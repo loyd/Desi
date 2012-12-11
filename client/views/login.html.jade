@@ -1,0 +1,18 @@
+form.form-horizontal(data-bind="with: $root.locale().login")
+
+	.control-group
+		label.control-label(for="input-email", data-bind="text: email")
+		.controls: input(type="text", id="input-email",
+			data-bind="attr: { placeholder: emailHolder }")
+
+	.control-group
+		label.control-label(for="input-password", data-bind="text: password")
+		.controls: input(type="password", id="input-password",
+			data-bind="attr: { placeholder: passwordHolder }")
+
+	.control-group
+		.controls
+			label.checkbox
+				input(type="checkbox")
+				p(data-bind="text: remember")
+			button.btn(type="submit", data-bind="text: text")

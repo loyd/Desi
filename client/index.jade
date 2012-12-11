@@ -1,0 +1,51 @@
+doctype 5
+head
+	meta(charset="UTF-8")
+	title(data-bind="text: title")
+
+	// Icon
+	link(rel="shortcut icon", href=icon)
+
+	// Styles
+	each sheet in styles
+		link(rel="stylesheet", href=sheet)
+
+	// Templates
+	each tmpl in templates
+		script(type=tmpl.type, id=tmpl.id, src=tmpl.path)= tmpl.content
+
+	// Source loader
+	script(data-main=loader.main, src=loader.path)
+
+body
+	#top.navbar.navbar-inverse: .navbar-inner
+		button.btn.btn-navbar(data-bind="click: toggleSidebar")
+			span.icon-bar
+			span.icon-bar
+			span.icon-bar
+
+		a#logo.brand(href="#") Desi
+
+		form.navbar-search
+			input.search-query(
+				type="text",
+				data-bind="attr: { placeholder: locale().searchHolder }"
+			)
+
+		ul.nav.pull-right(data-bind="with: locale().menu")
+			// ko ifnot: $root.isAuthorized
+			li: a(href="#login", data-bind="text: login")
+			li: a(href="#signup", data-bind="text: signup")
+			// /ko
+			// ko if: $root.isAuthorized
+			li: a(href="#logout", data-bind="text: logout")
+			// /ko
+
+	// ko if: isAuthorized
+	#sidebar
+	#content
+	// /ko
+
+	// ko ifnot: isAuthorized
+	#login(data-bind="section: login")
+	// /ko

@@ -1,0 +1,22 @@
+{
+	"menu" : {
+		"login"  : "Login",
+		"logout" : "Logout",
+		"signup" : "Signup"
+	},
+
+	"signup" : {
+
+	},
+
+	"searchHolder" : "Search...",
+
+	"login" : {
+		"email"          : "Email",
+		"password"       : "Password",
+		"remember"       : "Remember me",
+		"text"           : "Login",
+		"emailHolder"    : "your email",
+		"passwordHolder" : "your password"
+	}
+}

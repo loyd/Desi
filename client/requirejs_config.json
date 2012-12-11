@@ -1,0 +1,8 @@
+{
+	"paths" : {
+		"ko" : "vendors/knockout/index"
+	},
+	
+	"enforceDefine" : true,
+	"scriptType" : ""
+}
