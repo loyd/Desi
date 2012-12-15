@@ -14,6 +14,8 @@ coffee    = require 'coffee-script'
 option '-o', '--output  [DIR]', 'directory for compiled code or docs'
 option '-v', '--verbose [LVL]', 'level of message about errors (0..2)'
 
+option '-n', '--class-name [NAME]', 'name of class'
+
 task 'build:dev', 'build a development version', (options) ->
 	do (o = options) ->
 		o.verbose ?= 2
@@ -32,6 +34,37 @@ task 'watch:dev', 'build and watch development', (options) ->
 		o.watching = yes
 
 	buildAll options
+
+for type in ['model', 'view-model'] then do (type) ->
+	task "create:#{type}", "create #{type} class", (options) ->
+		name = options['class-name']
+
+		unless isClassName name
+			handleExternError new Error 'Invalid name of class'
+
+		switch type
+			when 'model'
+				baseClassPath = 'libs/base_model'
+				baseClassName = 'BaseModel'
+				fpath         = "client/models/#{name.toLowerCase()}"
+				name         += 'Model'
+			when 'view-model'
+				baseClassPath = 'libs/base_view_model'
+				baseClassName = 'BaseViewModel'
+				fpath         = "client/view_models/#{name.toLowerCase()}"
+				name         += 'ViewModel'
+
+		fs.writeFile "#{fpath}.coffee", """
+			#{baseClassName} = require '#{baseClassPath}'
+
+			class #{name} extends #{baseClassName}
+				constructor : ->
+					super
+					
+					#...
+
+			module.exports = #{name}
+		""", handleExternError
 
 ################################################################################
 buildAll = (opts, done) ->
@@ -62,6 +95,7 @@ buildAll = (opts, done) ->
 now = -> new Date().toTimeString()[0..7]
 b   = (str) -> "\u001b[31m#{str}\u001b[0m"
 handleBuildError = (err, path, verbose, next) ->
+	next?() unless err
 	makeErrorText path, +err.line, (text) ->
 		console.log b "#{now()} - error at #{path}"
 		console.log b text if text
@@ -72,7 +106,7 @@ handleBuildError = (err, path, verbose, next) ->
 			else throw new RangeError('Incorrectly --verbose')
 		next?()
 
-handleExternError = (err) -> throw err
+handleExternError = (err) -> throw err if err
 
 String::count = (char) ->
 	num = 0
@@ -341,6 +375,10 @@ preparers['bootstrap'] = (ipath, opath, dev, done) ->
 	)
 
 ################################################################################
+className = /^[a-zA-Z_$][\w$]+$/
+isClassName = (str) ->
+	className.test str
+
 Function::only = (num) ->
 	return => this Array::slice.call(arguments, 0, num)...
 
