@@ -374,6 +374,17 @@ preparers['bootstrap'] = (ipath, opath, dev, done) ->
 		"#{opath}/index.css", dev, done
 	)
 
+preparers['bintrees'] = (ipath, opath, dev, done) ->
+	mkdir "#{opath}/lib", (err) ->
+		done err if err
+		async.forEach ['lib/bintree', 'lib/rbtree',
+		               'lib/treebase', 'index'], (name, ok) ->
+			fs.readFile "#{ipath}/#{name}.js", 'utf-8', (err, content) ->
+				ok err if err
+
+				fs.writeFile "#{opath}/#{name}.js", makeSandbox(content), ok
+		, done
+
 ################################################################################
 className = /^[a-zA-Z_$][\w$]+$/
 isClassName = (str) ->
@@ -480,3 +491,6 @@ makeAMD = (code, args...) ->
 
 	data.push '});\n'
 	data.join '\n'
+
+makeSandbox = (code) ->
+	"!function() {\n#{code}\n}\n"

@@ -3,6 +3,7 @@
 	"dependencies" : {
 		"knockout"  : ">=2.2.0",
 		"requirejs" : ">=2.1.1",
-		"bootstrap" : ">=2.2.0"
+		"bootstrap" : ">=2.2.0",
+		"bintrees"  : "git://github.com/vadimg/js_bintrees.git"
 	}
 }
