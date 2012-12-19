@@ -1,7 +1,9 @@
 {
-	"paths" : {
-		"ko"       : "vendors/knockout/index",
-		"bintrees" : "vendors/bintrees/index"
+	"map" : {
+		"*" : {
+			"ko"       : "vendors/knockout/index",
+			"bintrees" : "vendors/bintrees/index"
+		}
 	},
 	
 	"enforceDefine" : true,
