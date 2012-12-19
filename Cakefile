@@ -382,7 +382,7 @@ preparers['bintrees'] = (ipath, opath, dev, done) ->
 			fs.readFile "#{ipath}/#{name}.js", 'utf-8', (err, content) ->
 				ok err if err
 
-				fs.writeFile "#{opath}/#{name}.js", makeSandbox(content), ok
+				fs.writeFile "#{opath}/#{name}.js", makeAMD(content), ok
 		, done
 
 ################################################################################
