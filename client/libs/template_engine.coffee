@@ -1,5 +1,5 @@
 ko           = require 'ko'
-nativeEngine = ko.nativeTemplateEngine
+nativeEngine = ko.nativeTemplateEngine.instance
 
 class TemplateEngine extends ko.templateEngine
 	constructor : ->
