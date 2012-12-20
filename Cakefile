@@ -54,7 +54,8 @@ for type in ['model', 'view-model'] then do (type) ->
 				fpath         = "client/view_models/#{name.toLowerCase()}"
 				name         += 'ViewModel'
 
-		fs.writeFile "#{fpath}.coffee", """
+		fpath += '.coffee'
+		fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
 			#{baseClassName} = require '#{baseClassPath}'
 
 			class #{name} extends #{baseClassName}
