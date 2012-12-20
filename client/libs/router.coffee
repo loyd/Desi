@@ -1,12 +1,20 @@
 {RBTree} = require 'bintrees'
 
 class Router
+	instance = null
 	constructor : ->
+		return instance if instance
+		instance = this
+
 		@currentHash = null
 		@tmplsTree   = new RBTree Tmpl.compare
 		@tmplsCache  = {}
 
 		addEventListener 'hashchange', @onchange
+
+	refresh : =>
+		@currentHash = null
+		do @onchange
 
 	onchange : =>
 		newHashValue = location.hash[1..]
