@@ -44,8 +44,12 @@ body
 	// ko if: isAuthorized
 	#sidebar
 	#content
+		#lookup(data-bind="section: lookup")
+		#area(data-bind="section: area")
+		#share(data-bind="section: share")
 	// /ko
 
 	// ko ifnot: isAuthorized
 	#login(data-bind="section: login")
+	#signup(data-bind="section: singup")
 	// /ko
