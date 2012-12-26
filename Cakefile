@@ -35,9 +35,11 @@ task 'watch:dev', 'build and watch development', (options) ->
 
 	buildAll options
 
+isCaseChange = /([a-z])([A-Z])/g
 for type in ['model', 'view-model'] then do (type) ->
 	task "create:#{type}", "create #{type} class", (options) ->
-		name = options['class-name']
+		name     = options['class-name']
+		basename = name.replace(isCaseChange, '$1_$2').toLowerCase() + '.coffee'
 
 		unless isClassName name
 			handleExternError new Error 'Invalid name of class'
@@ -46,15 +48,14 @@ for type in ['model', 'view-model'] then do (type) ->
 			when 'model'
 				baseClassPath = 'libs/base_model'
 				baseClassName = 'BaseModel'
-				fpath         = "client/models/#{name.toLowerCase()}"
+				fpath         = "client/models/#{basename}"
 				name         += 'Model'
 			when 'view-model'
 				baseClassPath = 'libs/base_view_model'
 				baseClassName = 'BaseViewModel'
-				fpath         = "client/view_models/#{name.toLowerCase()}"
+				fpath         = "client/view_models/#{basename}"
 				name         += 'ViewModel'
 
-		fpath += '.coffee'
 		fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
 			#{baseClassName} = require '#{baseClassPath}'
 
