@@ -6,6 +6,8 @@
 		}
 	},
 	
+	"priority" : ["libs/proto_patch"],
+
 	"enforceDefine" : true,
 	"scriptType" : ""
 }
