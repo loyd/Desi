@@ -1,0 +1,32 @@
+g.essential
+	rect.border(data-bind="attr: {\
+		x: position.x,\
+		y: position.y,\
+		width:  width,\
+		height: height\
+	}")
+
+	g.section.header
+		text.name(data-bind="text: name")
+
+	g.section.attributes(data-bind="foreach: attributes")
+		line.separator(data-bind="")
+		g.element(data-bind="css: { static: isStatic }")
+			text.visibility(data-bind="text: visibility")
+			text.name(data-bind="text: name")
+			text :
+			text.type(data-bind="text: type")
+
+	g.section.operations(data-bind="foreach: operations")
+		line.separator(data-bind="x:")
+		g.element(data-bind="css: { static: isStatic }")
+			text.visibility(data-bind="text: visibility")
+			text.name(data-bind="text: name")
+			text (
+			g.params(data-bind="foreach: params")
+				text.name(data-bind="text: name")
+				text :
+				text.type(data-bind="text: type")
+			text )
+			text :
+			text.type(data-bind="text: type")

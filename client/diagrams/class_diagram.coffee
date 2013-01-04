@@ -1,8 +1,8 @@
-BaseModel    = require 'libs/base_model'
-DiagramModel = require './diagram'
+Base    = require 'libs/base_mvm'
+Diagram = require './diagram'
 {observable, observableArray} = require 'ko'
 
-class ClassDiagramModel extends DiagramModel
+class ClassDiagram extends Diagram
 	constructor : ->
 		super
 
@@ -13,7 +13,7 @@ class ClassDiagramModel extends DiagramModel
 		@essentials = observableArray []
 		@relations  = observableArray []
 
-class EssentialModel extends BaseModel
+class Essential extends Base
 	constructor : ->
 		super
 
@@ -43,7 +43,7 @@ class EssentialModel extends BaseModel
 		@size.width  += dW
 		@size.height += dH
 
-class MemberModel extends BaseModel
+class Member extends Base
 	@visibilities = visibilities =
 		public    : '+'
 		private   : '-'
@@ -59,31 +59,31 @@ class MemberModel extends BaseModel
 		@visibility = observable visibility.public
 		@isStatic   = observable no
 
-class AttributeModel extends MemberModel
-class OperationModel extends MemberModel
+class Attribute extends Member
+class Operation extends Member
 	constructor : ->
 		super
 
 		@params = observableArray []
 
-class ParamModel extends BaseModel
+class Param extends Base
 	constructor : ->
 		super
 
 		@name = observable ''
 		@type = observable ''
 
-class RelationshipModel extends BaseModel
+class Relationship extends Base
 	constructor : (from, to) ->
 		super
 
 		@points = []
 
-class AssociationModel extends RelationshipModel
-class AggregationModel extends RelationshipModel
-class CompositionModel extends RelationshipModel
-class GeneralizationModel extends RelationshipModel
-class RealizationModel extends RelationshipModel
-class DependencyModel extends RelationshipModel
+class Association extends Relationship
+class Aggregation extends Relationship
+class Composition extends Relationship
+class Generalization extends Relationship
+class Realization extends Relationship
+class Dependency extends Relationship
 
-module.exports = ClassDiagramModel
+module.exports = ClassDiagram

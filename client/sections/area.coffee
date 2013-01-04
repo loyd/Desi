@@ -1,7 +1,7 @@
-ko = require 'ko'
-BaseViewModel = require 'libs/base_view_model'
+ko   = require 'ko'
+Base = require 'libs/base_mvm'
 
-class AreaViewModel extends BaseViewModel
+class Area extends Base
 	sectionTmpl : 'area-tmpl'
 
 	constructor : ->
@@ -20,4 +20,4 @@ class AreaViewModel extends BaseViewModel
 		'area/:project/:name' : 'toDiagram'
 	}
 
-module.exports = WorkspaceViewModel
+module.exports = Area

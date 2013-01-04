@@ -1,6 +1,6 @@
 Router = require './router'
 
-class BaseViewModel
+class BaseMVM
 	router = new Router
 
 	constructor : ->
@@ -16,4 +16,4 @@ class BaseViewModel
 		else for tmpl in tmpl.split ','
 			@routingTable[tmpl.trim()] = cb
 
-module.exports = BaseViewModel
+module.exports = BaseMVM
