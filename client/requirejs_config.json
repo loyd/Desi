@@ -2,7 +2,8 @@
 	"map" : {
 		"*" : {
 			"ko"       : "vendors/knockout/index",
-			"bintrees" : "vendors/bintrees/index"
+			"bintrees" : "vendors/bintrees/index",
+			"domReady" : "vendors/requirejs-domready/index"
 		}
 	},
 	

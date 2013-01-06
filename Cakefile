@@ -365,6 +365,9 @@ preparers['knockout'] = (ipath, opath, dev, done) ->
 preparers['requirejs'] = (ipath, opath, dev, done) ->
 	clone "#{ipath}/require.js", "#{opath}/index.js", done
 
+preparers['requirejs-domready'] = (ipath, opath, dev, done) ->
+	clone "#{ipath}/domReady.js", "#{opath}/index.js", done
+
 preparers['bootstrap'] = (ipath, opath, dev, done) ->
 	builders['.less'][1](
 		"#{ipath}/less/bootstrap.less",
