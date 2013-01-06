@@ -76,6 +76,9 @@ Array::last = makeAccs
 Array::insert = (index, elems...) ->
 	@splice index, 0, elems...
 
+Array::empty = ->
+	@length == 0
+
 Array::max = ->
 	Math.max @...
 

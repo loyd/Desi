@@ -19,3 +19,21 @@ register 'section', yes, do ->
 
 	init   : wrap(tmplBinding.init),
 	update : wrap(tmplBinding.update)
+
+register 'translate', no, {
+	update : (elem, accs) ->
+		value = ko.utils.unwrapObservable accs()
+		elem.setAttribute 'transform', "translate:(#{value.x}, #{value.y})"
+}
+
+register 'translateY', no, {
+	update : (elem, accs) ->
+		value = ko.utils.unwrapObservable accs()
+		elem.setAttribute 'transform', "translate:(0, #{value})"
+}
+
+register 'translateX', no, {
+	update : (elem, accs) ->
+		value = ko.utils.unwrapObservable accs()
+		elem.setAttribute 'transform', "translate:(#{value}, 0)"
+}
