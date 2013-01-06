@@ -113,7 +113,7 @@ Number::format = (len) ->
 
 errorVicinity = 2
 makeErrorText = (path, errorLine, next) ->
-	return unless errorLine
+	return do next unless errorLine
 	startLine = errorLine - errorVicinity
 	endLine   = errorLine + errorVicinity
 	startLine = 0 if startLine < 0
@@ -185,11 +185,13 @@ compileCoffee = (filename, code) ->
 	return [null, code]
 
 formatJadeError = (err) ->
-	err.line    = err.message.match(/^.*:(\d+)/)?[1]
-	err.message = err.message
-		.split('\n')[1..].filter (line) ->
-			!~line.search(/\d+\|/)
-		.join('\n').trim()
+	line = err.message.match(/^.*:(\d+)/)?[1]
+	if line
+		err.line = line
+		err.message = err.message
+			.split('\n')[1..].filter (line) ->
+				!~line.search(/\d+\|/)
+			.join('\n').trim()
 	err
 
 compileJade = (filename, code) ->
