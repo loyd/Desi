@@ -46,20 +46,18 @@ for type in ['model', 'view-model'] then do (type) ->
 
 		switch type
 			when 'model'
-				baseClassPath = 'libs/base_model'
-				baseClassName = 'BaseModel'
-				fpath         = "client/models/#{basename}"
-				name         += 'Model'
+				baseClass = 'BaseModel'
+				fpath     = "client/models/#{basename}"
+				name     += 'Model'
 			when 'view-model'
-				baseClassPath = 'libs/base_view_model'
-				baseClassName = 'BaseViewModel'
-				fpath         = "client/view_models/#{basename}"
-				name         += 'ViewModel'
+				baseClass = 'BaseViewModel'
+				fpath     = "client/view_models/#{basename}"
+				name     += 'ViewModel'
 
 		fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
-			#{baseClassName} = require '#{baseClassPath}'
+			{#{baseClass}} = require 'libs/base_class'
 
-			class #{name} extends #{baseClassName}
+			class #{name} extends #{baseClass}
 				constructor : ->
 					super
 					

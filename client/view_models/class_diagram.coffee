@@ -1,4 +1,4 @@
-BaseViewModel    = require 'libs/base_view_model'
+{BaseViewModel}  = require 'libs/base_class'
 DiagramViewModel = require './diagram'
 countTextSize    = require 'libs/count_text_size'
 

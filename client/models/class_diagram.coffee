@@ -1,4 +1,4 @@
-BaseModel = require 'libs/base_model'
+{BaseModel} = require 'libs/base_class'
 
 class ClassDiagramModel extends BaseModel
 	constructor : ->

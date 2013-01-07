@@ -1,4 +1,4 @@
-BaseViewModel = require 'libs/base_view_model'
+{BaseViewModel} = require 'libs/base_class'
 
 class LoginViewModel extends BaseViewModel
 	sectionTmpl : 'login-tmpl'
