@@ -1,8 +1,12 @@
 Router = require './router'
 ko     = require 'ko'
 
-class BaseMVM
+class BaseViewModel
 	router = new Router
+
+	adopted = (key) ->
+		return (val) ->
+			@[key] = val
 
 	constructor : ->
 		for propName, propVal of this when ~propName.indexOf '#'
@@ -13,10 +17,8 @@ class BaseMVM
 					router.listen key, val.bind this
 				when 'computed'
 					@[key] = ko.computed propVal, this
-				when 'observable'
-					@[key] = ko.observable null
-				when 'observableArray'
-					@[key] = ko.observableArray null
+				when 'adopted'
+					@[key] = adopted key
 
 	navigate : router.navigate
 	@route = (tmpl, cb) ->
@@ -33,12 +35,8 @@ class BaseMVM
 		for key, val of hash
 			@::["#{key}#computed"] = val
 
-	@observable = (names...) ->
+	@adopted = (names...) ->
 		for name in args
-			@::["#{name}#observable"] = true
+			@::["#{name}#adopted"] = true
 
-	@observableArray = (names...) ->
-		for name in names
-			@::["#{name}#observableArray"] = true
-
-module.exports = BaseMVM
+module.exports = BaseViewModel

@@ -14,7 +14,7 @@ coffee    = require 'coffee-script'
 option '-o', '--output  [DIR]', 'directory for compiled code or docs'
 option '-v', '--verbose [LVL]', 'level of message about errors (0..2)'
 
-option '-p', '--path [PATH]', 'path for new class'
+option '-n', '--class-name [PATH]', 'name of new class'
 
 task 'build:dev', 'build a development version', (options) ->
 	do (o = options) ->
@@ -35,31 +35,38 @@ task 'watch:dev', 'build and watch development', (options) ->
 
 	buildAll options
 
-wordSep = /_(\w)/g
-task 'create:mvm', 'create MVM class', (options) ->
-	unless 'path' of options
-		handleExternError new Error 'Set path (use -p)'
+isCaseChange = /([a-z])([A-Z])/g
+for type in ['model', 'view-model'] then do (type) ->
+	task "create:#{type}", "create #{type} class", (options) ->
+		name     = options['class-name']
+		basename = name.replace(isCaseChange, '$1_$2').toLowerCase() + '.coffee'
 
-	fpath = path.normalize options['path']
-	name  = path.basename(fpath, '.coffee')
-		.replace wordSep, (str, c) -> c.toUpperCase()
+		unless isClassName name
+			handleExternError new Error 'Invalid name of class'
 
-	name = name[0].toUpperCase() + name[1..]
+		switch type
+			when 'model'
+				baseClassPath = 'libs/base_model'
+				baseClassName = 'BaseModel'
+				fpath         = "client/models/#{basename}"
+				name         += 'Model'
+			when 'view-model'
+				baseClassPath = 'libs/base_view_model'
+				baseClassName = 'BaseViewModel'
+				fpath         = "client/view_models/#{basename}"
+				name         += 'ViewModel'
 
-	unless isClassName name
-		handleExternError new Error 'Invalid basename'
+		fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
+			#{baseClassName} = require '#{baseClassPath}'
 
-	fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
-		BaseMVM = require 'libs/base_mvm'
+			class #{name} extends #{baseClassName}
+				constructor : ->
+					super
+					
+					#...
 
-		class #{name} extends BaseMVM
-			constructor : ->
-				super
-				
-				#...
-
-		module.exports = #{name}
-	""", handleExternError
+			module.exports = #{name}
+		""", handleExternError
 
 ################################################################################
 buildAll = (opts, done) ->

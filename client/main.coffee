@@ -1,13 +1,13 @@
 ko = require 'ko'
 require 'libs/bindings'
 
-Router         = require 'libs/router'
-TemplateEngine = require 'libs/template_engine'
-CommonMVM      = require 'sections/common'
+Router          = require 'libs/router'
+TemplateEngine  = require 'libs/template_engine'
+CommonViewModel = require 'view_models/common'
 
 ko.setTemplateEngine new TemplateEngine
-commonMVM = new CommonMVM
+common = new CommonViewModel
 
 do (new Router).refresh
 
-ko.applyBindings commonMVM
+ko.applyBindings common

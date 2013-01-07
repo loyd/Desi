@@ -1,18 +1,18 @@
-ko       = require 'ko'
-defLocal = require 'locales/en_US'
-Base     = require 'libs/base_mvm'
-Login    = require './login'
-Area     = require './area'
+ko             = require 'ko'
+defLocal       = require 'locales/en_US'
+BaseViewModel  = require 'libs/base_view_model'
+LoginViewModel = require './login'
+AreaViewModel  = require './area'
 
-class Common extends Base
+class CommonViewModel extends BaseViewModel
 	constructor : ->
 		super
 
 		@isAuthorized  = ko.observable no
 		@locale        = ko.observable defLocal
 
-		@login         = new Login
-		@area          = new Area
+		@login         = new LoginViewModel
+		@area          = new AreaViewModel
 		
 		@activeSection = ko.observable null
 
@@ -29,4 +29,4 @@ class Common extends Base
 		':section, :section/*' : 'toSection'
 	}
 
-module.exports = Common
+module.exports = CommonViewModel

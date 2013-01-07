@@ -1,8 +1,8 @@
-Base          = require 'libs/base_mvm'
-Diagram       = require './diagram'
-countTextSize = require 'libs/count_text_size'
+BaseViewModel    = require 'libs/base_view_model'
+DiagramViewModel = require './diagram'
+countTextSize    = require 'libs/count_text_size'
 
-class ClassDiagram extends Diagram
+class ClassDiagramViewModel extends DiagramViewModel
 	@observable 'name', 'width', 'height', 'shiftX', 'shiftY'
 	@observableArray 'essentials', 'relations'
 
@@ -11,7 +11,7 @@ class ClassDiagram extends Diagram
 
 		@name 'Undefined'
 
-class Essential extends Base
+class EssentialViewModel extends BaseViewModel
 	@observable 'name', 'posX', 'posY'
 	@observableArray 'relations', 'stereotypes'
 
@@ -19,9 +19,9 @@ class Essential extends Base
 		super
 
 		@parts = [
-			@header     = new Header
-			@attributes = new Section
-			@operations = new Section
+			@header     = new HeaderViewModel
+			@attributes = new SectionViewModel
+			@operations = new SectionViewModel
 		]
 
 		@header.height.subscribe (v) =>
@@ -29,7 +29,7 @@ class Essential extends Base
 			@operations.posY @attributes.height() + v
 
 		@attributes.height.subscribe (v) =>
-			@operations.posY v + @header.height
+			@operations.posY @header.height() + v
 
 		@width.subscribe @operations.width
 		@width.subscribe @attributes.width
@@ -42,7 +42,7 @@ class Essential extends Base
 	height : ->
 		@header.height() + @attributes.height() + @operations.height()
 
-class Header extends Base
+class HeaderViewModel extends BaseViewModel
 	@observable 'width', 'name'
 
 	MIN_TEXT_PADDING : 3
@@ -51,7 +51,7 @@ class Header extends Base
 	height : ->
 		minHeight = @MIN_TEXT_PADDING * 2 + countTextSize(@name).height
 
-	@computed
+	@computed \
 	posXName : ->
 		(@width - countTextSize(@name).width) / 2
 
@@ -63,7 +63,7 @@ class Header extends Base
 	minWidth : ->
 		@MIN_TEXT_PADDING * 2 + countTextSize(@text).width
 
-class Section extends Base
+class SectionViewModel extends BaseViewModel
 	@observable 'width', 'posY'
 	@observableArray 'data'
 
@@ -102,7 +102,7 @@ class Section extends Base
 	minWidth : ->
 		(@data().map (elem) -> elem.width()).max()
 		
-class Member extends Base
+class MemberViewModel extends BaseViewModel
 	@observable 'isStatic', 'name', 'type', 'posY', 'visibility'
 
 	@visibilities = visibilities =
@@ -120,15 +120,15 @@ class Member extends Base
 		@visibility visibilities.public
 		@isStatic no
 
-class Attribute extends Member
-class Operation extends Member
+class AttributeViewModel extends MemberViewModel
+class OperationViewModel extends MemberViewModel
 	@observableArray 'params'
 
 	constructor : ->
 		super
 		@params []
 
-class Param extends Base
+class ParamViewModel extends BaseViewModel
 	@observable 'name', 'type'
 
 	constructor : ->
@@ -137,12 +137,12 @@ class Param extends Base
 		@name = ''
 		@type = 'void'
 
-class Relationship extends Base
-class Association extends Relationship
-class Aggregation extends Relationship
-class Composition extends Relationship
-class Generalization extends Relationship
-class Realization extends Relationship
-class Dependency extends Relationship
+class RelationshipViewModel extends BaseViewModel
+class AssociationViewModel extends RelationshipViewModel
+class AggregationViewModel extends RelationshipViewModel
+class CompositionViewModel extends RelationshipViewModel
+class GeneralizationViewModel extends RelationshipViewModel
+class RealizationViewModel extends RelationshipViewModel
+class DependencyViewModel extends RelationshipViewModel
 
 module.exports = ClassDiagram
