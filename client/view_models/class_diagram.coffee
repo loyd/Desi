@@ -53,21 +53,21 @@ class EssentialViewModel extends BaseViewModel
 	height : ->
 		@header.height() + @attributes.height() + @operations.height()
 
-	@handling('click', '.btn-add-attribute') \
+	@delegate('click', '.btn-add-attribute') \
 	addAttribute : ->
 		attr = new AttributeViewModel
 		@attributes.push attr
 
-	@handling('click', '.btn-rm-attribute') \
+	@delegate('click', '.btn-rm-attribute') \
 	removeAttribute : (attr) ->
 		@attributes.remove attr
 
-	@handling('click', '.btn-add-operation') \
+	@delegate('click', '.btn-add-operation') \
 	addOperation : ->
 		oper = new OperationViewModel
 		@operations.push oper
 
-	@handling('click', '.btn-rm-operation') \
+	@delegate('click', '.btn-rm-operation') \
 	rmOperation : (oper) ->
 		@operations.remove oper
 

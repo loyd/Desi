@@ -62,7 +62,7 @@ class BaseViewModel extends Base
 	@viewRoot = (sel) ->
 		@viewRoot_ = sel.trim()
 
-	@handling = (event, sel) ->
+	@delegate = (event, sel) ->
 		sel = "#{@viewRoot_} #{sel}"
 		return (hash) =>
 			for key, val of hash

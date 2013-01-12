@@ -13,7 +13,7 @@ class Delegator
 	checkSelector : (sel, what) ->
 		nodes = @root.querySelectorAll sel
 		return no unless nodes
-		for node in nodes when elem is what
+		for node in nodes when node is what
 			return yes
 		return no
 
