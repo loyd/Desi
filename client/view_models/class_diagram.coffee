@@ -1,19 +1,30 @@
-{BaseViewModel}  = require 'libs/base_class'
-DiagramViewModel = require './diagram'
-countTextSize    = require 'libs/count_text_size'
+{BaseViewModel} = require 'libs/base_class'
+countTextSize   = require 'libs/count_text_size'
+M               = require 'models/class_diagram'
 
-class ClassDiagramViewModel extends DiagramViewModel
-	@observable 'name', 'width', 'height', 'shiftX', 'shiftY'
-	@observableArray 'essentials', 'relations'
+class ClassDiagramViewModel extends BaseViewModel
+	@model M.ClassDiagramModel
+	@adopted 'name'
+	@observable 'shiftX', 'shiftY'
+	@observableArray 'essentials', 'relationships'
 
 	constructor : ->
 		super
 
-		@name 'Undefined'
+		@shiftY 0
+		@shiftX 0
+
+	addEssential : (x, y) ->
+		ess = new EssentialViewModel
+		ess.posX x
+		ess.poxY y
+		@essentials.push ess
 
 class EssentialViewModel extends BaseViewModel
-	@observable 'name', 'posX', 'posY'
-	@observableArray 'relations', 'stereotypes'
+	@model M.EssentialModel
+	@viewRoot '.essential'
+	@adopted 'name', 'posX', 'posY'
+	@observableArray 'relationships', 'stereotypes'
 
 	constructor : ->
 		super
@@ -42,6 +53,24 @@ class EssentialViewModel extends BaseViewModel
 	height : ->
 		@header.height() + @attributes.height() + @operations.height()
 
+	@handling('click', '.btn-add-attribute') \
+	addAttribute : ->
+		attr = new AttributeViewModel
+		@attributes.push attr
+
+	@handling('click', '.btn-rm-attribute') \
+	removeAttribute : (attr) ->
+		@attributes.remove attr
+
+	@handling('click', '.btn-add-operation') \
+	addOperation : ->
+		oper = new OperationViewModel
+		@operations.push oper
+
+	@handling('click', '.btn-rm-operation') \
+	rmOperation : (oper) ->
+		@operations.remove oper
+
 class HeaderViewModel extends BaseViewModel
 	@observable 'width', 'name'
 
@@ -53,7 +82,8 @@ class HeaderViewModel extends BaseViewModel
 
 	@computed \
 	posXName : ->
-		(@width - countTextSize(@name).width) / 2
+		#(@width - countTextSize(@name).width) / 2
+		@width() / 2
 
 	@computed \
 	posYName : ->
@@ -103,14 +133,8 @@ class SectionViewModel extends BaseViewModel
 		(@data().map (elem) -> elem.width()).max()
 		
 class MemberViewModel extends BaseViewModel
+	@model M.MemberModel
 	@observable 'isStatic', 'name', 'type', 'posY', 'visibility'
-
-	@visibilities = visibilities =
-		public    : '+'
-		private   : '-'
-		protected : '#'
-		package   : '~'
-		derived   : '/'
 
 	constructor : ->
 		super
@@ -121,7 +145,10 @@ class MemberViewModel extends BaseViewModel
 		@isStatic no
 
 class AttributeViewModel extends MemberViewModel
+	@model M.AttributeModel
+
 class OperationViewModel extends MemberViewModel
+	@model M.OperationModel
 	@observableArray 'params'
 
 	constructor : ->
@@ -129,6 +156,7 @@ class OperationViewModel extends MemberViewModel
 		@params []
 
 class ParamViewModel extends BaseViewModel
+	@model M.ParamModel
 	@observable 'name', 'type'
 
 	constructor : ->
@@ -138,11 +166,24 @@ class ParamViewModel extends BaseViewModel
 		@type = 'void'
 
 class RelationshipViewModel extends BaseViewModel
-class AssociationViewModel extends RelationshipViewModel
-class AggregationViewModel extends RelationshipViewModel
-class CompositionViewModel extends RelationshipViewModel
-class GeneralizationViewModel extends RelationshipViewModel
-class RealizationViewModel extends RelationshipViewModel
-class DependencyViewModel extends RelationshipViewModel
+	@model M.RelationshipModel
 
-module.exports = ClassDiagram
+class AssociationViewModel extends RelationshipViewModel
+	@model M.AssociationModel
+
+class AggregationViewModel extends RelationshipViewModel
+	@model M.AggregationModel
+
+class CompositionViewModel extends RelationshipViewModel
+	@model M.CompositionModel
+
+class GeneralizationViewModel extends RelationshipViewModel
+	@model M.GeneralizationModel
+
+class RealizationViewModel extends RelationshipViewModel
+	@model M.RealizationModel
+
+class DependencyViewModel extends RelationshipViewModel
+	@model M.DependencyModel
+
+module.exports = ClassDiagramViewModel
