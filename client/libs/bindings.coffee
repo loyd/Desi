@@ -37,3 +37,9 @@ register 'translateX', no, {
 		value = ko.utils.unwrapObservable accs()
 		elem.setAttribute 'transform', "translate:(#{value}, 0)"
 }
+
+register 'bindElement', no, {
+	init : (elem, accs) ->
+		value = ko.utils.unwrapObservable accs()
+		value element
+}

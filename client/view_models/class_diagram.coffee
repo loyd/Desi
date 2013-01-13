@@ -1,32 +1,37 @@
 {BaseViewModel} = require 'libs/base_class'
 countTextSize   = require 'libs/count_text_size'
-M               = require 'models/class_diagram'
+models          = require 'models/class_diagram'
 
 class ClassDiagramViewModel extends BaseViewModel
-	@model M.ClassDiagramModel
+	@viewRoot '.class-diagram'
 	@adopted 'name'
-	@observable 'shiftX', 'shiftY'
+	@observable 'shiftX', 'shiftY', 'element'
 	@observableArray 'essentials', 'relationships'
 
-	constructor : ->
+	constructor : (@model) ->
 		super
 
 		@shiftY 0
 		@shiftX 0
 
+	@delegate('click') (t, event) ->
+		{left, top} = @element.getBoundingClientRect()
+		x = event.clientX - left
+		y = event.clientY - top
+		@addEssential x, y
+
 	addEssential : (x, y) ->
-		ess = new EssentialViewModel
+		ess = new EssentialViewModel(new models.EssentialModel)
 		ess.posX x
 		ess.poxY y
 		@essentials.push ess
 
 class EssentialViewModel extends BaseViewModel
-	@model M.EssentialModel
 	@viewRoot '.essential'
 	@adopted 'name', 'posX', 'posY'
 	@observableArray 'relationships', 'stereotypes'
 
-	constructor : ->
+	constructor : (@model) ->
 		super
 
 		@parts = [
@@ -55,7 +60,7 @@ class EssentialViewModel extends BaseViewModel
 
 	@delegate('click', '.btn-add-attribute') \
 	addAttribute : ->
-		attr = new AttributeViewModel
+		attr = new AttributeViewModel(new models.AttributeModel)
 		@attributes.push attr
 
 	@delegate('click', '.btn-rm-attribute') \
@@ -64,7 +69,7 @@ class EssentialViewModel extends BaseViewModel
 
 	@delegate('click', '.btn-add-operation') \
 	addOperation : ->
-		oper = new OperationViewModel
+		oper = new OperationViewModel(new models.OperationModel)
 		@operations.push oper
 
 	@delegate('click', '.btn-rm-operation') \
@@ -133,10 +138,9 @@ class SectionViewModel extends BaseViewModel
 		(@data().map (elem) -> elem.width()).max()
 		
 class MemberViewModel extends BaseViewModel
-	@model M.MemberModel
 	@observable 'isStatic', 'name', 'type', 'posY', 'visibility'
 
-	constructor : ->
+	constructor : (@model) ->
 		super
 
 		@name ''
@@ -145,45 +149,29 @@ class MemberViewModel extends BaseViewModel
 		@isStatic no
 
 class AttributeViewModel extends MemberViewModel
-	@model M.AttributeModel
 
 class OperationViewModel extends MemberViewModel
-	@model M.OperationModel
 	@observableArray 'params'
 
-	constructor : ->
+	constructor : (@model) ->
 		super
 		@params []
 
 class ParamViewModel extends BaseViewModel
-	@model M.ParamModel
 	@observable 'name', 'type'
 
-	constructor : ->
+	constructor : (@model) ->
 		super
 
 		@name = ''
 		@type = 'void'
 
 class RelationshipViewModel extends BaseViewModel
-	@model M.RelationshipModel
-
 class AssociationViewModel extends RelationshipViewModel
-	@model M.AssociationModel
-
 class AggregationViewModel extends RelationshipViewModel
-	@model M.AggregationModel
-
 class CompositionViewModel extends RelationshipViewModel
-	@model M.CompositionModel
-
 class GeneralizationViewModel extends RelationshipViewModel
-	@model M.GeneralizationModel
-
 class RealizationViewModel extends RelationshipViewModel
-	@model M.RealizationModel
-
 class DependencyViewModel extends RelationshipViewModel
-	@model M.DependencyModel
 
 module.exports = ClassDiagramViewModel

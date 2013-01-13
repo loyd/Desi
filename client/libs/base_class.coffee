@@ -35,11 +35,8 @@ class Base
 class BaseModel extends Base
 
 class BaseViewModel extends Base
-	constructor : ->
+	constructor : (@model) ->
 		super
-
-		if Model = @constructor.modelClass
-			@model = new Model
 
 	@adopted = (names...) ->
 		for name in names
@@ -56,16 +53,17 @@ class BaseViewModel extends Base
 			else
 				@::[key] = [cb]
 
-	@model = (Class) ->
-		@modelClass = Class
-
 	@viewRoot = (sel) ->
 		@viewRoot_ = sel.trim()
 
+	anonNum = 0
 	@delegate = (event, sel) ->
 		sel = "#{@viewRoot_} #{sel}"
-		return (hash) =>
-			for key, val of hash
+		return (hashOrFn) =>
+			if typeof hashOrFn is 'function'
+				hashOrFn = "__anon#{anonNum++}" : hashOrFn
+
+			for key, val of hashOrFn
 				@::[key] = val
 
 				delegator.delegate event, sel, @, key

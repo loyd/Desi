@@ -17,7 +17,7 @@ class Delegator
 			return yes
 		return no
 
-	context : (node, klass) ->
+	expandContext : (node, klass) ->
 		context  = ko.contextFor node
 		instance = context.$data
 		unless instance instanceof klass
@@ -31,7 +31,7 @@ class Delegator
 		@listeners[name] = list = []
 		@root.addEventListener name, (event) =>
 			for elem in list when @checkSelector elem.sel, event.target
-				[inst, data] = @context event.target, elem.klass
+				[inst, data] = @expandContext event.target, elem.klass
 				inst[elem.key]?(data, event)
 			return
 		, off
