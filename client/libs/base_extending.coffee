@@ -53,6 +53,15 @@ String::words = ->
 
 #### Arrays
 
+Array.from = (arrayLike) ->
+	return [] unless arrayLike.length?
+	
+	args = new Array arrayLike.length
+	for i in [0...args.length] by 1
+		args[i] = arrayLike[i]
+
+	args
+
 # Get/Set first element in array
 Array::first = makeAccs
 	set : (v) -> @[0] = v

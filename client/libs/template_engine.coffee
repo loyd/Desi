@@ -10,7 +10,7 @@ class TemplateEngine extends ko.templateEngine
 	textToSvg = (text) ->
 		div  = document.createElement 'div'
 		div.innerHTML = "<svg xmlns=\"#{W3_SVG}\">#{text}</svg>"
-		ko.utils.makeArray div.childNodes[0].childNodes
+		Array.from div.childNodes[0].childNodes
 
 	renderTemplateSource : (template, context, options) ->
 		elem    = template.domElement

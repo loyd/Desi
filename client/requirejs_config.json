@@ -7,7 +7,7 @@
 		}
 	},
 	
-	"priority" : ["libs/proto_patch"],
+	"priority" : ["libs/base_extending"],
 
 	"enforceDefine" : true,
 	"scriptType" : ""
