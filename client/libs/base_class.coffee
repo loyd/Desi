@@ -3,6 +3,9 @@ router    = new (require './router')
 delegator = new (require './delegator')
 
 class Base
+
+	emptyArray = []
+
 	constructor : ->
 		for propName, propVal of this when ~propName.indexOf '#'
 			[key, postfix] = key.split '#'
@@ -11,11 +14,14 @@ class Base
 				when 'observable'
 					@[key] = ko.observable null
 				when 'observableArray'
-					@[key] = ko.observableArray []
+					@[key] = ko.observableArray(emptyArray)
+						.extend(extEvents: on)
 				when 'computed'
 					@[key] = ko.computed propVal, this
 				when 'adopted'
 					@[key] = @model[key]
+				when 'adoptedArray'
+					@[key] = null
 				when 'hashHandler'
 					val = this[propVal] if typeof propVal is 'string'
 					router.listen key, val.bind this
@@ -24,7 +30,7 @@ class Base
 		for name in names
 			@::["#{name}#observable"] = on
 
-	@observableArray = (names...) ->
+	@observableArray = (hash) ->
 		for name in names
 			@::["#{name}#observableArray"] = on
 
@@ -41,6 +47,11 @@ class BaseViewModel extends Base
 	@adopted = (names...) ->
 		for name in names
 			@::["#{name}#adopted"] = on
+
+	@adoptedArray = (names...) ->
+		for name in names
+			@::["#{name}#adoptedArray"] = on
+
 
 	navigate : router.navigate
 	@route = (tmpl, cb) ->

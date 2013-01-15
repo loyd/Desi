@@ -4,9 +4,11 @@ models          = require 'models/class_diagram'
 
 class ClassDiagramViewModel extends BaseViewModel
 	@viewRoot '.class-diagram'
-	@adopted 'name'
 	@observable 'shiftX', 'shiftY', 'element'
-	@observableArray 'essentials', 'relationships'
+	@adopted 'name'
+	@adoptedArray
+		essentials    : EssentialViewModel
+		relationships : RelationshipViewModel
 
 	constructor : (@model) ->
 		super
@@ -15,7 +17,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		@shiftX 0
 
 	@delegate('click') (t, event) ->
-		{left, top} = @element.getBoundingClientRect()
+		{left, top} = @element().getBoundingClientRect()
 		x = event.clientX - left
 		y = event.clientY - top
 		@addEssential x, y
@@ -29,7 +31,9 @@ class ClassDiagramViewModel extends BaseViewModel
 class EssentialViewModel extends BaseViewModel
 	@viewRoot '.essential'
 	@adopted 'name', 'posX', 'posY'
-	@observableArray 'relationships', 'stereotypes'
+	@adoptedArray
+		relationships : RelationshipViewModel
+		stereotypes   : null
 
 	constructor : (@model) ->
 		super
@@ -100,7 +104,7 @@ class HeaderViewModel extends BaseViewModel
 
 class SectionViewModel extends BaseViewModel
 	@observable 'width', 'posY'
-	@observableArray 'data'
+	@adoptedArray 'data'
 
 	constructor : ->
 		super
@@ -151,7 +155,7 @@ class MemberViewModel extends BaseViewModel
 class AttributeViewModel extends MemberViewModel
 
 class OperationViewModel extends MemberViewModel
-	@observableArray 'params'
+	@adoptedArray params : ParamViewModel
 
 	constructor : (@model) ->
 		super
@@ -165,13 +169,5 @@ class ParamViewModel extends BaseViewModel
 
 		@name = ''
 		@type = 'void'
-
-class RelationshipViewModel extends BaseViewModel
-class AssociationViewModel extends RelationshipViewModel
-class AggregationViewModel extends RelationshipViewModel
-class CompositionViewModel extends RelationshipViewModel
-class GeneralizationViewModel extends RelationshipViewModel
-class RealizationViewModel extends RelationshipViewModel
-class DependencyViewModel extends RelationshipViewModel
 
 module.exports = ClassDiagramViewModel
