@@ -85,6 +85,18 @@ Array::last = makeAccs
 Array::insert = (index, elems...) ->
 	@splice index, 0, elems...
 
+Array::append = (targets...) ->
+	for target in targets
+		@push target...
+
+Array::move = (from, len, to) ->
+	return if arguments.length < 2
+	if arguments.length == 2
+		[to, len] = [len, 1]
+
+	what = @splice from, len
+	@insert to, what
+
 Array::empty = ->
 	@length == 0
 
