@@ -1,68 +1,71 @@
-{BaseModel} = require 'libs/base_class'
+{extend, number, string, array, object, boolean} = require 'libs/model_dsl'
 
-class ClassDiagramModel extends BaseModel
-	@observable 'name'
-	@observableArray 'essentials', 'relations'
+stereotype = object
 
-	constructor : ->
-		@name 'undefined'
+visibilities =
+	public    : '+'
+	private   : '-'
+	protected : '#'
+	package   : '~'
+	derived   : '/'
 
-class EssentialModel extends BaseModel
-	@observable 'posX', 'posY', 'name'
-	@observableArray 'stereotypes', 'attributes', 'operations', 'relationships'
-
-class MemberModel extends BaseModel
-	@observable 'name', 'type', 'isStatic'
-	@observableArray 'stereotypes'
-	
-	@observable 'visibility' : (val) ->
-		val of visibilities
-
-	@visibilities = visibilities =
-		public    : '+'
-		private   : '-'
-		protected : '#'
-		package   : '~'
-		derived   : '/'
-
-	constructor : ->
-		@name 'undefined'
-		@type 'void'
-		@visibility visibilities.public
-		@isStatic no
-
-class AttributeModel extends MemberModel
-
-class OperationModel extends MemberModel
-	@observableArray 'params'
-
-class ParamModel extends BaseModel
-	@observable 'name', 'type'
-
-class RelationshipModel extends BaseModel
-	for prop in ['posMode', 'essential', 'indicator']
-		@observable "#{prop}From"
-		@observable "#{prop}To"
-
-	validMultiplicity = /^(?:\d+\.{2})?(?:\d+|\*)$/
-	@observable 'multiplicityFrom', 'multiplicityTo', (val) ->
-		validMultiplicity.test val
-
-	@observableArray 'stereotypes'
-
-class AssociationModel extends RelationshipModel
-class AggregationModel extends RelationshipModel
-class CompositionModel extends RelationshipModel
-	@observable 'multiplicityFrom' : (val) ->
-		val in ['0', '0..1']
-
-class GeneralizationModel extends RelationshipModel
-class RealizationModel extends RelationshipModel
-class DependencyModel extends RelationshipModel
-
-module.exports = {
-	ClassDiagramModel, EssentialModel, MemberModel, AttributeModel,
-	OperationModel, ParamModel, RelationshipModel, AssociationModel,
-	AggregationModel, CompositionModel, GeneralizationModel, RealizationModel,
-	DependencyModel, RelationshipGoalModel, 
+member = object {
+	name : (string def: 'undefined')
+	type : (string def: 'void')
+	isStatic : (boolean def: no)
+	stereotypes : (array of: stereotype)
+	visibility : string
+		from: visibilities
+		def: visibilities.public
 }
+
+attribute = extend member
+
+param = object {
+	name : (string def: 'foo')
+	type : (string def: 'void')
+}
+
+operation = extend member, {
+	params : (array of: param)
+}
+
+validMultiplicity = /^(?:\d+\.{2})?(?:\d+|\*)$/
+between0and9 = (v) -> 0 <= v <= 9
+
+relationship = object {
+	type : (string in: [
+		'association', 'aggregation',
+		'composition', 'generalization',
+		'realization', 'dependency'
+	])
+	posModeFrom : (number valid: between0and9)
+	posModeTo : (number valid: between0and9)
+	indicatorFrom : string
+	indicatorTo : string
+	multiplicityFrom : (string valid: (val) ->
+		if @type is 'composition'
+			val in ['0', '0..1']
+		else
+			val.test validMultiplicity
+	)
+	multiplicityTo : (string test: validMultiplicity)
+	stereotypes : (array of: stereotype)
+}
+
+essential = object {
+	posX : number
+	posY : number
+	name : (string def: 'ClassName')
+	stereotypes : (array of: stereotype)
+	attributes : (array of: attribute)
+	operations : (array of: operation)
+	relationships : (array of: relationship)
+}
+
+classDiagram = object {
+	name : (string def: 'Untitled')
+	essentials : (array of: essential)
+}
+
+module.exports = classDiagram
