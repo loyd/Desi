@@ -1,10 +1,3 @@
-object = (hash) ->
-	for prop, value of hash when typeof value is 'function'
-		value {}
-
-	type : 'object'
-	data : hash
-
 standardize = (opts) ->
 	validate : switch yes
 		when 'in'    of opts then (v) -> v in opts.in
@@ -12,34 +5,41 @@ standardize = (opts) ->
 		when 'valid' of opts then opts.valid
 	default : opts.def
 
-number = (opts) ->
-	result = standardize opts
-	result.type = 'number'
-	result
+module.exports = {
+	object : (hash) ->
+		for prop, value of hash
+			hash[prop] = value?({}) || value
 
-boolean = (opts) ->
-	result = standardize opts
-	result.type = 'boolean'
-	result
+		type : 'object'
+		data : hash
 
-string = (opts) ->
-	result = standardize opts
-	if 'test' of opts
-		result.validate = (v) -> v.test opts.test
-	result.type = 'string'
-	result
+	array : (opts) ->
+		type : 'array'
+		data : opts.of?() || opts.of
 
-array = (opts) ->
-	type    : 'array'
-	content : opts.of?() || opts.of
+	number : (opts) ->
+		result = standardize opts
+		result.type = 'number'
+		result
 
-extend = (parent = null, hash) ->
-	result = type : 'object'
-	result.data = Object.create parent?() || parent.data
+	boolean : (opts) ->
+		result = standardize opts
+		result.type = 'boolean'
+		result
 
-	for own prop, value of hash
-		result.data[prop] = value?({}) || value
+	string : (opts) ->
+		result = standardize opts
+		if 'test' of opts
+			result.validate = (v) -> v.test opts.test
+		result.type = 'string'
+		result
 
-	result
+	extend : (parent = null, hash) ->
+		result = type : 'object'
+		result.data = Object.create parent?() || parent.data
 
-module.exports = { extend, object, number, string, array, boolean }
+		for own prop, value of hash
+			result.data[prop] = value?({}) || value
+
+		result
+}
