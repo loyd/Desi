@@ -33,14 +33,14 @@ nextId = (value) ->
 		return id++
 nextId(id ? 0)
 
-ls.alloc = (value) ->
+ls.allocate = (value) ->
 	if typeof value is 'object'
 		if Array.isArray value
-			nValue = value.map ls.alloc
+			nValue = value.map ls.allocate
 		else
 			nValue = {}
 			for prop of value
-				nValue[prop] = ls.alloc value[prop]
+				nValue[prop] = ls.allocate value[prop]
 	else
 		nValue = value
 
