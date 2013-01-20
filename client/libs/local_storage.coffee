@@ -48,15 +48,15 @@ ls.allocate = (value) ->
 	ls key, JSON.stringify(nValue)
 	key
 
-ls.expand = (key) ->
+ls.expand = (key, depth = Infinity) ->
 	root = JSON.parse(ls key)
 	
-	if typeof root is 'object'
+	if depth != 0 && typeof root is 'object'
 		if Array.isArray root
-			root = root.map ls.expand
+			root = (ls.expand part, depth-1 for part in root)
 		else
 			for prop of root
-				root[prop] = ls.expand root[prop]
+				root[prop] = ls.expand root[prop], depth-1
 
 	root
 
