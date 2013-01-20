@@ -9,13 +9,15 @@ extEventsMethods = do (obsFns = ko.observableArray.fn) ->
 
 	Object.keys(obsFns).forEach (name) ->
 		methods[name] = ->
+			args = Array.from(arguments)
+			@notifySubscribers args, "#{name}:before"
 			obsFns[name].apply(@, arguments)
-			@notifySubscribers Array.from(arguments), name
+			@notifySubscribers args, "#{name}:after"
 			this
 
 	methods.subscribeAll = (hash, self) ->
-		for key, val of hash
-			@subscribe val, self, key
+		for event, handler of hash
+			@subscribe handler, self, event
 
 		this
 
