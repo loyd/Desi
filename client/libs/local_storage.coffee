@@ -6,9 +6,19 @@ NEXT_ID_KEY   = '__nextId'
 commandRemove = Object.create null
 waiters = {}
 ls = (key, value) ->
+	return null unless key?
+	key = String key
+
+	# Getter
 	if arguments.length == 1
-		return waiters[key] ? $.getItem(key)
+		val = waiters[key]
+		return if val is commandRemove
+			null
+		else
+			val ? $.getItem(key)
 	
+	# Setter
+	value = String value
 	if key of waiters
 		waiters[key] = value
 		return
@@ -23,6 +33,9 @@ ls = (key, value) ->
 		, WRITE_TIMEOUT
 		return
 
+ls.has = (key) ->
+	ls(key)?
+
 id = ls NEXT_ID_KEY
 nextId = (value) ->
 	if arguments.length == 1
@@ -34,6 +47,7 @@ nextId = (value) ->
 nextId(id ? 0)
 
 ls.allocate = (value) ->
+	return null unless value?
 	if typeof value is 'object'
 		if Array.isArray value
 			nValue = value.map ls.allocate
@@ -49,6 +63,7 @@ ls.allocate = (value) ->
 	key
 
 ls.expand = (key, depth = Infinity) ->
+	return null unless ls.has key
 	root = JSON.parse(ls key)
 	
 	if depth != 0 && typeof root is 'object'
@@ -61,6 +76,7 @@ ls.expand = (key, depth = Infinity) ->
 	root
 
 ls.remove = (key) ->
+	return unless ls.has key
 	root = JSON.parse(ls key)
 
 	if typeof root is 'object'
