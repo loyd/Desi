@@ -1,24 +1,33 @@
 ko = require 'ko'
 
-ko.extenders.extEvents = (self) ->
-	ko.utils.extend self, extEventsMethods
+ko.extenders.extMode = (self) ->
+	ko.utils.extend self, extModeMethods
 	return self
 
-extEventsMethods = do (obsFns = ko.observableArray.fn) ->
-	methods = {}
+extModeMethods = do (obsFns = ko.observableArray.fn) ->
+	methods =
+		subscribeAll : (hash, self) ->
+			for event, handler of hash
+				@subscribe handler, self, event
 
-	Object.keys(obsFns).forEach (name) ->
+			this
+
+	makeMethod = (name, body) ->
 		methods[name] = ->
 			args = Array.from(arguments)
 			@notifySubscribers args, "#{name}:before"
-			obsFns[name].apply(@, arguments)
-			@notifySubscribers args, "#{name}:after"
-			this
+			res = body.apply(@, arguments)
+			@notifySubscribers [args, res], "#{name}:after"
+			res
 
-	methods.subscribeAll = (hash, self) ->
-		for event, handler of hash
-			@subscribe handler, self, event
+	for name in Object.keys(obsFns)
+		makeMethod name, obsFns[name]
 
-		this
+	makeMethod 'move', ->
+		arr = @peek()
+		do @valueWillMutate
+		res = arr.move arguments...
+		do @valueHasMutated
+		res
 
 	methods
