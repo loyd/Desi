@@ -84,18 +84,29 @@ Array::last = makeAccs
 
 Array::insert = (index, elems...) ->
 	@splice index, 0, elems...
+	return
 
 Array::append = (targets...) ->
-	for target in targets
-		@push target...
+	@push target... for target in targets
+	return
 
-Array::move = (from, len, to) ->
-	return if arguments.length < 2
-	if arguments.length == 2
-		[to, len] = [len, 1]
+Array::swap = (i, j, len = 1) ->
+	if len == 1
+		[this[i], this[j]] = [this[j], this[i]]
+	else
+		@swap(i + shift, j + shift) for shift in [0...len] by 1
+
+	return
+
+Array::move = (from, to, len = 1) ->
+	return if from == to
+
+	if len == 1 && (from - to).abs() == 1
+		return @swap from, to
 
 	what = @splice from, len
-	@insert to, what
+	@insert to, what...
+	return
 
 Array::empty = ->
 	@length == 0
@@ -120,7 +131,7 @@ Array::clear = ->
 			@splice i, 1
 		else ++i
 
-	return @
+	return
 
 Array::partition = (fn) ->
 	one = []; two = []
