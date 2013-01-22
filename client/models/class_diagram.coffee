@@ -1,4 +1,4 @@
-{extend, number, string, array, object, boolean} = require 'libs/model_dsl'
+{extend, number, string, array, object, boolean} = require '../libs/model_dsl'
 
 stereotype = object
 
@@ -15,7 +15,7 @@ member = object {
 	isStatic : (boolean def: no)
 	stereotypes : (array of: stereotype)
 	visibility : string
-		from: visibilities
+		in: visibilities
 		def: visibilities.public
 }
 
@@ -43,6 +43,8 @@ relationship = object {
 	posModeTo : (number valid: between0and9)
 	indicatorFrom : string
 	indicatorTo : string
+	essentialFrom : essential
+	essentialTo : essential
 	multiplicityFrom : (string valid: (val) ->
 		if @type is 'composition'
 			val in ['0', '0..1']
@@ -60,12 +62,12 @@ essential = object {
 	stereotypes : (array of: stereotype)
 	attributes : (array of: attribute)
 	operations : (array of: operation)
-	relationships : (array of: relationship)
 }
 
 classDiagram = object {
 	name : (string def: 'Untitled')
 	essentials : (array of: essential)
+	relationships : (array of: relationship)
 }
 
 module.exports = classDiagram

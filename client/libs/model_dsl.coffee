@@ -1,7 +1,13 @@
 standardize = (opts) ->
 	validate : switch yes
-		when 'in'    of opts then (v) -> v in opts.in
-		when 'of'    of otps then (v) -> v of opts.of
+		when 'in' of opts
+			if Array.isArray opts.in
+				(v) -> v in opts.in
+			else (v) ->
+				for key, val of opts.key when val == v
+					return true
+				return false
+		when 'of'    of opts then (v) -> v of opts.of
 		when 'valid' of opts then opts.valid
 	default : opts.def
 
@@ -15,7 +21,7 @@ module.exports = {
 
 	array : (opts) ->
 		type : 'array'
-		data : opts.of?() || opts.of
+		item : opts.of?() || opts.of
 
 	number : (opts) ->
 		result = standardize opts
