@@ -14,7 +14,7 @@ coffee    = require 'coffee-script'
 option '-o', '--output  [DIR]', 'directory for compiled code or docs'
 option '-v', '--verbose [LVL]', 'level of message about errors (0..2)'
 
-option '-n', '--class-name [PATH]', 'name of new class'
+option '-n', '--name [NAME]', 'name of new view-model class/model'
 
 task 'build:dev', 'build a development version', (options) ->
 	do (o = options) ->
@@ -35,36 +35,43 @@ task 'watch:dev', 'build and watch development', (options) ->
 
 	buildAll options
 
-isCaseChange = /([a-z])([A-Z])/g
-for type in ['model', 'view-model'] then do (type) ->
-	task "create:#{type}", "create #{type} class", (options) ->
-		name     = options['class-name']
-		basename = name.replace(isCaseChange, '$1_$2').toLowerCase() + '.coffee'
+task 'create:view-model', 'create view-model class', (options) ->
+	{name}   = options
+	basename = name.toPathName() + '.coffee'
 
-		unless isClassName name
-			handleExternError new Error 'Invalid name of class'
+	unless name.isValidName()
+		handleExternError new Error 'Invalid name of class'
 
-		switch type
-			when 'model'
-				baseClass = 'BaseModel'
-				fpath     = "client/models/#{basename}"
-				name     += 'Model'
-			when 'view-model'
-				baseClass = 'BaseViewModel'
-				fpath     = "client/view_models/#{basename}"
-				name     += 'ViewModel'
+	fpath = "client/view_models/#{basename}"
+	fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
+		BaseViewModel = require 'libs/base_view_model'
 
-		fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
-			{#{baseClass}} = require 'libs/base_class'
+		class #{name}ViewModel extends BaseViewModel
+			constructor : (@sync) ->
+				super
+				
+				#...
 
-			class #{name} extends #{baseClass}
-				constructor : ->
-					super
-					
-					#...
+		module.exports = #{name}ViewModel
+	""", handleExternError
 
-			module.exports = #{name}
-		""", handleExternError
+task 'create:model', 'create model', (options) ->
+	{name}   = options
+	basename = name.toPathName() + '.coffee'
+
+	unless name.isValidName()
+		handleExternError new Error 'Invalid name'
+
+	fpath = "client/models/#{basename}"
+	fs.exists fpath, (e) -> unless e then fs.writeFile fpath, """
+		{extend, number, string, array, object, boolean} = require 'libs/model_dsl'
+
+		#{name} = object {
+			# ...
+		}
+
+		module.exports = #{name}
+	""", handleExternError
 
 ################################################################################
 buildAll = (opts, done) ->
@@ -391,8 +398,16 @@ preparers['bintrees'] = (ipath, opath, dev, done) ->
 		, done
 
 ################################################################################
-className = /^[a-zA-Z_$][\w$]+$/
-isClassName = (str) ->
+isCaseChange = /([a-z])([A-Z])/g
+String::toPathName = ->
+	@replace(isCaseChange, '$1_$2').toLowerCase()
+
+validName = /^[a-zA-Z_$][\w$]+$/
+String::isValidName = (str) ->
+	validName.test str
+
+className = /^[A-Z_$][\w$]+$/
+String::isClassName = (str) ->
 	className.test str
 
 Function::only = (num) ->

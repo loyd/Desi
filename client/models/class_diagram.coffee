@@ -1,4 +1,4 @@
-{extend, number, string, array, object, boolean} = require '../libs/model_dsl'
+{extend, number, string, array, object, boolean} = require 'libs/model_dsl'
 
 stereotype = object
 
