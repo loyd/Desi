@@ -1,8 +1,8 @@
-ko              = require 'ko'
-defLocal        = require 'locales/en_US'
-{BaseViewModel} = require 'libs/base_class'
-LoginViewModel  = require './login'
-AreaViewModel   = require './area'
+ko             = require 'ko'
+defLocal       = require 'locales/en_US'
+BaseViewModel  = require 'libs/base_view_model'
+LoginViewModel = require './login'
+AreaViewModel  = require './area'
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->

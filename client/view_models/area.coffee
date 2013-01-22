@@ -1,5 +1,5 @@
 ko              = require 'ko'
-{BaseViewModel} = require 'libs/base_class'
+BaseViewModel = require 'libs/base_view_model'
 
 class AreaViewModel extends BaseViewModel
 	sectionTmpl : 'area-tmpl'
