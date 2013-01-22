@@ -1,21 +1,17 @@
 g.essential(data-bind="translate: { x: posX, y: posY }")
 	rect.border(data-bind="attr: { x: 0, y: 0, width: width, height: height }")
 
-	g.header(data-bind="with: header")
-		text.name(data-bind="text: name, attr: { x: posXName, y: posYName }")
+	g.header
+		text.name(data-bind="text: name, attr: { x: namePosX, y: namePosY }")
 
-	// ko with: attributes
-	g.section.attributes(data-bind="if: visible, translateY: posY")
+	g.section.attributes(data-bind="if: attributesVisible, translateY: attributesPosY")
 		// ko template: 'section-separator-tmpl'
 		// /ko
-		// ko template: { name: 'attribute-tmpl', foreach: attributes.data }
+		// ko template: { name: 'attribute-tmpl', foreach: attributes }
 		// /ko
-	// /ko
 
-	// ko with: operations
-	g.section.operations(data-bind="if: visible, translateY: posY")
+	g.section.operations(data-bind="if: operationsVisible, translateY: operationsPosY")
 		// ko template: 'section-separator-tmpl'
 		// /ko
-		// ko template: { name: 'attribute-tmpl', foreach: operations.data }
+		// ko template: { name: 'operation-tmpl', foreach: operations }
 		// /ko
-	// /ko

@@ -2,7 +2,21 @@ ko = require 'ko'
 ls = require 'libs/local_storage'
 
 class Synchronizer
+	createDataFromSpec = (spec) ->
+		return switch spec.type
+			when 'object'
+				data = {}
+				for prop of spec.data
+					data[prop] = createDataFromSpec spec.data[prop]
+				data
+			when 'array' then []
+			else spec.default
+
 	constructor : (@spec, @id) ->
+		unless id?
+			data = createDataFromSpec spec
+			@id = ls.allocate data
+
 		@observers = {}
 
 	leaveStorage : ->
@@ -31,11 +45,11 @@ class Synchronizer
 
 		obs = if spec.type is 'array'
 			adapter = if opts.classAdapter
-				(elemId) -> new opts.classAdapter(
-					new Synchronizer(spec.data, elemId)
+				(itemId) -> new opts.classAdapter(
+					new Synchronizer(spec.item, itemId)
 				)
 			else if opts.adapter
-				(elemId) -> opts.adapter new Synchronizer(spec.data, elemId)
+				(itemId) -> opts.adapter new Synchronizer(spec.item, itemId)
 
 			makeArrayObserver(spec, ls.expand(id, 0), adapter)
 		else

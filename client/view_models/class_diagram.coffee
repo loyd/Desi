@@ -1,20 +1,23 @@
-{BaseViewModel} = require 'libs/base_class'
+BaseViewModel = require 'libs/base_view_model'
 countTextSize   = require 'libs/count_text_size'
-models          = require 'models/class_diagram'
+Synchronizer    = require 'libs/synchronizer'
+ko              = require 'ko'
 
 class ClassDiagramViewModel extends BaseViewModel
 	@viewRoot '.class-diagram'
-	@observable 'shiftX', 'shiftY', 'element'
-	@adopted 'name'
-	@adoptedArray
-		essentials    : EssentialViewModel
-		relationships : RelationshipViewModel
 
-	constructor : (@model) ->
+	constructor : (@sync) ->
 		super
 
-		@shiftY 0
-		@shiftX 0
+		@shiftY = ko.observable 0
+		@shiftX = ko.observable 0
+		
+		@name       = sync.observer 'name'
+		@essentials = sync.observer 'essentials',
+			classAdapter : EssentialViewModel
+
+		@relationships = sync.observer 'relationships',
+			classAdapter : RelationshipViewModel
 
 	@delegate('click') (t, event) ->
 		{left, top} = @element().getBoundingClientRect()
@@ -23,48 +26,48 @@ class ClassDiagramViewModel extends BaseViewModel
 		@addEssential x, y
 
 	addEssential : (x, y) ->
-		ess = new EssentialViewModel(new models.EssentialModel)
+		sync = new Synchronizer @spec.essentials.item
+		ess = new EssentialViewModel sync
 		ess.posX x
 		ess.poxY y
 		@essentials.push ess
 
 class EssentialViewModel extends BaseViewModel
 	@viewRoot '.essential'
-	@adopted 'name', 'posX', 'posY'
-	@adoptedArray
-		relationships : RelationshipViewModel
-		stereotypes   : null
 
-	constructor : (@model) ->
+	MIN_HEADER_PADDING = 3
+
+	constructor : (@sync) ->
 		super
 
-		@parts = [
-			@header     = new HeaderViewModel
-			@attributes = new SectionViewModel
-			@operations = new SectionViewModel
-		]
+		@name = sync.observer 'name'
+		@posX = sync.observer 'posX'
+		@posY = sync.observer 'posY'
 
-		@header.height.subscribe (v) =>
-			@attributes.posY v
-			@operations.posY @attributes.height() + v
+		@attributes = sync.observer 'attributes',
+			classAdapter : AttributeViewModel
+		@attributes.subscribe => @placeAttributes
 
-		@attributes.height.subscribe (v) =>
-			@operations.posY @header.height() + v
-
-		@width.subscribe @operations.width
-		@width.subscribe @attributes.width
+		@operations = sync.observer 'operations',
+			classAdapter : OperationViewModel
+		@operations.subscribe => @placeOperations
 
 	@computed \
 	width : ->
-		@parts.map((part) -> part.minWidth()).min()
+		Math.max(
+			MIN_HEADER_PADDING * 2 + countTextSize(@name()).width
+			(@attributes().map (attr) -> attr.width()).max()
+			(@operations().map (oper) -> oper.width()).max()
+		)
 
 	@computed \
 	height : ->
-		@header.height() + @attributes.height() + @operations.height()
+		@headerHeight() + @attributesHeight() + @operationsHeight()
 
 	@delegate('click', '.btn-add-attribute') \
 	addAttribute : ->
-		attr = new AttributeViewModel(new models.AttributeModel)
+		sync = new Synchronizer @spec.attributes.item
+		attr = new AttributeViewModel sync
 		@attributes.push attr
 
 	@delegate('click', '.btn-rm-attribute') \
@@ -73,101 +76,94 @@ class EssentialViewModel extends BaseViewModel
 
 	@delegate('click', '.btn-add-operation') \
 	addOperation : ->
-		oper = new OperationViewModel(new models.OperationModel)
+		sync = new Synchronizer @spec.operations.item
+		oper = new OperationViewModel sync
 		@operations.push oper
 
 	@delegate('click', '.btn-rm-operation') \
 	rmOperation : (oper) ->
 		@operations.remove oper
 
-class HeaderViewModel extends BaseViewModel
-	@observable 'width', 'name'
-
-	MIN_TEXT_PADDING : 3
-
-	@computed \
-	height : ->
-		minHeight = @MIN_TEXT_PADDING * 2 + countTextSize(@name).height
+	# Header section
+	
+	haederHeight : ->
+		MIN_HEADER_PADDING * 2 + countTextSize(@name()).height
 
 	@computed \
-	posXName : ->
-		#(@width - countTextSize(@name).width) / 2
+	namePosX : ->
 		@width() / 2
 
 	@computed \
-	posYName : ->
-		@height() / 2
-	
-	@computed \
-	minWidth : ->
-		@MIN_TEXT_PADDING * 2 + countTextSize(@text).width
+	namePosY : ->
+		@headerHeight() / 2
 
-class SectionViewModel extends BaseViewModel
-	@observable 'width', 'posY'
-	@adoptedArray 'data'
+	# Attributes section
 
-	constructor : ->
-		super
-
-		@visible no
-		@data []
-
-		@data.subscribe => do @defineDataPosY
-
-	@computed \
-	visible : {
-		read : ->
-			return 0 if @data().empty()
-			@visible_
-
-		write : (v) ->
-			@visible_ = v
-	}
-
-	@computed \
-	height : ->
-		return 0 unless @visible()
-		
-		@data().reduce (sum, elem) ->
-			sum + elem.height()
+	attributesHeight : ->
+		@attributes().reduce (sum, attr) ->
+			sum + attr.height()
 		, 0
 
-	defineDataPosY : ->
+	placeAttributes : ->
 		posY = 0
-		for member in @data()
+		for member in @attributes()
 			member.posY posY
 			posY += member.height()
+		return
 
-	minWidth : ->
-		(@data().map (elem) -> elem.width()).max()
+	@computed \
+	attributesPosY : @::headerHeight
+
+	@computed \
+	attributesVisible : ->
+		@attributes().length
+
+	# Operations section
+	
+	operationsHeight : ->
+		@operations().reduce (sum, oper) ->
+			sum + oper.height()
+		, 0
+
+	placeOperations : ->
+		posY = 0
+		for member in @operations()
+			member.posY posY
+			posY += member.height()
+		return
+
+	@computed \
+	operationsPosY : ->
+		@attributesPosY() + @attributesHeight()
+
+	@computed \
+	operationsVisible : ->
+		@operations().length
 		
 class MemberViewModel extends BaseViewModel
-	@observable 'isStatic', 'name', 'type', 'posY', 'visibility'
-
-	constructor : (@model) ->
+	constructor : (@sync) ->
 		super
 
-		@name ''
-		@type 'void'
-		@visibility visibilities.public
-		@isStatic no
+		@posY       = ko.observable()
+		@name       = sync.observer 'name'
+		@type       = sync.observer 'type'
+		@visibility = sync.observer 'visibility'
+		@isStatic   = sync.observer 'isStatic'
 
 class AttributeViewModel extends MemberViewModel
 
 class OperationViewModel extends MemberViewModel
-	@adoptedArray params : ParamViewModel
-
-	constructor : (@model) ->
+	constructor : (@sync) ->
 		super
-		@params []
+
+		@params = sync.observer 'params',
+			classAdapter : ParamViewModel
 
 class ParamViewModel extends BaseViewModel
-	@observable 'name', 'type'
-
-	constructor : (@model) ->
+	constructor : (@sync) ->
 		super
 
-		@name = ''
-		@type = 'void'
+		@name = sync.observer 'name'
+		@type = sync.observer 'type'
 
 module.exports = ClassDiagramViewModel
