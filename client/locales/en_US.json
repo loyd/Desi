@@ -18,5 +18,16 @@
 		"text"           : "Login",
 		"emailHolder"    : "your email",
 		"passwordHolder" : "your password"
+	},
+
+	"signup" : {
+		"login"          : "Login",
+		"email"          : "Email",
+		"password"       : "Password",
+		"remember"       : "Remember me",
+		"text"           : "Login",
+		"loginHolder"    : "your login",
+		"emailHolder"    : "your email",
+		"passwordHolder" : "your password"		
 	}
 }
