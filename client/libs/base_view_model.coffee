@@ -5,17 +5,18 @@ delegator = new (require './delegator')
 class BaseViewModel
 
 	constructor : (@sync) ->
-		@spec = sync.spec
+		@spec = sync?.spec
 
 		for propName, propVal of this when ~propName.indexOf '#'
-			[key, postfix] = key.split '#'
+			[key, postfix] = propName.split '#'
 
 			switch postfix
 				when 'computed'
 					@[key] = ko.computed propVal, this
 				when 'hashHandler'
-					val = this[propVal] if typeof propVal is 'string'
-					router.listen key, val.bind this
+					for val in propVal
+						val = this[val] if typeof val is 'string'
+						router.listen key, val.bind this
 
 	@computed = (hash) ->
 		for key, val of hash
