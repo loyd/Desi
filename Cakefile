@@ -323,11 +323,14 @@ builders['.less'] = ['.css', (ipath, opath, dev, done) ->
 	async.waterfall [
 		(next) -> fs.readFile ipath, 'utf-8', next
 		(code, next) ->
-			less.render code,
-				filename : ipath
-				paths    : [path.dirname ipath]
-				optimization : if dev then 0 else 2
-			, next
+			try
+				less.render code,
+					filename : ipath
+					paths    : [path.dirname ipath]
+					optimization : if dev then 0 else 2
+				, next
+			catch error
+				return next error
 		(code, done) ->
 			fs.writeFile opath, code, done
 	], done
