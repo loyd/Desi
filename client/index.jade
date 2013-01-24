@@ -19,18 +19,15 @@ head
 
 body
 	#top.navbar.navbar-inverse: .navbar-inner
-		button.btn.btn-navbar(data-bind="click: toggleSidebar")
+		button#btn-sidebar.btn.btn-navbar(data-bind="\
+			click: toggleSidebar,\
+			css: { disabled : !isAuthorized() }\
+		")
 			span.icon-bar
 			span.icon-bar
 			span.icon-bar
 
 		a#logo.brand(href="#") Desi
-
-		form.navbar-search
-			input.search-query(
-				type="text",
-				data-bind="attr: { placeholder: locale().searchHolder }"
-			)
 
 		ul.nav.pull-right(data-bind="with: locale().menu")
 			// ko ifnot: $root.isAuthorized
@@ -43,13 +40,16 @@ body
 
 	// ko if: isAuthorized
 	#sidebar
-	#content
+	// /ko
+
+	#main
+		// ko if: isAuthorized
 		#lookup(data-bind="section: lookup")
 		#area(data-bind="section: area")
 		#share(data-bind="section: share")
-	// /ko
+		// /ko
 
-	// ko ifnot: isAuthorized
-	#login(data-bind="section: login")
-	#signup(data-bind="section: signup")
-	// /ko
+		// ko ifnot: isAuthorized
+		#login(data-bind="section: login")
+		#signup(data-bind="section: signup")
+		// /ko

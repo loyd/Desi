@@ -9,8 +9,6 @@
 
 	},
 
-	"searchHolder" : "Search...",
-
 	"login" : {
 		"email"          : "Email",
 		"password"       : "Password",
