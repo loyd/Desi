@@ -1,0 +1,10 @@
+table.table.table-striped
+	thead: tr(data-bind="with: $root.locale().lookup")
+		th(data-bind="text: number")
+		th(data-bind="text: title")
+		th(data-bind="text: lastModified")
+	tbody(data-bind="foreach: diagrams")
+		tr
+			td(data-bind="text: $index + 1")
+			td(data-bind="text: title")
+			td(data-bind="text: lastModified")
