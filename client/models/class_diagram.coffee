@@ -65,7 +65,8 @@ essential = object {
 }
 
 classDiagram = object {
-	name : (string def: 'Untitled')
+	title : (string def: 'Untitled')
+	lastModified : number
 	essentials : (array of: essential)
 	relationships : (array of: relationship)
 }

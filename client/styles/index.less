@@ -2,11 +2,11 @@
 @top-height    : 42px;
 
 .transition (@what) {
-	-moz-transition : @what;
+	-moz-transition    : @what;
 	-webkit-transition : @what;
-	-ms-transition : @what;
-	-o-transition : @what;
-	transition : @what
+	-ms-transition     : @what;
+	-o-transition      : @what;
+	transition         : @what;
 }
 
 #top, #sidebar, #main {
@@ -22,8 +22,8 @@
 }
 
 #btn-sidebar {
-	display: inline-block;
-	float : left;
+	display : inline-block;
+	float   : left;
 }
 
 #logo {
@@ -31,9 +31,9 @@
 }
 
 #sidebar {
-	top    : @top-height;
-	left   : 0;
-	width  : @sidebar-width;
+	top   : @top-height;
+	left  : 0;
+	width : @sidebar-width;
 
 	.transition(width 1s);
 
@@ -43,12 +43,12 @@
 }
 
 #main {
-	top    : @top-height;
-	left   : @sidebar-width;
+	top  : @top-height;
+	left : @sidebar-width;
 
 	.transition(left 1s);
 
-	#sidebar.close + & {
+	#sidebar.closed + & {
 		left : 0;
 	}
 }

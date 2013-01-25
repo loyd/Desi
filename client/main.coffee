@@ -1,5 +1,6 @@
 ko = require 'ko'
 require 'libs/bindings'
+require 'libs/observable_extenders'
 
 Router          = require 'libs/router'
 TemplateEngine  = require 'libs/template_engine'

@@ -78,7 +78,7 @@ class Synchronizer
 		obs
 
 	makeArrayObserver = (spec, init, wrap) ->
-		obs = ko.observableArray(init.map wrap).extends(extMode: on)
+		obs = ko.observableArray(init.map wrap).extend(extMode: on)
 
 		table = {}
 		for event of handlers then do (event) ->
@@ -89,7 +89,7 @@ class Synchronizer
 				(args) ->
 					handlers[event] obs.peek(), obs.id, args if obs.id
 
-		obs.observableAll table
+		obs.subscribeAll table
 		obs
 
 handlers = {

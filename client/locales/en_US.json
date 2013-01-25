@@ -27,5 +27,11 @@
 		"loginHolder"    : "your login",
 		"emailHolder"    : "your email",
 		"passwordHolder" : "your password"		
+	},
+
+	"lookup" : {
+		"number"       : "#",
+		"title"        : "Title",
+		"lastModified" : "Last modified"
 	}
 }

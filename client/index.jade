@@ -21,7 +21,7 @@ body
 	#top.navbar.navbar-inverse: .navbar-inner
 		button#btn-sidebar.btn.btn-navbar(data-bind="\
 			click: toggleSidebar,\
-			css: { disabled : !isAuthorized() }\
+			css: { disabled: !isAuthorized(), active: !sidebarIsClosed() }\
 		")
 			span.icon-bar
 			span.icon-bar
@@ -39,7 +39,12 @@ body
 			// /ko
 
 	// ko if: isAuthorized
-	#sidebar
+	#sidebar(data-bind="css: { closed: sidebarIsClosed }")
+		ul.nav.nav-list
+			li One
+			li Two
+			li Three
+			li Four
 	// /ko
 
 	#main

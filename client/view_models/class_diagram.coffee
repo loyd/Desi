@@ -12,7 +12,6 @@ class ClassDiagramViewModel extends BaseViewModel
 		@shiftY = ko.observable 0
 		@shiftX = ko.observable 0
 		
-		@name       = sync.observer 'name'
 		@essentials = sync.observer 'essentials',
 			classAdapter : EssentialViewModel
 
