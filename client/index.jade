@@ -18,7 +18,7 @@ head
 	script(data-main=loader.main, src=loader.path)
 
 body
-	#top.navbar: .navbar-inner
+	#top.navbar.navbar-fixed-top: .navbar-inner
 		button#btn-sidebar.btn.btn-navbar(data-bind="\
 			click: toggleSidebar,\
 			css: { disabled: !isAuthorized(), active: !sidebarIsClosed() }\
@@ -41,17 +41,27 @@ body
 	// ko if: isAuthorized
 	#sidebar(data-bind="css: { closed: sidebarIsClosed }")
 		ul.nav.nav-list
-			li One
-			li Two
-			li Three
-			li Four
+			li(data-bind="css: { active: activeSection() === lookup }"): a
+				i.icon-globe
+				span(data-bind="text: locale().sidebar.lookup")
+			li(data-bind="css: { active: activeSection() === account }"): a
+				i.icon-user
+				span(data-bind="text: locale().sidebar.account")
+			li(data-bind="css: { active: activeSection() === share }"): a
+				i.icon-share
+				span(data-bind="text: locale().sidebar.share")
+			li(data-bind="css: { active: activeSection() === exportation }"): a
+				i.icon-upload
+				span(data-bind="text: locale().sidebar.exportation")
+			li(data-bind="css: { active: activeSection() === generation }"): a
+				i.icon-wrench
+				span(data-bind="text: locale().sidebar.generation")
 	// /ko
 
 	#main
 		// ko if: isAuthorized
 		#lookup(data-bind="section: lookup")
 		#area(data-bind="section: area")
-		#share(data-bind="section: share")
 		// /ko
 
 		// ko ifnot: isAuthorized

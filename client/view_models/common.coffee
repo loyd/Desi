@@ -32,6 +32,11 @@ class CommonViewModel extends BaseViewModel
 
 		@area   = new AreaViewModel diagramsSync
 		@lookup = new LookupViewModel diagramsSync
+		
+		@account = null
+		@generation = null
+		@exportation = null
+		@share = null
 
 	deauthorize : ->
 		@area   = null

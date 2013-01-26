@@ -9,6 +9,14 @@
 
 	},
 
+	"sidebar" : {
+		"lookup"      : "Lookup",
+		"share"       : "Share",
+		"account"     : "Account",
+		"exportation" : "Export",
+		"generation"  : "Generation"
+	},
+
 	"login" : {
 		"email"          : "Email",
 		"password"       : "Password",

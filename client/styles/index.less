@@ -35,10 +35,38 @@
 	left  : 0;
 	width : @sidebar-width;
 
-	.transition(width 1s);
+	background-color : #fefefe;
+	border-right : 1px solid #dfdfdf;
 
-	&.close {
-		width : 0;
+	.transition(left 1s);
+
+	&.closed {
+		left : -@sidebar-width;
+	}
+
+	ul > li {
+		cursor : pointer;
+
+		a {
+			display        : inline-block;
+			padding-top    : 20px;
+			padding-bottom : 20px;
+			width          : 100%;
+		}
+
+		&.active a, & a:hover {
+			color            : #000;
+			background-color : #c5c5c5;
+			text-shadow      : none;
+		}
+
+		&.active a {
+			font-weight : bold;
+		}
+
+		a span {
+			margin-left : 15px;
+		}
 	}
 }
 
