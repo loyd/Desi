@@ -18,7 +18,7 @@ head
 	script(data-main=loader.main, src=loader.path)
 
 body
-	#top.navbar.navbar-inverse: .navbar-inner
+	#top.navbar: .navbar-inner
 		button#btn-sidebar.btn.btn-navbar(data-bind="\
 			click: toggleSidebar,\
 			css: { disabled: !isAuthorized(), active: !sidebarIsClosed() }\

@@ -239,7 +239,7 @@ builders['index.jade'] = ['.html', (ipath, opath, dev, done) ->
 			locals =
 				icon : 'favicon.png'
 				templates : []
-				styles : ['vendors/bootstrap/index.css']
+				styles : ['vendors/bootswatch/index.css']
 				loader :
 					main : 'requirejs_config'
 					path : 'vendors/requirejs/index.js'
@@ -383,11 +383,18 @@ preparers['requirejs'] = (ipath, opath, dev, done) ->
 preparers['requirejs-domready'] = (ipath, opath, dev, done) ->
 	clone "#{ipath}/domReady.js", "#{opath}/index.js", done
 
-preparers['bootstrap'] = (ipath, opath, dev, done) ->
-	builders['.less'][1](
-		"#{ipath}/less/bootstrap.less",
-		"#{opath}/index.css", dev, done
-	)
+preparers['bootswatch'] = (ipath, opath, dev, done) ->
+	async.parallel [
+		async.apply async.waterfall, [
+			(next) ->
+				fs.readFile "#{ipath}/simplex/bootstrap.css", 'utf-8', next
+			(code, next) ->
+				code = code.replace(/\.{2}\/img\//g, 'img/')
+				fs.writeFile "#{opath}/index.css", code, next
+		]
+
+		async.apply clone, "#{ipath}/img", "#{opath}/img"
+	], done
 
 preparers['bintrees'] = (ipath, opath, dev, done) ->
 	mkdir "#{opath}/lib", (err) ->
@@ -401,9 +408,9 @@ preparers['bintrees'] = (ipath, opath, dev, done) ->
 		, done
 
 ################################################################################
-isCaseChange = /([a-z])([A-Z])/g
+caseChange = /([a-z])([A-Z])/g
 String::toPathName = ->
-	@replace(isCaseChange, '$1_$2').toLowerCase()
+	@replace(caseChange, '$1_$2').toLowerCase()
 
 validName = /^[a-zA-Z_$][\w$]+$/
 String::isValidName = (str) ->
@@ -418,8 +425,14 @@ Function::only = (num) ->
 
 mkdir = (dpath, done) -> exec "mkdir -p #{dpath}", done.only 1
 clear = (dpath, done) -> exec "rm -rf #{dpath}/*", done.only 1
-clone = (f, to, done) -> exec "cp #{f} #{to}",     done.only 1
+clone = (f, to, done) -> exec "cp -R #{f} #{to}",  done.only 1
 touch = (fpath, done) -> exec "touch #{fpath}",    done.only 1
+
+download = (url, fpath, done) ->
+	if arguments.length == 3
+		exec "curl -o #{fpath} #{url}", done.only 1
+	else
+		exec "curl #{url}", done.only 2
 
 # decorator
 # see https://github.com/joyent/node/issues/2054
