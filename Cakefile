@@ -48,9 +48,9 @@ task 'create:view-model', 'create view-model class', (options) ->
 
 		class #{name}ViewModel extends BaseViewModel
 			constructor : (@sync) ->
-				super
-				
 				#...
+				
+				super
 
 		module.exports = #{name}ViewModel
 	""", handleExternError
@@ -289,13 +289,15 @@ builders['requirejs_config.json'] = ['.js', (ipath, opath, dev, done) ->
 				code.replace /\}\s*$/, '"bust=" + new Date().getTime()\n}'
 
 			code = "require.config(#{code});\n\n"
+			code += "define(['libs/base_extending'], function() {"
 			code += if dev
 				"""
-					define(['libs/tmpl_loader'], function(load) {
+					require(['libs/tmpl_loader'], function(load) {
 						load(require.bind(null, ['main']));
 					});\n
 				"""
-			else "define(['main'], null);\n"
+			else "require(['main'], null);\n"
+			code += '});'
 
 			next null, code
 		(code, done) ->

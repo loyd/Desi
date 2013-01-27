@@ -6,8 +6,6 @@
 			"domReady" : "vendors/requirejs-domready/index"
 		}
 	},
-	
-	"priority" : ["libs/base_extending"],
 
 	"enforceDefine" : true,
 	"scriptType" : ""
