@@ -47,8 +47,9 @@ nextId = (value) ->
 nextId(id ? 0)
 
 ls.allocate = (value) ->
-	return null unless value?
-	if typeof value is 'object'
+	unless value?
+		nValue = null
+	else if typeof value is 'object'
 		if Array.isArray value
 			nValue = value.map ls.allocate
 		else
