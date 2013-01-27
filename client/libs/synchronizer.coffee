@@ -34,6 +34,9 @@ class Synchronizer
 			opts = prop
 			prop = null
 
+		if prop of @observers
+			return @observers[prop]
+
 		if prop
 			spec = @spec.data[prop]
 			id   = ls.expand(@id, 0)[prop]
@@ -70,11 +73,11 @@ class Synchronizer
 				write : (v) ->
 					if spec.validate(v)
 						val = v
-						ls obs.id, v if obs.id
+						ls obs.id, v if obs.id?
 			}
 		else
 			obs = ko.observable init ? spec.default
-			obs.subscribe (v) -> ls id, v if obs.id
+			obs.subscribe (v) -> ls obs.id, v if obs.id?
 		obs
 
 	makeArrayObserver = (spec, init, wrap) ->
@@ -83,64 +86,59 @@ class Synchronizer
 		table = {}
 		for event of handlers then do (event) ->
 			table[event] = if ~event.indexOf ':after'
-				 ([args, res]) ->
-					handlers[event] obs.peek(), obs.id, args, res if obs.id
+				([args, res]) ->
+					handlers[event] obs.peek(), obs.id, args, res if obs.id?
 			else
 				(args) ->
-					handlers[event] obs.peek(), obs.id, args if obs.id
+					handlers[event] obs.peek(), obs.id, args if obs.id?
 
 		obs.subscribeAll table
 		obs
 
+unwrap = (id) -> ls(id)[1...-1]
 handlers = {
 	'push:before' : (arr, id, args) ->
-		val = ls id
+		val = unwrap id
 		addition = ''
 		for arg in args
 			addition += ',' + arg.sync.id
 
-		if val[0]
-			ls id, addition[1..]
-		else
-			ls id, val + addition
+		ls id, "[#{if val[0] then val + addition else addition[1..]}]"
 
 		return
 
 	'pop:before' : (arr, id) ->
-		val = ls id
+		val = unwrap id
 		lastComma = val.lastIndexOf ','
 
 		if ~lastComma
-			ls id, val[...lastComma]
+			ls id, "[#{val[...lastComma]}]"
 			do arr.last().sync.leaveStorage
 
 		return
 
 	'unshift:before' : (arr, id, args) ->
-		val = ls id
+		val = unwrap id
 		addition = ''
 		for arg in args
 			addition += arg.sync.id + ','
 
-		if val[0]
-			ls id, addition[...-1]
-		else
-			ls id, addition + val
+		ls id, "[#{if val[0] then addition[...-1] else addition + val}]"
 
 		return
 
 	'shift:before' : (arr, id) ->
-		val = ls id
+		val = unwrap id
 		firstComma = val.indexOf ','
 
 		if ~firstComma
-			ls id, val[firstComma+1..]
+			ls id, "[#{val[firstComma+1..]}]"
 			do arr.first().sync.leaveStorage
 
 		return
 
 	'splice:before' : (arr, id, [start, count, elems...]) ->
-		val = ls id
+		val = unwrap id
 		start = arr.length + start if start < 0
 
 		addition = ''
@@ -157,9 +155,9 @@ handlers = {
 			endIndex = str.indexOf ',', endIndex + 1
 
 		if ~endIndex
-			ls id, str[..startIndex] + addition +  + str[endIndex+1..]
+			ls id, "[#{str[..startIndex] + addition +  + str[endIndex+1..]}]"
 		else
-			ls id, str[..startIndex] + addition[...-1]
+			ls id, "[#{str[..startIndex] + addition[...-1]}]"
 
 		for i in [start...start+count] by 1
 			do arr[i].sync.leaveStorage
