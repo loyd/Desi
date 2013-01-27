@@ -10,11 +10,17 @@ class Delegator
 
 		@listeners[event].push { sel, klass, key }
 
-	checkSelector : (sel, what) ->
+	checkSelector : (sel, elem) ->
 		nodes = @root.querySelectorAll sel
 		return no unless nodes
-		for node in nodes when node is what
-			return yes
+		
+		for node in nodes
+			return yes if node is elem
+
+			parent = elem
+			while parent = parent.parentNode when parent is node
+				return yes
+
 		return no
 
 	expandContext : (node, klass) ->
