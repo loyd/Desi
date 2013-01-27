@@ -39,7 +39,7 @@ body
 			// /ko
 
 	// ko if: isAuthorized
-	#sidebar(data-bind="css: { closed: sidebarIsClosed }")
+	#sidebar.closed(data-bind="css: { closed: sidebarIsClosed }")
 		ul.nav.nav-list
 			li(data-bind="css: { active: activeSection() === lookup }"): a
 				i.icon-globe

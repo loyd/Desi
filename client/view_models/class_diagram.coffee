@@ -1,14 +1,12 @@
 BaseViewModel = require 'libs/base_view_model'
-countTextSize   = require 'libs/count_text_size'
-Synchronizer    = require 'libs/synchronizer'
-ko              = require 'ko'
+countTextSize = require 'libs/count_text_size'
+Synchronizer  = require 'libs/synchronizer'
+ko            = require 'ko'
 
 class ClassDiagramViewModel extends BaseViewModel
-	@viewRoot '.class-diagram'
+	viewRoot : '.class-diagram'
 
 	constructor : (@sync) ->
-		super
-
 		@shiftY = ko.observable 0
 		@shiftX = ko.observable 0
 		
@@ -17,6 +15,8 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		@relationships = sync.observer 'relationships',
 			classAdapter : RelationshipViewModel
+
+		super
 
 	@delegate('click') (t, event) ->
 		{left, top} = @element().getBoundingClientRect()
@@ -32,13 +32,11 @@ class ClassDiagramViewModel extends BaseViewModel
 		@essentials.push ess
 
 class EssentialViewModel extends BaseViewModel
-	@viewRoot '.essential'
+	viewRoot : '.essential'
 
 	MIN_HEADER_PADDING = 3
 
 	constructor : (@sync) ->
-		super
-
 		@name = sync.observer 'name'
 		@posX = sync.observer 'posX'
 		@posY = sync.observer 'posY'
@@ -50,6 +48,8 @@ class EssentialViewModel extends BaseViewModel
 		@operations = sync.observer 'operations',
 			classAdapter : OperationViewModel
 		@operations.subscribe => @placeOperations
+
+		super
 
 	@computed \
 	width : ->
@@ -141,28 +141,30 @@ class EssentialViewModel extends BaseViewModel
 		
 class MemberViewModel extends BaseViewModel
 	constructor : (@sync) ->
-		super
-
 		@posY       = ko.observable()
 		@name       = sync.observer 'name'
 		@type       = sync.observer 'type'
 		@visibility = sync.observer 'visibility'
 		@isStatic   = sync.observer 'isStatic'
 
+		super
+
 class AttributeViewModel extends MemberViewModel
 
 class OperationViewModel extends MemberViewModel
 	constructor : (@sync) ->
-		super
-
 		@params = sync.observer 'params',
 			classAdapter : ParamViewModel
 
-class ParamViewModel extends BaseViewModel
-	constructor : (@sync) ->
 		super
 
+class ParamViewModel extends BaseViewModel
+	constructor : (@sync) ->
 		@name = sync.observer 'name'
 		@type = sync.observer 'type'
+
+		super
+
+class RelationshipViewModel extends BaseViewModel
 
 module.exports = ClassDiagramViewModel

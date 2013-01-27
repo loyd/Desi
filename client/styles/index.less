@@ -11,13 +11,16 @@
 
 #top, #sidebar, #main {
 	position : fixed;
-	width    : 100%;
-	height   : 100%;
+}
+
+#sidebar, #main {
+	height : 100%;
 }
 
 #top {
 	top    : 0;
 	left   : 0;
+	width  : 100%;
 	height : @top-height;
 }
 
@@ -71,12 +74,48 @@
 }
 
 #main {
-	top  : @top-height;
-	left : @sidebar-width;
+	top   : @top-height;
+	right : 0;
+	left  : @sidebar-width;
 
 	.transition(left 1s);
 
 	#sidebar.closed + & {
 		left : 0;
+	}
+}
+
+#lookup {
+	.btn-rm-diagram {
+		display : none;
+	}
+
+	.btn-new-diagram {
+		display : block;
+		margin  : auto;
+	}
+
+	td {
+		vertical-align : middle;
+	}
+
+	td input {
+		margin : 0;
+	}
+
+	td:first-child {
+		width : 1px;
+	}
+
+	td:nth-child(3) {
+		width : 130px;
+	}
+
+	td:last-child {
+		width : 12px;
+	}
+
+	tr:hover .btn-rm-diagram {
+		display : inline;
 	}
 }

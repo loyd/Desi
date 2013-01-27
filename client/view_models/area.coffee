@@ -1,13 +1,13 @@
-ko              = require 'ko'
+ko            = require 'ko'
 BaseViewModel = require 'libs/base_view_model'
 
 class AreaViewModel extends BaseViewModel
 	sectionTmpl : 'area-tmpl'
 
 	constructor : ->
-		super
 		@diagrams      = ko.observableArray null
 		@activeDiagram = ko.observable null
+		super
 
 	toDiagram : (project, name) ->
 

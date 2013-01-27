@@ -12,8 +12,6 @@ SignupViewModel = require './signup'
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->
-		super
-
 		@isAuthorized    = ko.observable ls.has('profile')
 		@sidebarIsClosed = ko.observable yes
 		@locale          = ko.observable defLocal
@@ -25,6 +23,8 @@ class CommonViewModel extends BaseViewModel
 		@signup = new SignupViewModel
 		
 		@activeSection = ko.observable null
+
+		super
 	
 	authorize : ->
 		profileSync = new Synchronizer profileSpec, ls('profile')

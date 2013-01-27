@@ -4,7 +4,20 @@ table.table.table-striped
 		th(data-bind="text: title")
 		th(data-bind="text: lastModified")
 	tbody(data-bind="foreach: diagrams")
-		tr
-			td(data-bind="text: $index + 1")
-			td(data-bind="text: title")
+		tr.diagram-item
+			td(data-bind="text: $index() + 1")
+			td.title
+				span(data-bind="text: title, visible: !editing()")
+				input(type="text", data-bind="\
+					value: title,\
+					visible: editing,\
+					hasfocus: editing\
+				")
+
 			td(data-bind="text: lastModified")
+			td: button.close.btn-rm-diagram &times;
+
+button.btn.btn-new-diagram(data-bind="\
+	click: newDiagram,\
+	text: $root.locale().lookup.newDiagram\
+")

@@ -4,8 +4,8 @@ class LoginViewModel extends BaseViewModel
 	sectionTmpl : 'login-tmpl'
 
 	constructor : ->
-		super
-		
 		#...
+		
+		super
 
 module.exports = LoginViewModel

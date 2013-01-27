@@ -4,8 +4,8 @@ class SignupViewModel extends BaseViewModel
 	sectionTmpl : 'signup-tmpl'
 
 	constructor : ->
-		super
-		
 		#...
+		
+		super
 
 module.exports = SignupViewModel

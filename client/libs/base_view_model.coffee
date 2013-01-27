@@ -33,12 +33,9 @@ class BaseViewModel
 			else
 				@::[key] = [cb]
 
-	@viewRoot = (sel) ->
-		@viewRoot_ = sel.trim()
-
 	anonNum = 0
 	@delegate = (event, sel) ->
-		sel = "#{@viewRoot_} #{sel}"
+		sel = "#{@::viewRoot} #{sel}"
 		return (hashOrFn) =>
 			if typeof hashOrFn is 'function'
 				hashOrFn = {}
