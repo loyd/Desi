@@ -73,11 +73,16 @@ class Synchronizer
 				write : (v) ->
 					if spec.validate(v)
 						val = v
-						ls obs.id, v if obs.id?
+						if obs.id?
+							v = "\"#{v}\"" if spec.type == 'string'
+							ls obs.id, v
 			}
 		else
 			obs = ko.observable init ? spec.default
-			obs.subscribe (v) -> ls obs.id, v if obs.id?
+			obs.subscribe (v) ->
+				if obs.id?
+					v = "\"#{v}\"" if spec.type == 'string'
+					ls obs.id, v
 		obs
 
 	makeArrayObserver = (spec, init, wrap) ->
@@ -123,7 +128,7 @@ handlers = {
 		for arg in args
 			addition += arg.sync.id + ','
 
-		ls id, "[#{if val[0] then addition[...-1] else addition + val}]"
+		ls id, "[#{if val[0] then addition + val else addition[...-1]}]"
 
 		return
 
@@ -174,7 +179,7 @@ handlers = {
 
 	'remove:after' : (arr, id, args, res) ->
 		do wrapper.sync.leaveStorage for wrapper in res
-		refreshFromWrap arr
+		refreshFromWrap arr, id
 		return
 
 	'removeAll:after' : (arr, id, args, res) ->

@@ -18,7 +18,7 @@ ls = (key, value) ->
 			val ? $.getItem(key)
 	
 	# Setter
-	value = String value
+	value = String value if value isnt commandRemove
 	if key of waiters
 		waiters[key] = value
 		return
