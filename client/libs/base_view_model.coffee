@@ -22,6 +22,8 @@ class BaseViewModel
 		for key, val of hash
 			@::["#{key}#computed"] = val
 
+		return
+
 	navigate : router.navigate
 	@route = (tmpl, cb) ->
 		if typeof tmpl is 'object'
@@ -33,17 +35,22 @@ class BaseViewModel
 			else
 				@::[key] = [cb]
 
+		return
+
 	anonNum = 0
-	@delegate = (event, sel) ->
+	@delegate = (event, sel = '') ->
 		sel = "#{@::viewRoot} #{sel}"
 		return (hashOrFn) =>
 			if typeof hashOrFn is 'function'
-				hashOrFn = {}
-				hashOrFn["__anon#{anonNum++}"] = hashOrFn
+				hash = {}
+				hash["__anon#{anonNum++}"] = hashOrFn
+				hashOrFn = hash
 
 			for key, val of hashOrFn
 				@::[key] = val
 
 				delegator.delegate event, sel, @, key
+
+			return
 
 module.exports = BaseViewModel
