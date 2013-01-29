@@ -41,6 +41,10 @@
 		"number"       : "#",
 		"title"        : "Title",
 		"lastModified" : "Last modified",
-		"newDiagram"   : "Add new diagram"
+		"newDiagram"   : "Add new diagram",
+		"closeButton"  : "close",
+		"removeButton" : "remove",
+		"editButton"   : "edit",
+		"renameButton" : "rename"
 	}
 }

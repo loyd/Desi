@@ -86,10 +86,6 @@
 }
 
 #lookup {
-	.btn-rm-diagram {
-		display : none;
-	}
-
 	.btn-new-diagram {
 		display : block;
 		margin  : auto;
@@ -97,25 +93,33 @@
 
 	td {
 		vertical-align : middle;
-	}
 
-	td input {
-		margin : 0;
-	}
+		input {
+			margin : 0;
+		}
 
-	td:first-child {
-		width : 1px;
-	}
+		&.number {
+			width : 1px;
+		}
 
-	td:nth-child(3) {
-		width : 130px;
-	}
+		&.modified {
+			width : 130px;
+		}
 
-	td:last-child {
-		width : 12px;
-	}
+		&.control {
+			.control-inner {
+				display : none;
+			}
 
-	tr:hover .btn-rm-diagram {
-		display : inline;
+			width : 200px;
+		}
+	}
+	
+	tr.active {
+		font-weight : bold;
+
+		.control-inner {
+			display : block;
+		}
 	}
 }

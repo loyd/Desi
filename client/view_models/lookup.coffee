@@ -1,6 +1,6 @@
-BaseViewModel = require 'libs/base_view_model'
-Synchronizer  = require 'libs/synchronizer'
-ko            = require 'ko'
+BaseViewModel         = require 'libs/base_view_model'
+Synchronizer          = require 'libs/synchronizer'
+ko                    = require 'ko'
 
 class LookupViewModel extends BaseViewModel
 	sectionTmpl : 'lookup-tmpl'
@@ -19,7 +19,7 @@ class LookupViewModel extends BaseViewModel
 		diag.lastModifiedInMs +date + date.getTimezoneOffset() * 1000
 		@diagrams.push diag
 
-	@delegate('click', '.btn-rm-diagram') \
+	@delegate('click', '.btn-remove-diagram') \
 	rmDiagram : (diagram) ->
 		@diagrams.remove diagram
 
@@ -30,13 +30,29 @@ class DiagramItemViewModel extends BaseViewModel
 		@title            = sync.observer 'title'
 		@lastModifiedInMs = sync.observer 'lastModified'
 
-		@editing = ko.observable no
+		@renaming = ko.observable no
+		@isOpen   = ko.observable no
+		@isActive = ko.observable no
 
 		super
 
-	@delegate('click', '.title') \
-	editTitle : ->
-		@editing yes
+	@delegate('click', '.btn-edit-diagram') \
+	open : ->
+		@isOpen yes
+		@navigate "edit/#{@title}"
+
+	@delegate('click', '.btn-close-diagram') \
+	close : ->
+		@isOpen no
+
+	oldActived = null
+	@delegate('click') ->
+		oldActived?.isActive no
+		oldActived = this
+		@isActive yes
+
+	@delegate('click', '.btn-rename-diagram') ->
+		@renaming yes
 
 	@computed \
 	lastModified : ->

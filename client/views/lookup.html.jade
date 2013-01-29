@@ -2,20 +2,32 @@ table.table.table-striped
 	thead: tr(data-bind="with: $root.locale().lookup")
 		th(data-bind="text: number")
 		th(data-bind="text: title")
+		th
 		th(data-bind="text: lastModified")
 	tbody(data-bind="foreach: diagrams")
-		tr.diagram-item
-			td(data-bind="text: $index() + 1")
+		tr.diagram-item(data-bind="css: { open: isOpen, active : isActive }")
+			td.number(data-bind="text: $index() + 1")
 			td.title
-				span(data-bind="text: title, visible: !editing()")
+				span(data-bind="text: title, visible: !renaming()")
 				input(type="text", data-bind="\
 					value: title,\
-					visible: editing,\
-					hasfocus: editing\
+					visible: renaming,\
+					hasfocus: renaming\
 				")
 
-			td(data-bind="text: lastModified")
-			td: button.close.btn-rm-diagram &times;
+			td.control: .control-inner
+				button.btn.btn-rename-diagram(data-bind="\
+					text: $root.locale().lookup.renameButton")
+				button.btn.btn-close-diagram(data-bind="\
+					visible: isOpen,\
+					text: $root.locale().lookup.closeButton")
+				button.btn.btn-remove-diagram(data-bind="\
+					visible: !isOpen(),\
+					text: $root.locale().lookup.removeButton")
+				button.btn.btn-edit-diagram(data-bind="\
+					text: $root.locale().lookup.editButton")
+
+			td.modified(data-bind="text: lastModified")
 
 button.btn.btn-new-diagram(data-bind="\
 	click: newDiagram,\
