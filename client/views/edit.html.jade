@@ -1,0 +1,10 @@
+.tabbable.below
+	.tab-content(data-bind="foreach: diagrams")
+		svg(data-bind="\
+			visible: $parent.activeDiagram() === $data,\
+			bindElement: element\
+		")
+
+	.nav.nav-tabs(data-bind="foreach: diagrams")
+		li(data-bind="css: { 'active': $parent.activeDiagram() === $data }")
+			a(data-bind="text: name, attr: { href: '#workspace/' + fullName() }")
