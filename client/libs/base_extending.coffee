@@ -143,7 +143,7 @@ Array::pairs = ->
 
 Array::scan = (fn) ->
 	for el, i in @ when (res = fn(el, i, @))
-		return res
+		return el
 	false
 
 Array::each = Array::forEach
