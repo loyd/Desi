@@ -41,30 +41,35 @@ body
 	// ko if: isAuthorized
 	#sidebar.closed(data-bind="css: { closed: sidebarIsClosed }")
 		ul.nav.nav-list
-			li(data-bind="css: { active: activeSection() === lookup }"): a
-				i.icon-globe
-				span(data-bind="text: locale().sidebar.lookup")
-			li(data-bind="css: { active: activeSection() === account }"): a
-				i.icon-user
-				span(data-bind="text: locale().sidebar.account")
-			li(data-bind="css: { active: activeSection() === share }"): a
-				i.icon-share
-				span(data-bind="text: locale().sidebar.share")
-			li(data-bind="css: { active: activeSection() === exportation }"): a
-				i.icon-upload
-				span(data-bind="text: locale().sidebar.exportation")
-			li(data-bind="css: { active: activeSection() === generation }"): a
-				i.icon-wrench
-				span(data-bind="text: locale().sidebar.generation")
+			li(data-bind="css: { active: sectionTemplate() === 'lookup' }")
+				a(href="#lookup")
+					i.icon-globe
+					span(data-bind="text: locale().sidebar.lookup")
+			li(data-bind="css: { active: sectionTemplate() === 'account' }")
+				a(href="#account")
+					i.icon-user
+					span(data-bind="text: locale().sidebar.account")
+			li(data-bind="css: { active: sectionTemplate() === 'share' }")
+				a(href="#share")
+					i.icon-share
+					span(data-bind="text: locale().sidebar.share")
+			li(data-bind="css: { active: sectionTemplate() === 'exportation' }")
+				a(href="#exportation")
+					i.icon-upload
+					span(data-bind="text: locale().sidebar.exportation")
+			li(data-bind="css: { active: sectionTemplate() === 'generation' }")
+				a(href="#generation")
+					i.icon-wrench
+					span(data-bind="text: locale().sidebar.generation")
 	// /ko
 
 	#main
 		// ko if: isAuthorized
-		#lookup(data-bind="section: lookup")
-		#area(data-bind="section: area")
+		#lookup(data-bind="section: 'lookup'")
+		#edit(data-bind="section: 'edit'")
 		// /ko
 
 		// ko ifnot: isAuthorized
-		#login(data-bind="section: login")
-		#signup(data-bind="section: signup")
+		#login(data-bind="section: 'login'")
+		#signup(data-bind="section: 'signup'")
 		// /ko

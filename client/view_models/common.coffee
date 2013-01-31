@@ -1,14 +1,11 @@
-ko              = require 'ko'
-ls              = require 'libs/local_storage'
-profileSpec     = require 'models/profile'
-Synchronizer    = require 'libs/synchronizer'
-defLocal        = require 'locales/en_US'
+ko               = require 'ko'
+ls               = require 'libs/local_storage'
+profileSpec      = require 'models/profile'
+Synchronizer     = require 'libs/synchronizer'
+defLocal         = require 'locales/en_US'
 
-BaseViewModel   = require 'libs/base_view_model'
-AreaViewModel   = require './area'
-LoginViewModel  = require './login'
-LookupViewModel = require './lookup'
-SignupViewModel = require './signup'
+BaseViewModel    = require 'libs/base_view_model'
+DiagramViewModel = require './class_diagram'
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->
@@ -19,19 +16,66 @@ class CommonViewModel extends BaseViewModel
 		if @isAuthorized()
 			do @authorize
 
-		@login  = new LoginViewModel
-		@signup = new SignupViewModel
-		
-		@activeSection = ko.observable null
+		@sectionTemplate = ko.observable null
+		@openDiagrams    = ko.observableArray()
+		@chosenDiagram   = ko.observable null
 
 		super
 	
-	authorize : ->
-		profileSync = new Synchronizer profileSpec, ls('profile')
-		diagramsSync = profileSync.concretize 'diagrams'
+	reqAuth = (propName) -> ->
+		@[propName] arguments... if @isAuthorized()
 
-		@area   = new AreaViewModel diagramsSync
-		@lookup = new LookupViewModel diagramsSync
+	@route {
+		''                     : 'toRoot'
+		'edit/:title'          : reqAuth 'openDiagram'
+		':section, :section/*' : (name) ->
+			@sectionTemplate "#{name}-tmpl"
+	}
+
+	openDiagram : (title) ->
+		res = @diagrams().scan (item) ->
+			item.title() == title
+
+		unless res
+			@navigate ''
+		else
+			unless res.isOpen()
+				do res.open
+				@openDiagrams.push res
+
+			@chosenDiagram res
+
+		return
+
+	closeDiagram : (title) ->
+		res = @openDiagrams.remove (item) ->
+			item.title() == title
+
+		do res[0].close if res.length
+
+		return
+
+	removeDiagram : (title) ->
+		@closeDiagram title
+		@diagrams.remove (item) ->
+			item.title() == title
+
+		return
+
+	createDiagram : ->
+		sync = new Synchronizer @diagramsSync.spec.item
+		diag = new DiagramItemViewModel sync
+		date = new Date
+		diag.lastModifiedInMs +date + date.getTimezoneOffset() * 1000
+		diag.title diag.title() + +date
+		@diagrams.push diag
+
+	authorize : ->
+		@profileSync = new Synchronizer profileSpec, ls('profile')
+		@diagramsSync = @profileSync.concretize 'diagrams'
+
+		@diagrams = @diagramsSync.observer
+			classAdapter : DiagramItemViewModel
 		
 		@account = null
 		@generation = null
@@ -39,8 +83,6 @@ class CommonViewModel extends BaseViewModel
 		@share = null
 
 	deauthorize : ->
-		@area   = null
-		@lookup = null
 
 	toggleSidebar : =>
 		val = @sidebarIsClosed()
@@ -49,12 +91,49 @@ class CommonViewModel extends BaseViewModel
 	toRoot : ->
 		@navigate(if @isAuthorized() then 'lookup' else 'login')
 
-	toSection : (name) ->
-		@activeSection this[name]
+	@delegate('click', '#lookup .btn-create-diagram') ->
+		do @createDiagram
 
-	@route {
-		''                     : 'toRoot'
-		':section, :section/*' : 'toSection'
-	}
+	@delegate('click', '#lookup .btn-remove-diagram') (item) ->
+		@removeDiagram item.title()
+
+	@delegate('click', '#lookup .btn-edit-diagram') (item) ->
+		@navigate "edit/#{item.title()}"
+
+	@delegate('click', '#lookup .btn-close-diagram') (item) ->
+		@closeDiagram item.title()
+
+	@delegate('click', '#lookup .btn-rename-diagram') (item) ->
+		item.renaming yes
+
+	oldActived = null
+	@delegate('click', '#lookup .diagram-item') (item) ->
+		oldActived?.isActive no
+		oldActived = item
+		item.isActive yes
+
+class DiagramItemViewModel extends BaseViewModel
+	constructor : (@sync) ->
+		@title            = sync.observer 'title'
+		@lastModifiedInMs = sync.observer 'lastModified'
+
+		@renaming = ko.observable no
+		@isOpen   = ko.observable no
+		@isActive = ko.observable no
+
+		super
+
+	open : ->
+		@data = new DiagramViewModel @sync
+		@isOpen yes
+
+	close : ->
+		@data = null
+		@isOpen no
+
+	@computed \
+	lastModified : ->
+		d = new Date(@lastModifiedInMs() - new Date().getTimezoneOffset() * 1000)
+		"#{d.toLocaleDateString()} #{d.toLocaleTimeString()}"
 
 module.exports = CommonViewModel

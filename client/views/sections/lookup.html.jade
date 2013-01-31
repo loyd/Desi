@@ -1,5 +1,5 @@
 table.table.table-striped
-	thead: tr(data-bind="with: $root.locale().lookup")
+	thead: tr(data-bind="with: locale().lookup")
 		th(data-bind="text: number")
 		th(data-bind="text: title")
 		th
@@ -29,7 +29,4 @@ table.table.table-striped
 
 			td.modified(data-bind="text: lastModified")
 
-button.btn.btn-new-diagram(data-bind="\
-	click: newDiagram,\
-	text: $root.locale().lookup.newDiagram\
-")
+button.btn.btn-create-diagram(data-bind="text: locale().lookup.createDiagram")

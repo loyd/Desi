@@ -1,19 +1,9 @@
-form.form-horizontal(data-bind="with: $root.locale().signup")
-
-	.control-group
-		label.control-label(for="input-login", data-bind="text: login")
-		.controls: input(type="text", id="input-login",
-			data-bind="attr: { placeholder: loginHolder }")
+form.form-horizontal(data-bind="with: locale().login")
 
 	.control-group
 		label.control-label(for="input-email", data-bind="text: email")
 		.controls: input(type="text", id="input-email",
 			data-bind="attr: { placeholder: emailHolder }")
-
-	.control-group
-		label.control-label(for="input-password", data-bind="text: password")
-		.controls: input(type="password", id="input-password",
-			data-bind="attr: { placeholder: passwordHolder }")
 
 	.control-group
 		label.control-label(for="input-password", data-bind="text: password")

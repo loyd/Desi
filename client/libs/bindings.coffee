@@ -6,14 +6,17 @@ register = (name, allowVirtual, cnf) ->
 
 register 'section', yes, do ->
 	tmplBinding = ko.bindingHandlers['template']
+	vsblBinding = ko.bindingHandlers['visible']
 
 	wrap = (what) -> ->
-		section   = ko.utils.unwrapObservable arguments[1]()
-		viewModel = arguments[3]
+		sectionName = ko.utils.unwrapObservable(arguments[1]()) + '-tmpl'
+		viewModel   = arguments[3]
 		arguments[1] = ->
-			name : section.sectionTmpl
-			data : section
-			if   : viewModel.activeSection() == section
+			name : sectionName
+			data : viewModel
+
+		vsblBinding.update arguments[0], ->
+			sectionName == viewModel.sectionTemplate()
 		
 		what.apply this, arguments
 
