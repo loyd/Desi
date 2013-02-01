@@ -43,6 +43,5 @@ register 'translateX', no, {
 
 register 'bindElement', no, {
 	init : (elem, accs) ->
-		value = ko.utils.unwrapObservable accs()
-		value element
+		accs() elem
 }
