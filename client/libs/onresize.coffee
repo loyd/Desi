@@ -4,8 +4,8 @@ cache = []
 
 makeIframe = (parent, handlers) ->
 	iframe = document.createElement 'iframe'
-	iframe.style.position = 'absolute'
-	iframe.style.zIndex = -1
+	iframe.style.position   = 'absolute'
+	iframe.style.visibility = 'hidden'
 	iframe.width  = '100%'
 	iframe.height = '100%'
 	

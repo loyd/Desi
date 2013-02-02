@@ -1,22 +1,63 @@
 BaseViewModel = require 'libs/base_view_model'
 countTextSize = require 'libs/count_text_size'
+onresize      = require 'libs/onresize'
 Synchronizer  = require 'libs/synchronizer'
 ko            = require 'ko'
 
 class ClassDiagramViewModel extends BaseViewModel
 	viewRoot : '.class-diagram'
 
+	SCALE_DIFF = 0.3
+
 	constructor : (@sync) ->
-		@shiftY = ko.observable 0
-		@shiftX = ko.observable 0
-		
 		@essentials = sync.observer 'essentials',
 			classAdapter : EssentialViewModel
 
 		@relationships = sync.observer 'relationships',
 			classAdapter : RelationshipViewModel
 
+		@originX     = ko.observable 0
+		@originY     = ko.observable 0
+		@width       = ko.observable 0
+		@height      = ko.observable 0
+		@scaleFactor = ko.observable 1
+		@element     = ko.observable null
+
+		@editing = no
+
+		onresize '#main', =>
+			do @refreshSizes if @editing
+
 		super
+
+	refreshSizes : ->
+		style = getComputedStyle(@element(), null)
+
+		@width  parseInt style.width, 10
+		@height parseInt style.height, 10
+
+	startEditing : ->
+		@editing = yes
+		do @refreshSizes
+
+	stopEditing : ->
+		@editing = no
+
+	@computed \
+	viewBox : ->
+		scaleFactor = @scaleFactor()
+		uuWidth  = @width()  / scaleFactor
+		uuHeight = @height() / scaleFactor
+		"#{@originX()} #{@originY()} #{uuWidth} #{uuHeight}"
+
+	shift : (x, y) ->
+		scaleFactor = @scaleFactor()
+		@originX @originX() - x / scaleFactor
+		@originY @originY() - y / scaleFactor
+
+	scale : (sign) ->
+		newFactor = @scaleFactor() + SCALE_DIFF * sign
+		@scaleFactor newFactor if newFactor > 0
 
 	@delegate('click') (t, event) ->
 		{left, top} = @element().getBoundingClientRect()
