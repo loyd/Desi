@@ -147,3 +147,8 @@ Array::scan = (fn) ->
 	false
 
 Array::each = Array::forEach
+
+#### Functions
+
+Function::defer = (time = 0) ->
+	setTimeout this, time
