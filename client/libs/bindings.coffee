@@ -4,12 +4,14 @@ register = (name, allowVirtual, cnf) ->
 	ko.bindingHandlers[name] = cnf
 	ko.virtualElements.allowedBindings[name] = true if allowVirtual
 
+unwrap = ko.utils.unwrapObservable
+
 register 'section', yes, do ->
 	tmplBinding = ko.bindingHandlers['template']
 	vsblBinding = ko.bindingHandlers['visible']
 
 	wrap = (what) -> ->
-		sectionName = ko.utils.unwrapObservable(arguments[1]()) + '-tmpl'
+		sectionName = unwrap(arguments[1]()) + '-tmpl'
 		viewModel   = arguments[3]
 		arguments[1] = ->
 			name : sectionName
@@ -25,20 +27,22 @@ register 'section', yes, do ->
 
 register 'translate', no, {
 	update : (elem, accs) ->
-		value = ko.utils.unwrapObservable accs()
-		elem.setAttribute 'transform', "translate:(#{value.x}, #{value.y})"
+		value = unwrap accs()
+		x     = unwrap value.x
+		y     = unwrap value.y
+		elem.setAttribute 'transform', "translate(#{x}, #{y})"
 }
 
 register 'translateY', no, {
 	update : (elem, accs) ->
-		value = ko.utils.unwrapObservable accs()
-		elem.setAttribute 'transform', "translate:(0, #{value})"
+		value = unwrap accs()
+		elem.setAttribute 'transform', "translate(0, #{value})"
 }
 
 register 'translateX', no, {
 	update : (elem, accs) ->
-		value = ko.utils.unwrapObservable accs()
-		elem.setAttribute 'transform', "translate:(#{value}, 0)"
+		value = unwrap accs()
+		elem.setAttribute 'transform', "translate(#{value}, 0)"
 }
 
 register 'bindElement', no, {
