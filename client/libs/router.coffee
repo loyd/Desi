@@ -19,24 +19,31 @@ class Router
 	onchange : =>
 		newHashValue = location.hash[1..]
 		return if @currentHash == newHashValue
+
+		@tmplsTree.each (tmpl) =>
+			tmpl.apply @currentHash, newHashValue
+
 		@currentHash = newHashValue
 
-		@tmplsTree.each (tmpl) -> tmpl.apply newHashValue
-
-	listen : (tmplStr, cb) =>
+	listen : (tmplStr, cbIn, cbOut) =>
 		if tmplStr not of @tmplsCache
 			tmpl = new Tmpl tmplStr
 			@tmplsTree.insert tmpl
 			@tmplsCache[tmplStr] = tmpl
 
-		(tmpl || @tmplsCache[tmplStr]).addCallback cb
+		tmpl ?= @tmplsCache[tmplStr]
 
-	forget : (tmplStr, cb) =>
+		tmpl.addCallbackIn cbIn if cbIn
+		tmpl.addCallbackOut cbOut if cbOut
+
+	forget : (tmplStr, cbIn, cbOut) =>
+		tmpl = @tmplsCache[tmplsStr]
 		if arguments.length == 1
-			@tmpl.remove @tmplsCache[tmplsStr]
+			@tmpl.remove tmpl
 			delete @tmplsCache[tmplsStr]
-		else
-			@tmplsCache[tmplStr]?.rmCallback cb
+		else if tmpl?
+			tmpl.rmCallbackIn cbIn if cbIn
+			tmpl.rmCallbackOut cbOut if cbOut
 
 	navigate : (urlHash) =>
 		location.hash = '#' + urlHash
@@ -51,7 +58,8 @@ class Tmpl
 		else +(one.priority > two.priority) || -1
 
 	constructor : (@str) ->
-		@stack = []
+		@stackIn  = []
+		@stackOut = []
 
 		do @countPriority
 		do @makeRegExp
@@ -94,19 +102,28 @@ class Tmpl
 
 		@regExp = new RegExp "^#{regParts.join('/')}$"
 
-	addCallback : (fn) ->
-		@stack.push fn
+	addCallbackIn : (cbIn) ->
+		@stackIn.push cbIn
 
-	rmCallback : (fn) ->
-		if ~(index = @stack.indexOf fn)
-			@stack.splice index, 1
+	addCallbackOut : (cbOut) ->
+		@stackOut.push cbOut
 
-	apply : (str) ->
-		res = str.match @regExp
-		return unless res
+	rmCallbackIn : (cb) ->
+		if ~(index = @stackIn.indexOf cb)
+			@stackIn.splice index, 1
 
-		do res.shift
-		cb res... for cb in @stack
+	rmCallbackOut : (cb) ->
+		if ~(index = @stackOut.indexOf cb)
+			@stackOut.splice index, 1
+
+	apply : (strOut, strIn) ->
+		if resOut = strOut?.match @regExp
+			do resOut.shift
+			cbOut resOut... for cbOut in @stackOut
+
+		if resIn = strIn?.match @regExp
+			do resIn.shift
+			cbIn resIn... for cbIn in @stackIn
 
 		return
 

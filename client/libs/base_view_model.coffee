@@ -4,6 +4,12 @@ delegator = new (require './delegator')
 
 class BaseViewModel
 
+	bindMethod : (fnOrName) ->
+		if typeof fnOrName == 'string'
+			this[fnOrName].bind this
+		else
+			fnOrName.bind this
+
 	constructor : (@sync) ->
 		@spec = sync?.spec
 
@@ -15,8 +21,11 @@ class BaseViewModel
 					@[key] = ko.computed propVal, this
 				when 'hashHandler'
 					for val in propVal
-						val = this[val] if typeof val is 'string'
-						router.listen key, val.bind this
+						if typeof val is 'object'
+							router.listen key,
+								@bindMethod(val.in), @bindMethod(val.out)
+						else
+							router.listen key, @bindMethod(val)
 
 	@computed = (hash) ->
 		for key, val of hash
