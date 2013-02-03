@@ -26,8 +26,13 @@ class CommonViewModel extends BaseViewModel
 		@[propName] arguments... if @isAuthorized()
 
 	@route {
-		''                     : 'toRoot'
-		'edit/:title'          : reqAuth 'openDiagram'
+		''            : 'toRoot'
+		'edit/:title' : {
+			in : reqAuth 'openDiagram'
+			out : ->
+				do @chosenDiagram().data.stopEditing
+				@chosenDiagram null
+		}
 		':section, :section/*' : (name) ->
 			@sectionTemplate "#{name}-tmpl"
 	}
@@ -43,7 +48,9 @@ class CommonViewModel extends BaseViewModel
 				do res.open
 				@openDiagrams.push res
 
+			@chosenDiagram()?.data.stopEditing()
 			@chosenDiagram res
+			do res.data.startEditing
 
 		return
 

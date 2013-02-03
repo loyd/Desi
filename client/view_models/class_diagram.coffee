@@ -38,7 +38,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	startEditing : ->
 		@editing = yes
-		do @refreshSizes
+		(=> do @refreshSizes).defer()
 
 	stopEditing : ->
 		@editing = no
