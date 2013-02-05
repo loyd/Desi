@@ -8,11 +8,11 @@ table.table.table-striped
 		tr.diagram-item(data-bind="css: { open: isOpen, active : isActive }")
 			td.number(data-bind="text: $index() + 1")
 			td.title
-				span(data-bind="text: title, visible: !renaming()")
+				span(data-bind="text: title, visible: !isRenamed()")
 				input(type="text", data-bind="\
 					value: title,\
-					visible: renaming,\
-					hasfocus: renaming\
+					visible: isRenamed,\
+					hasfocus: isRenamed\
 				")
 
 			td.control: .control-inner

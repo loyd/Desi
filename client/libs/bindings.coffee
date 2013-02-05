@@ -49,3 +49,20 @@ register 'bindElement', no, {
 	init : (elem, accs) ->
 		accs() elem
 }
+
+register 'svgcss', no, {
+	update : (elem, accs) ->
+		classes = " #{elem.getAttribute('class') || ''} "
+
+		for className, flagAccs of unwrap(accs())
+			flag  = unwrap flagAccs()
+			index = classes.indexOf(" #{className} ")
+
+			continue if flag == Boolean(~index)
+			if flag
+				classes += "#{className} "
+			else
+				classes = classes.replace " #{className} ", ' '
+
+		elem.setAttribute 'class', classes.trim()
+}

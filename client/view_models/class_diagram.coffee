@@ -23,10 +23,10 @@ class ClassDiagramViewModel extends BaseViewModel
 		@scaleFactor = ko.observable 2
 		@element     = ko.observable null
 
-		@editing = no
+		@isEdited = no
 
 		onresize '#main', =>
-			do @refreshSizes if @editing
+			do @refreshSizes if @isEdited
 
 		super
 
@@ -37,11 +37,11 @@ class ClassDiagramViewModel extends BaseViewModel
 		@height parseInt style.height, 10
 
 	startEditing : ->
-		@editing = yes
+		@isEdited = yes
 		(=> do @refreshSizes).defer()
 
 	stopEditing : ->
-		@editing = no
+		@isEdited = no
 
 	@computed \
 	viewBox : ->
@@ -67,7 +67,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		y = @originY() + (event.clientY - top)  / scaleFactor
 		@addEssential x, y
 
-	@delegate('mousedown', '.essential') ({posX, posY}, event) ->
+	@delegate('mousedown', '.essential') (ess, event) ->
+		ess.isMoved yes
+		{posX, posY} = ess
 		prevX = event.clientX
 		prevY = event.clientY
 
@@ -78,11 +80,14 @@ class ClassDiagramViewModel extends BaseViewModel
 			prevX = e.clientX
 			prevY = e.clientY
 			do e.stopPropagation
+			do e.preventDefault
 
 		mouseUp = (e) ->
 			document.removeEventListener 'mousemove', mouseMove, on
 			document.removeEventListener 'mouseup', mouseUp, on
+			ess.isMoved no
 			do e.stopPropagation
+			do e.preventDefault
 
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
@@ -113,6 +118,8 @@ class EssentialViewModel extends BaseViewModel
 		@operations = sync.observer 'operations',
 			classAdapter : OperationViewModel
 		@operations.subscribe => @placeOperations
+
+		@isMoved = ko.observable no
 
 		super
 

@@ -111,7 +111,7 @@ class CommonViewModel extends BaseViewModel
 		@closeDiagram item.title()
 
 	@delegate('click', '#lookup .btn-rename-diagram') (item) ->
-		item.renaming yes
+		item.isRenamed yes
 
 	oldActived = null
 	@delegate('click', '#lookup .diagram-item') (item) ->
@@ -124,9 +124,9 @@ class DiagramItemViewModel extends BaseViewModel
 		@title            = sync.observer 'title'
 		@lastModifiedInMs = sync.observer 'lastModified'
 
-		@renaming = ko.observable no
-		@isOpen   = ko.observable no
-		@isActive = ko.observable no
+		@isRenamed = ko.observable no
+		@isOpen    = ko.observable no
+		@isActive  = ko.observable no
 
 		super
 
