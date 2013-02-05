@@ -28,7 +28,9 @@ class CommonViewModel extends BaseViewModel
 	@route {
 		''            : 'toRoot'
 		'edit/:title' : {
-			in : reqAuth 'openDiagram'
+			in : (title) ->
+				@openDiagram title
+				do @toggleSidebar unless @sidebarIsClosed()
 			out : ->
 				do @chosenDiagram().data.stopEditing
 				@chosenDiagram null
