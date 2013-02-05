@@ -23,10 +23,11 @@ class ClassDiagramViewModel extends BaseViewModel
 		@scaleFactor = ko.observable 2
 		@element     = ko.observable null
 
-		@isEdited = no
+		@isChosen = no
+		@isMoved  = no
 
 		onresize '#main', =>
-			do @refreshSizes if @isEdited
+			do @refreshSizes if @isChosen
 
 		super
 
@@ -37,11 +38,11 @@ class ClassDiagramViewModel extends BaseViewModel
 		@height parseInt style.height, 10
 
 	startEditing : ->
-		@isEdited = yes
+		@isChosen = yes
 		(=> do @refreshSizes).defer()
 
 	stopEditing : ->
-		@isEdited = no
+		@isChosen = no
 
 	@computed \
 	viewBox : ->
@@ -49,6 +50,16 @@ class ClassDiagramViewModel extends BaseViewModel
 		uuWidth  = @width()  / scaleFactor
 		uuHeight = @height() / scaleFactor
 		"#{@originX()} #{@originY()} #{uuWidth} #{uuHeight}"
+
+	@computed \
+	bgSize : ->
+		value = 5 * @scaleFactor()
+		"#{value}mm #{value}mm"
+
+	@computed \
+	bgPosition : ->
+		scaleFactor = @scaleFactor()
+		"#{-@originX() * scaleFactor} #{-@originY() * scaleFactor}"
 
 	shift : (x, y) ->
 		scaleFactor = @scaleFactor()
@@ -61,36 +72,83 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	@delegate('click') (el, event) ->
 		return unless event.target is @element()
+		if @isMoved
+			@isMoved = no
+			return
+
 		{left, top} = @element().getBoundingClientRect()
 		scaleFactor = @scaleFactor()
 		x = @originX() + (event.clientX - left) / scaleFactor
 		y = @originY() + (event.clientY - top)  / scaleFactor
 		@addEssential x, y
 
+	@delegate('mousedown') (el, event) ->
+		return if event.target isnt @element()
+		{originX, originY} = this
+		prevX = event.clientX
+		prevY = event.clientY
+
+		mouseMove = (e) =>
+			@shift(e.clientX - prevX, e.clientY - prevY)
+			prevX    = e.clientX
+			prevY    = e.clientY
+			@isMoved = yes
+
+		mouseUp = (e) =>
+			document.removeEventListener 'mousemove', mouseMove, on
+			document.removeEventListener 'mouseup', mouseUp, on
+
+			if e.target isnt event.target
+				@isMoved = no
+
+		document.addEventListener 'mousemove', mouseMove, on
+		document.addEventListener 'mouseup', mouseUp, on
+
+		do event.preventDefault
+
+	@delegate('click', '.essential') (ess, event) ->
+		if ess.isMoved()
+			ess.isMoved no
+			return
+
+		do event.preventDefault
+
 	@delegate('mousedown', '.essential') (ess, event) ->
-		ess.isMoved yes
 		{posX, posY} = ess
 		prevX = event.clientX
 		prevY = event.clientY
 
 		mouseMove = (e) =>
+			ess.isMoved yes unless ess.isMoved()
 			scaleFactor = @scaleFactor()
 			posX posX() + (e.clientX - prevX) / scaleFactor
 			posY posY() + (e.clientY - prevY) / scaleFactor
 			prevX = e.clientX
 			prevY = e.clientY
-			do e.stopPropagation
-			do e.preventDefault
 
-		mouseUp = (e) ->
+		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
 			document.removeEventListener 'mouseup', mouseUp, on
-			ess.isMoved no
-			do e.stopPropagation
-			do e.preventDefault
+
+			if e.target isnt event.target
+				ess.isMoved no
 
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
+
+		do event.preventDefault
+
+	nameWheelEvent = ['wheel', 'mousewheel'].scan((name) ->
+		('on' + name) of document) || 'MozMousePixelScroll'
+
+	@delegate(nameWheelEvent) (el, event) ->
+		sign = (event.deltaY || event.detail || event.wheelDelta).sign()
+		
+		oldScaleFactor = @scaleFactor()
+		@scale sign
+		relFactor = 1 - @scaleFactor() / oldScaleFactor
+
+		@shift event.clientX * relFactor, event.clientY * relFactor
 
 		do event.preventDefault
 

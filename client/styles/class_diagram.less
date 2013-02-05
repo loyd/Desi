@@ -8,6 +8,12 @@
 	background-color  : white;
 
 	.essential {
+		cursor : default;
+		
+		text {
+			cursor : inherit;
+		}
+
 		.border {
 			fill   : white;
 			stroke : black;
@@ -22,6 +28,7 @@
 
 		&.moved {
 			opacity : 0.4;
+			cursor  : move;
 		}
 	}
 }

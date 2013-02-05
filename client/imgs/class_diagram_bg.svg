@@ -6,7 +6,7 @@
 	xmlns:ev="http://www.w3.org/2001/xml-events">
 
 	<rect
-		x="0" y="0" width="5mm" height="5mm"
-		fill="none" stroke="gray" stroke-width="0.2mm" />
+		x="0" y="0" width="100%" height="100%"
+		fill="none" stroke="black" stroke-width="1%" />
 
 </svg>
