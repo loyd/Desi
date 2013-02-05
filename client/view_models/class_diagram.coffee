@@ -20,7 +20,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		@originY     = ko.observable 0
 		@width       = ko.observable 0
 		@height      = ko.observable 0
-		@scaleFactor = ko.observable 1
+		@scaleFactor = ko.observable 2
 		@element     = ko.observable null
 
 		@editing = no
@@ -59,23 +59,42 @@ class ClassDiagramViewModel extends BaseViewModel
 		newFactor = @scaleFactor() + SCALE_DIFF * sign
 		@scaleFactor newFactor if newFactor > 0
 
-	@delegate('click') (t, event) ->
+	@delegate('click') (el, event) ->
+		return unless event.target is @element()
 		{left, top} = @element().getBoundingClientRect()
-		x = event.clientX - left
-		y = event.clientY - top
+		scaleFactor = @scaleFactor()
+		x = @originX() + (event.clientX - left) / scaleFactor
+		y = @originY() + (event.clientY - top)  / scaleFactor
 		@addEssential x, y
 
+	@delegate('mousedown', '.essential') (ess, event) ->
+		moved = yes
+		prevX = event.clientX
+		prevY = event.clientY
+		scaleFactor = @scaleFactor()
+
+		mouseMove = (e) =>
+			@posX @pos() + (e.clientX - prevX) / scaleFactor
+			@posY @pos() + (e.clientY - prevY) / scaleFactor
+			prevX = e.clientX
+			prevY = e.clientY
+
+		@delegate('mousemove') mouseMove
+
+		@delegateOnce('mouseup') =>
+			@delegateOff('mousemove') mouseMove
+
 	addEssential : (x, y) ->
-		sync = new Synchronizer @spec.essentials.item
+		sync = new Synchronizer @spec.data.essentials.item
 		ess = new EssentialViewModel sync
-		ess.posX x
-		ess.poxY y
+		ess.posX x - ess.width() / 2
+		ess.posY y - ess.headerHeight() / 2
 		@essentials.push ess
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
 
-	MIN_HEADER_PADDING = 3
+	MIN_HEADER_PADDING = 10
 
 	constructor : (@sync) ->
 		@name = sync.observer 'name'
@@ -126,7 +145,7 @@ class EssentialViewModel extends BaseViewModel
 
 	# Header section
 	
-	haederHeight : ->
+	headerHeight : ->
 		MIN_HEADER_PADDING * 2 + countTextSize(@name()).height
 
 	@computed \
