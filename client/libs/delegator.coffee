@@ -24,7 +24,7 @@ class Delegator
 		return no
 
 	expandContext : (node, klass) ->
-		context  = ko.contextFor node
+		context  = ko.contextFor(node) || ko.contextFor(node.parentNode)
 		instance = context.$data
 		unless instance instanceof klass
 			for parent in context.$parents when parent instanceof klass
