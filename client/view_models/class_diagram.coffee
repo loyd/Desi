@@ -67,22 +67,27 @@ class ClassDiagramViewModel extends BaseViewModel
 		y = @originY() + (event.clientY - top)  / scaleFactor
 		@addEssential x, y
 
-	@delegate('mousedown', '.essential') (ess, event) ->
-		moved = yes
+	@delegate('mousedown', '.essential') ({posX, posY}, event) ->
 		prevX = event.clientX
 		prevY = event.clientY
-		scaleFactor = @scaleFactor()
 
 		mouseMove = (e) =>
-			@posX @pos() + (e.clientX - prevX) / scaleFactor
-			@posY @pos() + (e.clientY - prevY) / scaleFactor
+			scaleFactor = @scaleFactor()
+			posX posX() + (e.clientX - prevX) / scaleFactor
+			posY posY() + (e.clientY - prevY) / scaleFactor
 			prevX = e.clientX
 			prevY = e.clientY
+			do e.stopPropagation
 
-		@delegate('mousemove') mouseMove
+		mouseUp = (e) ->
+			document.removeEventListener 'mousemove', mouseMove, on
+			document.removeEventListener 'mouseup', mouseUp, on
+			do e.stopPropagation
 
-		@delegateOnce('mouseup') =>
-			@delegateOff('mousemove') mouseMove
+		document.addEventListener 'mousemove', mouseMove, on
+		document.addEventListener 'mouseup', mouseUp, on
+
+		do event.preventDefault
 
 	addEssential : (x, y) ->
 		sync = new Synchronizer @spec.data.essentials.item
