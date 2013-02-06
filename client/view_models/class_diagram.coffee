@@ -23,6 +23,8 @@ class ClassDiagramViewModel extends BaseViewModel
 		@scaleFactor = ko.observable 2
 		@element     = ko.observable null
 
+		@chosenEssential = ko.observable null
+
 		@isChosen = no
 		@isMoved  = no
 
@@ -43,6 +45,12 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	stopEditing : ->
 		@isChosen = no
+
+	chooseEssential : (ess) ->
+		@chosenEssential()?.isChosen no
+		@chosenEssential ess
+		if ess?
+			ess.isChosen yes
 
 	@computed \
 	viewBox : ->
@@ -74,6 +82,10 @@ class ClassDiagramViewModel extends BaseViewModel
 		return unless event.target is @element()
 		if @isMoved
 			@isMoved = no
+			return
+
+		if @chosenEssential()
+			@chooseEssential null
 			return
 
 		{left, top} = @element().getBoundingClientRect()
@@ -111,15 +123,24 @@ class ClassDiagramViewModel extends BaseViewModel
 			ess.isMoved no
 			return
 
+		@chooseEssential ess
+
 		do event.preventDefault
 
-	@delegate('mousedown', '.essential') (ess, event) ->
+	@delegate('mousedown', '.essential') \
+	essentialMouseDown : (ess, event) ->
+		wasChosen = ess.isChosen()
+		unless wasChosen
+			@chooseEssential null
+
 		{posX, posY} = ess
 		prevX = event.clientX
 		prevY = event.clientY
 
 		mouseMove = (e) =>
-			ess.isMoved yes unless ess.isMoved()
+			unless ess.isMoved()
+				ess.isMoved yes
+				@chooseEssential null
 			scaleFactor = @scaleFactor()
 			posX posX() + (e.clientX - prevX) / scaleFactor
 			posY posY() + (e.clientY - prevY) / scaleFactor
@@ -132,6 +153,9 @@ class ClassDiagramViewModel extends BaseViewModel
 
 			if e.target isnt event.target
 				ess.isMoved no
+
+			if wasChosen
+				@chooseEssential ess
 
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
@@ -159,6 +183,32 @@ class ClassDiagramViewModel extends BaseViewModel
 		ess.posY y - ess.headerHeight() / 2
 		@essentials.push ess
 
+	ifChosenEssential = (fn) -> ->
+		fn.apply this, arguments if @chosenEssential()
+
+	@computed \
+	controlPanelPosX : ifChosenEssential ->
+		(@chosenEssential().posX() - @originX()) * @scaleFactor()
+
+	@computed \
+	controlPanelPosY : ifChosenEssential ->
+		(@chosenEssential().posY() - @originY()) * @scaleFactor()
+
+	@computed \
+	controlPanelWidth : ifChosenEssential ->
+		@chosenEssential().width() * @scaleFactor()
+
+	@computed \
+	controlPanelHeight : ifChosenEssential ->
+		@chosenEssential().height() * @scaleFactor()
+
+	@delegate('click', '.btn-rm-essential') ->
+		@essentials.remove @chosenEssential()
+		@chooseEssential null
+
+	@delegate('mousedown', '.control-panel') (el, event) ->
+		@essentialMouseDown @chosenEssential(), event
+
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
 
@@ -177,7 +227,8 @@ class EssentialViewModel extends BaseViewModel
 			classAdapter : OperationViewModel
 		@operations.subscribe => @placeOperations
 
-		@isMoved = ko.observable no
+		@isMoved  = ko.observable no
+		@isChosen = ko.observable no
 
 		super
 

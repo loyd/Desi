@@ -1,16 +1,29 @@
 // ko foreach: openDiagrams
-// ko with: data
-svg.class-diagram(
-	data-bind="\
-		visible: $parent === $root.chosenDiagram(),\
-		attr: { viewBox: viewBox },\
-		bindElement: element,\
-		style: { backgroundPosition: bgPosition, backgroundSize: bgSize }\
-	",
-	width="100%", height="100%"
-)
-	// ko template: { name: 'essential-tmpl', foreach: essentials }
-	// /ko
+.class-diagram(data-bind="with: data")
+	svg(
+		data-bind="\
+			visible: $parent === $root.chosenDiagram(),\
+			attr: { viewBox: viewBox },\
+			bindElement: element,\
+			style: { backgroundPosition: bgPosition, backgroundSize: bgSize }\
+		",
+		width="100%", height="100%"
+	)
+		// ko template: { name: 'essential-tmpl', foreach: essentials }
+		// /ko
 
-// /ko
+	.control-panel(data-bind="\
+		visible: chosenEssential() != null,\
+		style: {\
+			left: controlPanelPosX() + 'px',\
+			top: controlPanelPosY() + 'px',\
+			width: controlPanelWidth() + 'px',\
+			height: controlPanelHeight() + 'px'\
+		}\
+	")
+		button.btn.btn-rm-essential: i.icon-remove
+		button.btn.btn-edit-essential: i.icon-edit
+		button.btn.btn-link-essential: i.icon-arrow-right
+		button.btn.btn-color-essential: i.icon-th
+
 // /ko

@@ -1,11 +1,18 @@
-.class-diagram {
-	width  : 100%;
-	height : 100%;
+@stroke-width   : 0.2mm;
+@btn-size       : 45px;
+@dist-to-vertex : @btn-size / 2;
 
-	background-clip   : border-box;
-	background-image  : url(../imgs/class_diagram_bg.svg);
-	background-repeat : repeat;
-	background-color  : white;
+.class-diagram {
+
+	svg {
+		width  : 100%;
+		height : 100%;
+
+		background-clip   : border-box;
+		background-image  : url(../imgs/class_diagram_bg.svg);
+		background-repeat : repeat;
+		background-color  : white;
+	}
 
 	.essential {
 		cursor : default;
@@ -17,6 +24,7 @@
 		.border {
 			fill   : white;
 			stroke : black;
+			stroke-width : @stroke-width;
 		}
 
 		.header {
@@ -29,6 +37,47 @@
 		&.moved {
 			opacity : 0.4;
 			cursor  : move;
+		}
+
+		&.chosen {
+			.border {
+				stroke-width : @stroke-width * 2;
+			}
+		}
+	}
+
+	.control-panel {
+		position : absolute;
+		background : none;
+
+		.btn {
+			border-radius : 50%;
+			position : absolute;
+			width    : @btn-size;
+			height   : @btn-size;
+			padding  : 0;
+		}
+
+		@diff : @dist-to-vertex - @btn-size;
+
+		.btn-rm-essential {
+			top  : @diff;
+			left : @diff;
+		}
+
+		.btn-edit-essential {
+			top   : @diff;
+			right : @diff;
+		}
+
+		.btn-color-essential {
+			bottom : @diff;
+			left   : @diff;
+		}
+
+		.btn-link-essential {
+			bottom  : @diff;
+			right   : @diff;
 		}
 	}
 }
