@@ -48,7 +48,10 @@ class BaseViewModel
 
 	anonNum = 0
 	@delegate = (event, sel = '') ->
-		sel = "#{[@::viewRoot]} #{sel}".trim()
+		if v = @::viewRoot?.trim()
+			sel = sel.split(',').map((part) -> "#{v} #{part}".trim()).join(', ')
+
+		sel = sel.trim()
 		return (hashOrFn) =>
 			if typeof hashOrFn is 'function'
 				hash = {}
