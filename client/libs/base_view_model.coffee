@@ -10,6 +10,8 @@ class BaseViewModel
 		else
 			fnOrName.bind this
 
+	oDefEval = { deferEvaluation : on }
+
 	constructor : (@sync) ->
 		@spec = sync?.spec
 
@@ -18,7 +20,7 @@ class BaseViewModel
 
 			switch postfix
 				when 'computed'
-					@[key] = ko.computed propVal, this
+					@[key] = ko.computed propVal, this, oDefEval
 				when 'hashHandler'
 					for val in propVal
 						if typeof val is 'object'
