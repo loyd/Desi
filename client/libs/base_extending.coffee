@@ -152,3 +152,5 @@ Array::each = Array::forEach
 
 Function::defer = (time = 0) ->
 	setTimeout this, time
+
+Function::empty = ->
