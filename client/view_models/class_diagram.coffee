@@ -22,8 +22,10 @@ class ClassDiagramViewModel extends BaseViewModel
 		@height      = ko.observable 0
 		@scaleFactor = ko.observable 2
 		@element     = ko.observable null
-
-		@chosenEssential = ko.observable null
+		
+		@chosenEssential     = ko.observable null
+		@openPopover         = ko.observable null
+		@colorPopoverElement = ko.observable null
 
 		@isChosen = no
 		@isMoved  = no
@@ -205,6 +207,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		@essentials.remove @chosenEssential()
 		@chooseEssential null
 
+	@delegate('click', '.btn-color-essential') ->
+		@openPopover 'color'
+
 	@delegate('mousedown', '.control-panel') (el, event) ->
 		@essentialMouseDown @chosenEssential(), event
 
@@ -216,6 +221,57 @@ class ClassDiagramViewModel extends BaseViewModel
 		@chooseEssential ess
 
 		do event.preventDefault
+
+	#### Color popover
+	
+	colorPopoverWidth : ->
+		@colorPopoverElement()?.getBoundingClientRect().width || 0
+
+	colorPopoverHeight : ->
+		style = getComputedStyle(@colorPopoverElement(), null)
+		if style
+			parseInt style.height + style.marginTop, 10
+		else 0
+
+	@computed \
+	colorPopoverPosition : ifChosenEssential ->
+		ess = @chosenEssential()
+		bottomPosY = (ess.posY() - @originY() + ess.height()) * @scaleFactor()
+		essBottom = @height() - bottomPosY
+
+		if essBottom > @colorPopoverHeight()
+			'bottom'
+		else
+			'top'
+
+	@computed \
+	colorPopoverPosX : ifChosenEssential ->
+		popoverWidth = @colorPopoverWidth()
+		ess = @chosenEssential()
+		essRealPosX = (ess.posX() - @originX()) * @scaleFactor()
+		posX = essRealPosX + (ess.width() * @scaleFactor() - popoverWidth) / 2
+		maxPosX = @width() - popoverWidth
+		
+		if 0 <= posX <= maxPosX
+			posX
+		else if maxPosX < posX
+			maxPosX
+		else 0
+
+	@computed \
+	colorPopoverPosY : ifChosenEssential ->
+		ess = @chosenEssential()
+		realPosY = (ess.posY() - @originY()) * @scaleFactor()
+		if @colorPopoverPosition() == 'top'
+			realPosY - @colorPopoverHeight()
+		else
+			realPosY + ess.height() * @scaleFactor()
+
+	@computed \
+	colorPopoverArrowPos : ifChosenEssential ->
+		ess  = @chosenEssential()
+		diff = ess.width() / 2 + (ess.posY() - @colorPopoverPosX())
+		diff / @colorPopoverWidth() * 100 | 0
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
@@ -237,6 +293,7 @@ class EssentialViewModel extends BaseViewModel
 
 		@isMoved  = ko.observable no
 		@isChosen = ko.observable no
+		@color    = ko.observable '#FFF'
 
 		super
 

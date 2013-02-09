@@ -27,4 +27,22 @@
 		button.btn.btn-color-essential: i.icon-th
 	// /ko
 
+	// ko if: openPopover() === 'color' && chosenEssential()
+	.color-popover.popover.fade(data-bind="\
+		bindElement: colorPopoverElement,\
+		css: {\
+			in: colorPopoverPosition() !== 'none',\
+			top: colorPopoverPosition() === 'top',\
+			bottom: colorPopoverPosition() === 'bottom'\
+		},\
+		style: {\
+			top: colorPopoverPosY() + 'px',\
+			left: colorPopoverPosX() + 'px'\
+		}\
+	")
+		.arrow(data-bind="left: colorPopoverArrowPos + '%'")
+		.popover-inner
+			.popover-content
+			div(style="height: 200px")
+	// /ko
 // /ko
