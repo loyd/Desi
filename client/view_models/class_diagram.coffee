@@ -46,37 +46,20 @@ class ClassDiagramViewModel extends BaseViewModel
 	stopEditing : ->
 		@isChosen = no
 
+	#### Adding essentials
+
+	addEssential : (x, y) ->
+		sync = new Synchronizer @spec.data.essentials.item
+		ess = new EssentialViewModel sync
+		ess.posX x - ess.width() / 2
+		ess.posY y - ess.headerHeight() / 2
+		@essentials.push ess
+
 	chooseEssential : (ess) ->
 		@chosenEssential()?.isChosen no
 		@chosenEssential ess
 		if ess?
 			ess.isChosen yes
-
-	@computed \
-	viewBox : ->
-		scaleFactor = @scaleFactor()
-		uuWidth  = @width()  / scaleFactor
-		uuHeight = @height() / scaleFactor
-		"#{@originX()} #{@originY()} #{uuWidth} #{uuHeight}"
-
-	@computed \
-	bgSize : ->
-		value = 5 * @scaleFactor()
-		"#{value}mm #{value}mm"
-
-	@computed \
-	bgPosition : ->
-		scaleFactor = @scaleFactor()
-		"#{-@originX() * scaleFactor} #{-@originY() * scaleFactor}"
-
-	shift : (x, y) ->
-		scaleFactor = @scaleFactor()
-		@originX @originX() - x / scaleFactor
-		@originY @originY() - y / scaleFactor
-
-	scale : (sign) ->
-		newFactor = @scaleFactor() + SCALE_DIFF * sign
-		@scaleFactor newFactor if newFactor > 0
 
 	@delegate('click') (el, event) ->
 		return unless event.target is @element()
@@ -94,38 +77,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		y = @originY() + (event.clientY - top)  / scaleFactor
 		@addEssential x, y
 
-	@delegate('mousedown') (el, event) ->
-		return if event.target isnt @element()
-		{originX, originY} = this
-		prevX = event.clientX
-		prevY = event.clientY
-
-		mouseMove = (e) =>
-			@shift(e.clientX - prevX, e.clientY - prevY)
-			prevX    = e.clientX
-			prevY    = e.clientY
-			@isMoved = yes
-
-		mouseUp = (e) =>
-			document.removeEventListener 'mousemove', mouseMove, on
-			document.removeEventListener 'mouseup', mouseUp, on
-
-			if e.target isnt event.target
-				@isMoved = no
-
-		document.addEventListener 'mousemove', mouseMove, on
-		document.addEventListener 'mouseup', mouseUp, on
-
-		do event.preventDefault
-
-	@delegate('click', '.essential') (ess, event) ->
-		if ess.isMoved()
-			ess.isMoved no
-			return
-
-		@chooseEssential ess
-
-		do event.preventDefault
+	#### Moving essential
 
 	@delegate('mousedown', '.essential') \
 	essentialMouseDown : (ess, event) ->
@@ -162,6 +114,34 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		do event.preventDefault
 
+	#### Scaling and shifting
+
+	shift : (x, y) ->
+		scaleFactor = @scaleFactor()
+		@originX @originX() - x / scaleFactor
+		@originY @originY() - y / scaleFactor
+
+	scale : (sign) ->
+		newFactor = @scaleFactor() + SCALE_DIFF * sign
+		@scaleFactor newFactor if newFactor > 0
+
+	@computed \
+	viewBox : ->
+		scaleFactor = @scaleFactor()
+		uuWidth  = @width()  / scaleFactor
+		uuHeight = @height() / scaleFactor
+		"#{@originX()} #{@originY()} #{uuWidth} #{uuHeight}"
+
+	@computed \
+	bgSize : ->
+		value = 5 * @scaleFactor()
+		"#{value}mm #{value}mm"
+
+	@computed \
+	bgPosition : ->
+		scaleFactor = @scaleFactor()
+		"#{-@originX() * scaleFactor} #{-@originY() * scaleFactor}"
+
 	nameWheelEvent = ['wheel', 'mousewheel'].scan((name) ->
 		('on' + name) of document) || 'MozMousePixelScroll'
 
@@ -176,12 +156,31 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		do event.preventDefault
 
-	addEssential : (x, y) ->
-		sync = new Synchronizer @spec.data.essentials.item
-		ess = new EssentialViewModel sync
-		ess.posX x - ess.width() / 2
-		ess.posY y - ess.headerHeight() / 2
-		@essentials.push ess
+	@delegate('mousedown') (el, event) ->
+		return if event.target isnt @element()
+		{originX, originY} = this
+		prevX = event.clientX
+		prevY = event.clientY
+
+		mouseMove = (e) =>
+			@shift(e.clientX - prevX, e.clientY - prevY)
+			prevX    = e.clientX
+			prevY    = e.clientY
+			@isMoved = yes
+
+		mouseUp = (e) =>
+			document.removeEventListener 'mousemove', mouseMove, on
+			document.removeEventListener 'mouseup', mouseUp, on
+
+			if e.target isnt event.target
+				@isMoved = no
+
+		document.addEventListener 'mousemove', mouseMove, on
+		document.addEventListener 'mouseup', mouseUp, on
+
+		do event.preventDefault
+
+	#### Control panel
 
 	ifChosenEssential = (fn) -> ->
 		fn.apply this, arguments if @chosenEssential()
@@ -208,6 +207,15 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	@delegate('mousedown', '.control-panel') (el, event) ->
 		@essentialMouseDown @chosenEssential(), event
+
+	@delegate('click', '.essential') (ess, event) ->
+		if ess.isMoved()
+			ess.isMoved no
+			return
+
+		@chooseEssential ess
+
+		do event.preventDefault
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
