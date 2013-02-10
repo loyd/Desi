@@ -12,13 +12,13 @@
 		// ko template: { name: 'essential-tmpl', foreach: essentials }
 		// /ko
 
-	// ko if: chosenEssential
-	.control-panel(data-bind="\
+	// ko if: openMenu() === 'control'
+	.control-menu(data-bind="\
 		style: {\
-			left: controlPanelPosX() + 'px',\
-			top: controlPanelPosY() + 'px',\
-			width: controlPanelWidth() + 'px',\
-			height: controlPanelHeight() + 'px'\
+			left: controlMenuPosX() + 'px',\
+			top: controlMenuPosY() + 'px',\
+			width: controlMenuWidth() + 'px',\
+			height: controlMenuHeight() + 'px'\
 		}\
 	")
 		button.btn.btn-rm-essential: i.icon-remove
@@ -27,20 +27,20 @@
 		button.btn.btn-color-essential: i.icon-th
 	// /ko
 
-	// ko if: openPopover() === 'color' && chosenEssential()
-	.color-popover.popover.fade(data-bind="\
-		bindElement: colorPopoverElement,\
+	// ko if: openMenu() === 'color'
+	.color-menu.popover.fade(data-bind="\
+		bindElement: colorMenuElement,\
 		css: {\
-			in: colorPopoverPosition() !== 'none',\
-			top: colorPopoverPosition() === 'top',\
-			bottom: colorPopoverPosition() === 'bottom'\
+			in: colorMenuPosition() !== 'none',\
+			top: colorMenuPosition() === 'top',\
+			bottom: colorMenuPosition() === 'bottom'\
 		},\
 		style: {\
-			top: colorPopoverPosY() + 'px',\
-			left: colorPopoverPosX() + 'px'\
+			top: colorMenuPosY() + 'px',\
+			left: colorMenuPosX() + 'px'\
 		}\
 	")
-		.arrow(data-bind="left: colorPopoverArrowPos + '%'")
+		.arrow(data-bind="left: colorMenuArrowPos + '%'")
 		.popover-inner
 			.popover-content
 			div(style="height: 200px")

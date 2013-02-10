@@ -22,10 +22,12 @@ class ClassDiagramViewModel extends BaseViewModel
 		@height      = ko.observable 0
 		@scaleFactor = ko.observable 2
 		@element     = ko.observable null
+
+		@openMenu = ko.observable null
 		
-		@chosenEssential     = ko.observable null
-		@openPopover         = ko.observable null
-		@colorPopoverElement = ko.observable null
+		@chosenEssential  = ko.observable null
+		@openPopover      = ko.observable null
+		@colorMenuElement = ko.observable null
 
 		@isChosen = no
 		@isMoved  = no
@@ -34,6 +36,15 @@ class ClassDiagramViewModel extends BaseViewModel
 			do @refreshSizes if @isChosen
 
 		super
+
+	calcExternSize : (size) ->
+		size * @scaleFactor()
+
+	calcExternPosX : (pos) ->
+		(pos - @originX()) * @scaleFactor()
+
+	calcExternPosY : (pos) ->
+		(pos - @originY()) * @scaleFactor()
 
 	refreshSizes : ->
 		style = getComputedStyle(@element(), null)
@@ -69,7 +80,8 @@ class ClassDiagramViewModel extends BaseViewModel
 			@isMoved = no
 			return
 
-		if @chosenEssential()
+		if @openMenu()
+			@openMenu null
 			@chooseEssential null
 			return
 
@@ -79,13 +91,15 @@ class ClassDiagramViewModel extends BaseViewModel
 		y = @originY() + (event.clientY - top)  / scaleFactor
 		@addEssential x, y
 
-	#### Moving essential
+	#### Clicking and moving essential
 
 	@delegate('mousedown', '.essential') \
 	essentialMouseDown : (ess, event) ->
-		wasChosen = ess.isChosen()
-		unless wasChosen
-			@chooseEssential null
+		if ess isnt @chosenEssential()
+			@chosenEssential ess
+			@openMenu 'control'
+
+		menuName = @openMenu() ? 'control'
 
 		{posX, posY} = ess
 		prevX = event.clientX
@@ -93,23 +107,23 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		mouseMove = (e) =>
 			unless ess.isMoved()
+				isClick = no
 				ess.isMoved yes
+				@openMenu null
 				@chooseEssential null
+
 			scaleFactor = @scaleFactor()
 			posX posX() + (e.clientX - prevX) / scaleFactor
 			posY posY() + (e.clientY - prevY) / scaleFactor
-			prevX = e.clientX
-			prevY = e.clientY
+			{clientX : prevX, clientY : prevY} = e
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
 			document.removeEventListener 'mouseup', mouseUp, on
 
-			if e.target isnt event.target
-				ess.isMoved no
-
-			if wasChosen
-				@chooseEssential ess
+			ess.isMoved no
+			@chosenEssential ess
+			@openMenu menuName
 
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
@@ -182,71 +196,67 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		do event.preventDefault
 
-	#### Control panel
+	#### Control menu
 
 	ifChosenEssential = (fn) -> ->
 		fn.apply this, arguments if @chosenEssential()
 
 	@computed \
-	controlPanelPosX : ifChosenEssential ->
-		(@chosenEssential().posX() - @originX()) * @scaleFactor()
+	controlMenuPosX : ->
+		if @openMenu() == 'control'
+			@calcExternPosX @chosenEssential().posX()
 
 	@computed \
-	controlPanelPosY : ifChosenEssential ->
-		(@chosenEssential().posY() - @originY()) * @scaleFactor()
+	controlMenuPosY : ->
+		if @openMenu() == 'control'
+			@calcExternPosY @chosenEssential().posY()
 
 	@computed \
-	controlPanelWidth : ifChosenEssential ->
-		@chosenEssential().width() * @scaleFactor()
+	controlMenuWidth : ->
+		if @openMenu() == 'control'
+			@calcExternSize @chosenEssential().width()
 
 	@computed \
-	controlPanelHeight : ifChosenEssential ->
-		@chosenEssential().height() * @scaleFactor()
+	controlMenuHeight : ->
+		if @openMenu() == 'control'
+			@calcExternSize @chosenEssential().height()
 
 	@delegate('click', '.btn-rm-essential') ->
 		@essentials.remove @chosenEssential()
+		@openMenu null
 		@chooseEssential null
 
 	@delegate('click', '.btn-color-essential') ->
-		@openPopover 'color'
+		@openMenu 'color'
 
-	@delegate('mousedown', '.control-panel') (el, event) ->
+	@delegate('mousedown', '.control-menu') (el, event) ->
 		@essentialMouseDown @chosenEssential(), event
 
-	@delegate('click', '.essential') (ess, event) ->
-		if ess.isMoved()
-			ess.isMoved no
-			return
-
-		@chooseEssential ess
-
-		do event.preventDefault
-
-	#### Color popover
+	#### Color menu
 	
-	colorPopoverWidth : ->
-		@colorPopoverElement()?.getBoundingClientRect().width || 0
+	colorMenuWidth : ->
+		@colorMenuElement()?.getBoundingClientRect().width || 0
 
-	colorPopoverHeight : ->
-		style = getComputedStyle(@colorPopoverElement(), null)
+	colorMenuHeight : ->
+		style = getComputedStyle(@colorMenuElement(), null)
 		if style
 			parseInt style.height + style.marginTop, 10
 		else 0
 
 	@computed \
-	colorPopoverPosition : ifChosenEssential ->
+	colorMenuPosition : ifChosenEssential ->
 		ess = @chosenEssential()
 		bottomPosY = (ess.posY() - @originY() + ess.height()) * @scaleFactor()
 		essBottom = @height() - bottomPosY
 
-		if essBottom > @colorPopoverHeight()
+		if essBottom > @colorMenuHeight()
 			'bottom'
 		else
 			'top'
 
 	@computed \
-	colorPopoverPosX : ifChosenEssential ->
-		popoverWidth = @colorPopoverWidth()
+	colorMenuPosX : ifChosenEssential ->
+		popoverWidth = @colorMenuWidth()
 		ess = @chosenEssential()
 		essRealPosX = (ess.posX() - @originX()) * @scaleFactor()
 		posX = essRealPosX + (ess.width() * @scaleFactor() - popoverWidth) / 2
@@ -259,19 +269,19 @@ class ClassDiagramViewModel extends BaseViewModel
 		else 0
 
 	@computed \
-	colorPopoverPosY : ifChosenEssential ->
+	colorMenuPosY : ifChosenEssential ->
 		ess = @chosenEssential()
 		realPosY = (ess.posY() - @originY()) * @scaleFactor()
-		if @colorPopoverPosition() == 'top'
-			realPosY - @colorPopoverHeight()
+		if @colorMenuPosition() == 'top'
+			realPosY - @colorMenuHeight()
 		else
 			realPosY + ess.height() * @scaleFactor()
 
 	@computed \
-	colorPopoverArrowPos : ifChosenEssential ->
+	colorMenuArrowPos : ifChosenEssential ->
 		ess  = @chosenEssential()
-		diff = ess.width() / 2 + (ess.posY() - @colorPopoverPosX())
-		diff / @colorPopoverWidth() * 100 | 0
+		diff = ess.width() / 2 + (ess.posY() - @colorMenuPosX())
+		diff / @colorMenuWidth() * 100 | 0
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
