@@ -77,11 +77,22 @@
 
 		.btn-link-essential {
 			bottom : @diff;
-			right  : @diff;
+			left   : 50%;
+
+			margin-left : -@btn-size / 2;
 		}
 	}
 
-	.color-menu {
-		display : block;
+	.essential-menu {
+		display    : block;
+		max-height : 100%;
+	}
+
+	.fade {
+		visibility : hidden;
+	}
+
+	.fade.in {
+		visibility : visible;
 	}
 }

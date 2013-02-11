@@ -12,8 +12,8 @@
 		// ko template: { name: 'essential-tmpl', foreach: essentials }
 		// /ko
 
-	// ko if: openMenu() === 'control'
-	.control-menu(data-bind="\
+	.control-menu.fade(data-bind="\
+		css: { in: openMenu() === 'control' },\
 		style: {\
 			left: controlMenuPosX() + 'px',\
 			top: controlMenuPosY() + 'px',\
@@ -24,25 +24,21 @@
 		button.btn.btn-rm-essential: i.icon-remove
 		button.btn.btn-edit-essential: i.icon-edit
 		button.btn.btn-link-essential: i.icon-arrow-right
-		button.btn.btn-color-essential: i.icon-th
-	// /ko
 
-	// ko if: openMenu() === 'color'
-	.color-menu.popover.fade(data-bind="\
-		bindElement: colorMenuElement,\
+	.essential-menu.popover.fade(data-bind="\
+		bindElement: essentialMenuElement,\
 		css: {\
-			in: colorMenuPosition() !== 'none',\
-			top: colorMenuPosition() === 'top',\
-			bottom: colorMenuPosition() === 'bottom'\
+			in: openMenu() === 'essential',\
+			left: essentialMenuPosition() === 'left',\
+			right: essentialMenuPosition() === 'right'\
 		},\
 		style: {\
-			top: colorMenuPosY() + 'px',\
-			left: colorMenuPosX() + 'px'\
+			top: essentialMenuPosY() + 'px',\
+			left: essentialMenuPosX() + 'px'\
 		}\
 	")
-		.arrow(data-bind="left: colorMenuArrowPos + '%'")
+		.arrow(data-bind="style: { top: essentialMenuArrowPos() + '%' }")
 		.popover-inner
 			.popover-content
-			div(style="height: 200px")
-	// /ko
+				div(style="height: 300px")
 // /ko

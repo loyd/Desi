@@ -27,7 +27,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		
 		@chosenEssential  = ko.observable null
 		@openPopover      = ko.observable null
-		@colorMenuElement = ko.observable null
+		@essentialMenuElement = ko.observable null
 
 		@isChosen = no
 		@isMoved  = no
@@ -73,6 +73,8 @@ class ClassDiagramViewModel extends BaseViewModel
 		@chosenEssential ess
 		if ess?
 			ess.isChosen yes
+			index = @essentials.indexOf ess
+			@essentials.move index, @essentials().length-1
 
 	@delegate('click') (el, event) ->
 		return unless event.target is @element()
@@ -96,7 +98,7 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('mousedown', '.essential') \
 	essentialMouseDown : (ess, event) ->
 		if ess isnt @chosenEssential()
-			@chosenEssential ess
+			@chooseEssential ess
 			@openMenu 'control'
 
 		menuName = @openMenu() ? 'control'
@@ -122,7 +124,7 @@ class ClassDiagramViewModel extends BaseViewModel
 			document.removeEventListener 'mouseup', mouseUp, on
 
 			ess.isMoved no
-			@chosenEssential ess
+			@chooseEssential ess
 			@openMenu menuName
 
 		document.addEventListener 'mousemove', mouseMove, on
@@ -198,9 +200,6 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	#### Control menu
 
-	ifChosenEssential = (fn) -> ->
-		fn.apply this, arguments if @chosenEssential()
-
 	@computed \
 	controlMenuPosX : ->
 		if @openMenu() == 'control'
@@ -226,62 +225,70 @@ class ClassDiagramViewModel extends BaseViewModel
 		@openMenu null
 		@chooseEssential null
 
-	@delegate('click', '.btn-color-essential') ->
-		@openMenu 'color'
+	@delegate('click', '.btn-edit-essential') ->
+		@openMenu 'essential'
 
 	@delegate('mousedown', '.control-menu') (el, event) ->
 		@essentialMouseDown @chosenEssential(), event
 
-	#### Color menu
+	#### Essential menu
 	
-	colorMenuWidth : ->
-		@colorMenuElement()?.getBoundingClientRect().width || 0
+	essentialMenuWidth : ->
+		return unless @essentialMenuElement()
+		s = getComputedStyle(@essentialMenuElement(), null)
+		[s.marginLeft, s.width, s.marginRight].reduce (res, size) ->
+			res + (parseInt(size, 10) || 0).abs()
+		, 0
 
-	colorMenuHeight : ->
-		style = getComputedStyle(@colorMenuElement(), null)
-		if style
-			parseInt style.height + style.marginTop, 10
-		else 0
+	essentialMenuHeight : ->
+		return unless @essentialMenuElement()
+		@essentialMenuElement().getBoundingClientRect().height
 
 	@computed \
-	colorMenuPosition : ifChosenEssential ->
+	essentialMenuPosition : ->
+		return if @openMenu() != 'essential'
 		ess = @chosenEssential()
-		bottomPosY = (ess.posY() - @originY() + ess.height()) * @scaleFactor()
-		essBottom = @height() - bottomPosY
+		spaceBefore = @calcExternPosX ess.posX()
+		spaceAfter  = @width() - spaceBefore - @calcExternSize ess.width()
 
-		if essBottom > @colorMenuHeight()
-			'bottom'
+		if spaceBefore > spaceAfter then 'left' else 'right'
+
+	@computed \
+	essentialMenuPosX : ->
+		return if @openMenu() != 'essential'
+		ess     = @chosenEssential()
+		essPosX = @calcExternPosX ess.posX()
+
+		if @essentialMenuPosition() == 'left'
+			essPosX - @essentialMenuWidth()
 		else
-			'top'
+			essPosX + @calcExternSize ess.width()
 
 	@computed \
-	colorMenuPosX : ifChosenEssential ->
-		popoverWidth = @colorMenuWidth()
+	essentialMenuPosY : ->
+		return if @openMenu() != 'essential'
 		ess = @chosenEssential()
-		essRealPosX = (ess.posX() - @originX()) * @scaleFactor()
-		posX = essRealPosX + (ess.width() * @scaleFactor() - popoverWidth) / 2
-		maxPosX = @width() - popoverWidth
-		
-		if 0 <= posX <= maxPosX
-			posX
-		else if maxPosX < posX
-			maxPosX
-		else 0
+		popoverHeight = @essentialMenuHeight()
+		centerPosY = @calcExternPosY(ess.posY()) +
+			@calcExternSize(ess.height()) / 2
+
+		posY = centerPosY - popoverHeight / 2
+		if posY < 0
+			posY = 0
+		else if posY + popoverHeight > @height()
+			posY = @height() - popoverHeight
+
+		posY
 
 	@computed \
-	colorMenuPosY : ifChosenEssential ->
+	essentialMenuArrowPos : ->
+		return if @openMenu() != 'essential'
 		ess = @chosenEssential()
-		realPosY = (ess.posY() - @originY()) * @scaleFactor()
-		if @colorMenuPosition() == 'top'
-			realPosY - @colorMenuHeight()
-		else
-			realPosY + ess.height() * @scaleFactor()
+		menuPosY  = @essentialMenuPosY()
+		arrowPosY = @calcExternPosY(ess.posY()) +
+			@calcExternSize(ess.height()) / 2
 
-	@computed \
-	colorMenuArrowPos : ifChosenEssential ->
-		ess  = @chosenEssential()
-		diff = ess.width() / 2 + (ess.posY() - @colorMenuPosX())
-		diff / @colorMenuWidth() * 100 | 0
+		(arrowPosY - menuPosY) / @essentialMenuHeight() * 100
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
