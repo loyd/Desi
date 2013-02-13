@@ -22,7 +22,6 @@
 		}
 
 		.border {
-			fill   : white;
 			stroke : black;
 			stroke-width : @stroke-width;
 		}
@@ -94,5 +93,33 @@
 
 	.fade.in {
 		visibility : visible;
+	}
+
+	.essential-menu {
+		.name {
+			text-align : center;
+
+			input {
+				margin : 0;
+				text-align : center;
+			}
+		}
+
+		.colors {
+			text-align : center;
+
+			.color {
+				display : inline-block;
+				width   : 15px;
+				height  : 15px;
+				margin  : 3px;
+				border  : 1px solid;
+				border-radius : 15%;
+			}
+
+			.active-color {
+				border-width : 2px;
+			}
+		}
 	}
 }

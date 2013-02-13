@@ -56,9 +56,10 @@ relationship = object {
 }
 
 essential = object {
-	posX : number
-	posY : number
-	name : (string def: 'ClassName')
+	posX  : number
+	posY  : number
+	name  : (string def: 'ClassName')
+	color : (string def: 'white')
 	stereotypes : (array of: stereotype)
 	attributes : (array of: attribute)
 	operations : (array of: operation)

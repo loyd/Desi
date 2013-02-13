@@ -290,15 +290,22 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		(arrowPosY - menuPosY) / @essentialMenuHeight() * 100
 
+	@delegate('click', '.essential-menu .name') ->
+		@chosenEssential().isRenamed yes
+
+	@delegate('click', '.essential-menu .color') (color) ->
+		@chosenEssential().color color
+
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
 
 	MIN_HEADER_PADDING = 10
 
 	constructor : (@sync) ->
-		@name = sync.observer 'name'
-		@posX = sync.observer 'posX'
-		@posY = sync.observer 'posY'
+		@name  = sync.observer 'name'
+		@posX  = sync.observer 'posX'
+		@posY  = sync.observer 'posY'
+		@color = sync.observer 'color'
 
 		@attributes = sync.observer 'attributes',
 			classAdapter : AttributeViewModel
@@ -308,9 +315,9 @@ class EssentialViewModel extends BaseViewModel
 			classAdapter : OperationViewModel
 		@operations.subscribe => @placeOperations
 
-		@isMoved  = ko.observable no
-		@isChosen = ko.observable no
-		@color    = ko.observable '#FFF'
+		@isMoved   = ko.observable no
+		@isChosen  = ko.observable no
+		@isRenamed = ko.observable no
 
 		super
 
