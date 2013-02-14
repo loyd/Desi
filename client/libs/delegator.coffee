@@ -10,18 +10,18 @@ class Delegator
 
 		@listeners[event].push { sel, klass, key }
 
-	checkSelector : (sel, elem) ->
-		nodes = @root.querySelectorAll sel
-		return no unless nodes
+	findElement : (selector, startNode) ->
+		nodes = @root.querySelectorAll selector
+		return null unless nodes
 		
 		for node in nodes
-			return yes if node is elem
+			return node if node is startNode
 
-			parent = elem
+			parent = startNode
 			while parent = parent.parentNode when parent is node
-				return yes
+				return node
 
-		return no
+		return null
 
 	expandContext : (node, klass) ->
 		context  = ko.contextFor(node) || ko.contextFor(node.parentNode)
@@ -31,14 +31,14 @@ class Delegator
 				instance = parent
 				break
 
-		[instance, context.$data]
+		instance
 
 	listenEvent : (name) ->
 		@listeners[name] = list = []
 		@root.addEventListener name, (event) =>
-			for elem in list when @checkSelector elem.sel, event.target
-				[inst, data] = @expandContext event.target, elem.klass
-				inst[elem.key]?(data, event)
+			for item in list when elem = @findElement item.sel, event.target
+				inst = @expandContext event.target, item.klass
+				inst[item.key]?(ko.dataFor(elem), event)
 			return
 		, off
 
