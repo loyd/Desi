@@ -1,25 +1,38 @@
 require 'domReady!'
 
-SVG_NS = 'http://www.w3.org/2000/svg'
+isTmplInclude = ///
+	<!--\s*ko\s+template\s*:\s*
+	(?:.*?name\s*:\s*)?(['"])(.*?)\1.*?-->
+///gi
 
-svg = document.createElementNS SVG_NS, 'svg'
+explainTmpl = (name) ->
+	text = document.querySelector("##{name}").text
+		.replace isTmplInclude, (str, b, tmplName) -> explainTmpl(tmplName)
 
-do ($ = svg.style) ->
+div = document.createElement 'div'
+div.innerHTML = explainTmpl('edit-tmpl')
+
+do ($ = div.style) ->
 	$.visibility = 'hidden'
 	$.position   = 'absolute'
-	$.top        = 0
-	$.left       = 0
+	$.top        = '0px'
+	$.left       = '0px'
+	$.width      = '1px'
+	$.height     = '1px'
 
-svg.width  = 1
-svg.height = 1
-svg.className = 'diagram class-diagram'
+document.body.appendChild div
 
-text = document.createElementNS SVG_NS, 'text'
-text.x = text.y = 0
+cache = {}
 
-svg.appendChild text
-document.body.appendChild svg
+module.exports = (selector, content) ->
+	if selector of cache
+		text = cache[selector]
+	else
+		text = div.querySelector selector
+		if text.tagName != 'text'
+			text = text.querySelector 'text'
 
-module.exports = (content) ->
+		cache[selector] = text
+
 	text.textContent = content
 	text.getBBox() || { width : 0, height : 0 }
