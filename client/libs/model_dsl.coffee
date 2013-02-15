@@ -4,7 +4,7 @@ standardize = (opts) ->
 			if Array.isArray opts.in
 				(v) -> v in opts.in
 			else (v) ->
-				for key, val of opts.key when val == v
+				for key, val of opts.in when val == v
 					return true
 				return false
 		when 'of'    of opts then (v) -> v of opts.of
