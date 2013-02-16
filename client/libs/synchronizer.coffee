@@ -66,23 +66,14 @@ class Synchronizer
 		new Synchronizer @spec.data[prop], ls.expand(@id, 0)[prop]
 
 	makeObserver = (spec, init) ->
-		if spec.validate
-			val = init ? spec.default
-			obs = ko.computed {
-				read : -> val
-				write : (v) ->
-					if spec.validate(v)
-						val = v
-						if obs.id?
-							v = "\"#{v}\"" if spec.type == 'string'
-							ls obs.id, v
-			}
-		else
-			obs = ko.observable init ? spec.default
-			obs.subscribe (v) ->
-				if obs.id?
-					v = "\"#{v}\"" if spec.type == 'string'
-					ls obs.id, v
+		obs = ko.observable init ? spec.default
+		obs.subscribe (v) ->
+			if obs.id?
+				v = "\"#{v}\"" if spec.type == 'string'
+				ls obs.id, v
+
+			return
+
 		obs
 
 	makeArrayObserver = (spec, init, wrap) ->
