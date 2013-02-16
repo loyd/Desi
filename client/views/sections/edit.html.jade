@@ -40,15 +40,25 @@
 		.arrow(data-bind="style: { top: essentialMenuArrowPos() + '%' }")
 		.popover-inner
 			.popover-content(data-bind="with: chosenEssential")
-				.name
-					span(data-bind="text: name, visible: !isRenamed()")
-					input(type="text", data-bind="\
-						value: name,\
-						visible: isRenamed,\
-						hasfocus: isRenamed\
-					")
+				input.class-name(type="text", data-bind="value: name")
 				hr
 				.colors(data-bind="foreach: 'white blue green yellow grey'.words()")
 					.color(data-bind="style: { backgroundColor: $data },\
 						css: { 'active-color': $data === $parent.color() }")
+				hr
+				.attributes(data-bind="foreach: attributes")
+					.attribute
+						select.visibility(data-bind="value: visibility")
+							option(value="+") +
+							option(value="-") -
+							option(value="#") #
+							option(value="~") ~
+							option(value="/") /
+						input.name(type="text", data-bind="value: name")
+						input.type(type="text", data-bind="value: type")
+						button.btn.btn-static-toggle(
+							data-bind="css: { 'btn-inverse' : isStatic }") S
+						button.btn.btn-rm-attribute: i.icon-remove
+						
+				button.btn.btn-add-attribute: i.icon-plus
 // /ko

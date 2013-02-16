@@ -296,10 +296,22 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('click', '.essential-menu .color') (color) ->
 		@chosenEssential().color color
 
+	@delegate('click', '.essential-menu .btn-add-attribute') ->
+		do @chosenEssential().addAttribute
+
+	@delegate('click', '.essential-menu .btn-rm-attribute') (attr) ->
+		@chosenEssential().removeAttribute attr
+
+	#@delegate('click', '.essential-menu .btn-add-operation') ->
+	#@delegate('click', '.essential-menu .btn-rm-operation') ->
+
+	@delegate('click', '.essential-menu .btn-static-toggle') (member) ->
+		member.isStatic !member.isStatic()
+
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
 
-	MIN_HEADER_PADDING = 10
+	MIN_HEADER_PADDING = 8
 
 	constructor : (@sync) ->
 		@name  = sync.observer 'name'
@@ -309,11 +321,13 @@ class EssentialViewModel extends BaseViewModel
 
 		@attributes = sync.observer 'attributes',
 			classAdapter : AttributeViewModel
-		@attributes.subscribe => @placeAttributes
+		@attributes.subscribe => do @placeAttributes
+		do @placeAttributes
 
 		@operations = sync.observer 'operations',
 			classAdapter : OperationViewModel
-		@operations.subscribe => @placeOperations
+		@operations.subscribe => do @placeOperations
+		do @placeOperations
 
 		@isMoved   = ko.observable no
 		@isChosen  = ko.observable no
@@ -321,42 +335,46 @@ class EssentialViewModel extends BaseViewModel
 
 		super
 
+	textSize = (sel, text) ->
+		countTextSize ".essential .header #{sel}", text
+
 	@computed \
 	width : ->
-		Math.max(
-			MIN_HEADER_PADDING * 2 + countTextSize(@name()).width
-			(@attributes().map (attr) -> attr.width()).max()
-			(@operations().map (oper) -> oper.width()).max()
+		w = Math.max(
+			MIN_HEADER_PADDING * 2 + textSize('.name', @name()).width
+			(@attributes().map (attr) -> attr.minWidth()).max()
+			(@operations().map (oper) -> oper.minWidth()).max()
 		)
+
+		attr.width w for attr in @attributes()
+		oper.width w for oper in @operations()
+
+		w
 
 	@computed \
 	height : ->
 		@headerHeight() + @attributesHeight() + @operationsHeight()
 
-	@delegate('click', '.btn-add-attribute') \
 	addAttribute : ->
-		sync = new Synchronizer @spec.attributes.item
+		sync = new Synchronizer @spec.data.attributes.item
 		attr = new AttributeViewModel sync
 		@attributes.push attr
 
-	@delegate('click', '.btn-rm-attribute') \
 	removeAttribute : (attr) ->
 		@attributes.remove attr
 
-	@delegate('click', '.btn-add-operation') \
 	addOperation : ->
-		sync = new Synchronizer @spec.operations.item
+		sync = new Synchronizer @spec.data.operations.item
 		oper = new OperationViewModel sync
 		@operations.push oper
 
-	@delegate('click', '.btn-rm-operation') \
 	rmOperation : (oper) ->
 		@operations.remove oper
 
-	# Header section
+	#### Header section
 	
 	headerHeight : ->
-		MIN_HEADER_PADDING * 2 + countTextSize(@name()).height
+		MIN_HEADER_PADDING * 2 + textSize('.name', @name()).height
 
 	@computed \
 	namePosX : ->
@@ -366,7 +384,7 @@ class EssentialViewModel extends BaseViewModel
 	namePosY : ->
 		@headerHeight() / 2
 
-	# Attributes section
+	#### Attributes section
 
 	attributesHeight : ->
 		@attributes().reduce (sum, attr) ->
@@ -387,7 +405,7 @@ class EssentialViewModel extends BaseViewModel
 	attributesVisible : ->
 		@attributes().length
 
-	# Operations section
+	#### Operations section
 	
 	operationsHeight : ->
 		@operations().reduce (sum, oper) ->
@@ -410,14 +428,57 @@ class EssentialViewModel extends BaseViewModel
 		@operations().length
 		
 class MemberViewModel extends BaseViewModel
+	viewRoot : '.member'
+
+	MIN_GOR_PADDING = 5
+	VERT_PADDING = 3
+	INTERVAL = 2
+
 	constructor : (@sync) ->
-		@posY       = ko.observable()
 		@name       = sync.observer 'name'
 		@type       = sync.observer 'type'
 		@visibility = sync.observer 'visibility'
 		@isStatic   = sync.observer 'isStatic'
 
+		@posY        = ko.observable()
+		@width       = ko.observable()
+
 		super
+
+	textSize = (text) ->
+		countTextSize ".member", text
+
+	@computed \
+	minWidth : ->
+		@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
+
+	@computed \
+	height : ->
+		textSize(@name()[0].up()).height + VERT_PADDING * 2
+
+	visibilityPosX : MIN_GOR_PADDING
+
+	@computed \
+	namePosX : ->
+		@visibilityPosX + textSize(@visibility()).width + INTERVAL
+
+	@computed \
+	separatorPosX : ->
+		@namePosX() + textSize(@name()).width + INTERVAL
+
+	@computed \
+	typePosX : ->
+		@separatorPosX() + textSize(':').width + INTERVAL
+
+	@computed \
+	textPosY : ->
+		@height() / 2
+
+	separatorLinePosX1 : MIN_GOR_PADDING / 2
+
+	@computed \
+	separatorLinePosX2 : ->
+		@width() - MIN_GOR_PADDING / 2
 
 class AttributeViewModel extends MemberViewModel
 

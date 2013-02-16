@@ -12,6 +12,10 @@
 		background-image  : url(../imgs/class_diagram_bg.svg);
 		background-repeat : repeat;
 		background-color  : white;
+
+		text {
+			font-family : Consolas monospace;
+		}
 	}
 
 	.essential {
@@ -30,6 +34,7 @@
 			text {
 				text-anchor        : middle;
 				alignment-baseline : middle;
+				font-size : 14px;
 			}
 		}
 
@@ -42,6 +47,35 @@
 			.border {
 				stroke-width : @stroke-width * 2;
 			}
+
+			.section-separator {
+				stroke-width : @stroke-width * 2;
+			}
+
+			.element-separator {
+				stroke-width : @stroke-width;
+			}
+		}
+
+		.member text {
+			alignment-baseline : middle;
+			font-size : 10px;
+		}
+
+		.member.static text.name {
+			text-decoration : underline;
+		}
+
+		.section-separator, .element-separator {
+			stroke : black;
+		}
+
+		.section-separator {
+			stroke-width : @stroke-width;
+		}
+
+		.element-separator {
+			stroke-width : @stroke-width / 2;
 		}
 	}
 
@@ -96,13 +130,22 @@
 	}
 
 	.essential-menu {
-		.name {
-			text-align : center;
+		width : 335px;
 
-			input {
-				margin : 0;
-				text-align : center;
-			}
+		input, select {
+			margin-top    : 0;
+			margin-bottom : 0;
+		}
+
+		hr {
+			margin : 10px 0;
+		}
+
+		.class-name {
+			display : block;
+			width   : 230px;
+			margin  : auto;
+			text-align : center;
 		}
 
 		.colors {
@@ -120,6 +163,28 @@
 			.active-color {
 				border-width : 2px;
 			}
+		}
+
+		.attribute {
+			margin-bottom : 10px;
+
+			.btn {
+				width   : 32px;
+				height  : 32px;
+				padding : 0;
+			}
+		}
+
+		.attribute select {
+			width : 45px;
+		}
+
+		.name {
+			width : 100px;
+		}
+
+		.type {
+			width : 50px;
 		}
 	}
 }

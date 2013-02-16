@@ -1,8 +1,9 @@
-g.element(data-bind="css: { static: isStatic }, translateY: posY")
+g.member(data-bind="svgcss: { static: isStatic }, translateY: posY")
 	// ko template: { name: 'element-separator-tmpl', if: $index !== 0 }
 	// /ko
 
-	text.visibility(data-bind="text: visibility")
-	text.name(data-bind="text: name")
-	text :
-	text.type(data-bind="text: type")
+	g(data-bind="translateY: textPosY")
+		text.visibility(data-bind="attr: { x: visibilityPosX }, text: visibility")
+		text.name(data-bind="attr: { x: namePosX }, text: name")
+		text(data-bind="attr: { x: separatorPosX }") :
+		text.type(data-bind="attr: { x: typePosX }, text: type")
