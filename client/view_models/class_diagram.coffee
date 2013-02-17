@@ -25,8 +25,8 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		@openMenu = ko.observable null
 		
-		@chosenEssential  = ko.observable null
-		@openPopover      = ko.observable null
+		@chosenEssential = ko.observable null
+		@openPopover     = ko.observable null
 		@essentialMenuElement = ko.observable null
 
 		@isChosen = no
@@ -34,6 +34,12 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		onresize '#main', =>
 			do @refreshSizes if @isChosen
+
+		subscr = @essentialMenuElement.subscribe (elem) =>
+			do subscr.dispose
+			onresize elem, =>
+				# I love this hack :D
+				@essentialMenuElement @essentialMenuElement()
 
 		super
 
