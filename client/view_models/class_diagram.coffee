@@ -290,9 +290,6 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		(arrowPosY - menuPosY) / @essentialMenuHeight() * 100
 
-	@delegate('click', '.essential-menu .name') ->
-		@chosenEssential().isRenamed yes
-
 	@delegate('click', '.essential-menu .color') (color) ->
 		@chosenEssential().color color
 
@@ -302,11 +299,24 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('click', '.essential-menu .btn-rm-attribute') (attr) ->
 		@chosenEssential().removeAttribute attr
 
-	#@delegate('click', '.essential-menu .btn-add-operation') ->
-	#@delegate('click', '.essential-menu .btn-rm-operation') ->
+	@delegate('click', '.essential-menu .btn-add-operation') ->
+		do @chosenEssential().addOperation
+
+	@delegate('click', '.essential-menu .btn-rm-operation') (oper) ->
+		@chosenEssential().removeOperation oper
+
+	@delegate('click', '.essential-menu .btn-params-toggle') (oper) ->
+		oper.paramsAreOpen !oper.paramsAreOpen()
+
+	@delegate('click', '.essential-menu .btn-add-param') (oper) ->
+		do oper.addParam
 
 	@delegate('click', '.essential-menu .btn-static-toggle') (member) ->
 		member.isStatic !member.isStatic()
+
+	@delegate('click', '.essential-menu .btn-rm-param') (param, event) ->
+		oper = ko.contextFor(event.target).$parent
+		oper.removeParam param
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'
@@ -331,7 +341,6 @@ class EssentialViewModel extends BaseViewModel
 
 		@isMoved   = ko.observable no
 		@isChosen  = ko.observable no
-		@isRenamed = ko.observable no
 
 		super
 
@@ -368,7 +377,7 @@ class EssentialViewModel extends BaseViewModel
 		oper = new OperationViewModel sync
 		@operations.push oper
 
-	rmOperation : (oper) ->
+	removeOperation : (oper) ->
 		@operations.remove oper
 
 	#### Header section
@@ -427,12 +436,13 @@ class EssentialViewModel extends BaseViewModel
 	operationsVisible : ->
 		@operations().length
 		
+MIN_GOR_PADDING = 5
+VERT_PADDING = 3
+INTERVAL = 2
+textSize = (text) -> countTextSize ".member", text
+
 class MemberViewModel extends BaseViewModel
 	viewRoot : '.member'
-
-	MIN_GOR_PADDING = 5
-	VERT_PADDING = 3
-	INTERVAL = 2
 
 	constructor : (@sync) ->
 		@name       = sync.observer 'name'
@@ -440,17 +450,10 @@ class MemberViewModel extends BaseViewModel
 		@visibility = sync.observer 'visibility'
 		@isStatic   = sync.observer 'isStatic'
 
-		@posY        = ko.observable()
-		@width       = ko.observable()
+		@posY  = ko.observable()
+		@width = ko.observable()
 
 		super
-
-	textSize = (text) ->
-		countTextSize ".member", text
-
-	@computed \
-	minWidth : ->
-		@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
 
 	@computed \
 	height : ->
@@ -463,14 +466,6 @@ class MemberViewModel extends BaseViewModel
 		@visibilityPosX + textSize(@visibility()).width + INTERVAL
 
 	@computed \
-	separatorPosX : ->
-		@namePosX() + textSize(@name()).width + INTERVAL
-
-	@computed \
-	typePosX : ->
-		@separatorPosX() + textSize(':').width + INTERVAL
-
-	@computed \
 	textPosY : ->
 		@height() / 2
 
@@ -481,20 +476,104 @@ class MemberViewModel extends BaseViewModel
 		@width() - MIN_GOR_PADDING / 2
 
 class AttributeViewModel extends MemberViewModel
+	@computed \
+	minWidth : ->
+		@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
+
+	@computed \
+	separatorPosX : ->
+		@namePosX() + textSize(@name()).width + INTERVAL
+
+	@computed \
+	typePosX : ->
+		@separatorPosX() + textSize(':').width + INTERVAL
 
 class OperationViewModel extends MemberViewModel
 	constructor : (@sync) ->
+		super
+
 		@params = sync.observer 'params',
 			classAdapter : ParamViewModel
+		do @placeParams
 
-		super
+		@paramsAreOpen = ko.observable no
+
+	addParam : ->
+		sync  = new Synchronizer @spec.data.params.item
+		param = new ParamViewModel sync
+		@params.push param
+
+	removeParam : (param) ->
+		@params.remove param
+
+	@computed \
+	widthParams : ->
+		last = @params().last()
+		if last
+			last.posX() + last.width()
+		else 0
+
+	@computed \
+	placeParams : ->
+		posX = -(textSize(',').width)
+		for param in @params()
+			param.posX posX
+			posX += param.width()
+		return
+
+	@computed \
+	minWidth : ->
+		@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
+
+	@computed \
+	openScobePosX : ->
+		@namePosX() + textSize(@name()).width + INTERVAL/2
+
+	@computed \
+	paramsPosX : ->
+		@openScobePosX() + textSize('(').width +
+			INTERVAL - textSize(',').width - INTERVAL
+
+	@computed \
+	closeScobePosX : ->
+		@paramsPosX() + @widthParams() + INTERVAL
+
+	@computed \
+	separatorPosX : ->
+		@closeScobePosX() + textSize(')').width + INTERVAL
+
+	@computed \
+	typePosX : ->
+		@separatorPosX() + textSize(':').width + INTERVAL
 
 class ParamViewModel extends BaseViewModel
 	constructor : (@sync) ->
 		@name = sync.observer 'name'
 		@type = sync.observer 'type'
 
+		@posX = ko.observable()
+
 		super
+
+	@computed \
+	width : ->
+		@typePosX() + textSize(@type()).width
+
+	@computed \
+	commaPosX : ->
+		INTERVAL / 2
+
+	@computed \
+	namePosX : ->
+		textSize(',').width + INTERVAL
+
+	@computed \
+	separatorPosX : ->
+		@namePosX() + textSize(@name()).width + INTERVAL
+
+	@computed \
+	typePosX : ->
+		@separatorPosX() + textSize(':').width + INTERVAL
 
 class RelationshipViewModel extends BaseViewModel
 

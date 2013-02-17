@@ -57,8 +57,36 @@
 						input.name(type="text", data-bind="value: name")
 						input.type(type="text", data-bind="value: type")
 						button.btn.btn-static-toggle(
-							data-bind="css: { 'btn-inverse' : isStatic }") S
+							data-bind="css: { 'btn-inverse': isStatic }") S
 						button.btn.btn-rm-attribute: i.icon-remove
 						
 				button.btn.btn-add-attribute: i.icon-plus
+
+				hr
+				.operations(data-bind="foreach: operations")
+					.operation
+						select.visibility(data-bind="value: visibility")
+							option(value="+") +
+							option(value="-") -
+							option(value="#") #
+							option(value="~") ~
+							option(value="/") /
+						input.name(type="text", data-bind="value: name")
+						input.type(type="text", data-bind="value: type")
+						button.btn.btn-params-toggle(
+							data-bind="css: { 'btn-inverse': paramsAreOpen } ") P
+						button.btn.btn-static-toggle(
+							data-bind="css: { 'btn-inverse': isStatic }") S
+						button.btn.btn-rm-operation: i.icon-remove
+
+						// ko if: paramsAreOpen
+						.params(data-bind="foreach: params")
+							input.param-name(type="text", data-bind="value: name")
+							input.param-type(type="text", data-bind="value: type")
+							button.btn.btn-rm-param: i.icon-remove
+
+						button.btn.btn-add-param: i.icon-plus
+						// /ko
+						
+				button.btn.btn-add-operation: i.icon-plus
 // /ko

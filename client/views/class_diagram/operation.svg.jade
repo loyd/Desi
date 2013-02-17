@@ -2,15 +2,22 @@ g.member(data-bind="svgcss: { static: isStatic }, translateY: posY")
 	// ko template: { name: 'element-separator-tmpl', if: $index !== 0 }
 	// /ko
 
-	text.visibility(data-bind="text: visibility")
-	text.name(data-bind="text: name")
-	text (
-	// ko foreach: params
-	text(data-bind="if: $index() !== 0") ,
-	text(data-bind="text: name")
-	text :
-	text(data-bind="text: type")
-	// /ko
-	text )
-	text :
-	text.type(data-bind="text: type")
+	//- g(data-bind="translateY: textPosY")
+	//- 	text.visibility(data-bind="attr: { x: visibilityPosX }, text: visibility")
+	//- 	text.name(data-bind="attr: { x: namePosX }, text: name")
+	//- 	text(data-bind="attr: { x: separatorPosX }") :
+	//- 	text.type(data-bind="attr: { x: typePosX }, text: type")
+
+	g(data-bind="translateY: textPosY")
+		text.visibility(data-bind="attr: { x: visibilityPosX }, text: visibility")
+		text.name(data-bind="attr: { x: namePosX }, text: name")
+		text(data-bind="attr: { x: openScobePosX }") (
+		g.params(data-bind="foreach: params, translateX: paramsPosX")
+			g(data-bind="translateX: posX")
+				text(data-bind="if: $index() !== 0, attr: { x: commaPosX }") ,
+				text.param-name(data-bind="attr: { x: namePosX }, text: name")
+				text(data-bind="attr: { x: separatorPosX }") :
+				text.param-type(data-bind="attr: { x: typePosX }, text: type")
+		text(data-bind="attr: { x: closeScobePosX }") )
+		text(data-bind="attr: { x: separatorPosX }") :
+		text.type(data-bind="attr: { x: typePosX }, text: type")
