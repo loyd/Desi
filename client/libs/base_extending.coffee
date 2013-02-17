@@ -2,9 +2,9 @@
 
 makeAccs = (obj) -> (v) ->
 	if arguments.length
-		obj.set v
+		obj.set.call this, v
 	else
-		obj.get()
+		obj.get.call this
 
 #### Numbers
 
