@@ -29,6 +29,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		@openPopover     = ko.observable null
 		@essentialMenuElement = ko.observable null
 
+		@creatingMenuPosX = ko.observable()
+		@creatingMenuPosY = ko.observable()
+
 		@isChosen = no
 		@isMoved  = no
 
@@ -83,21 +86,19 @@ class ClassDiagramViewModel extends BaseViewModel
 			@essentials.move index, @essentials().length-1
 
 	@delegate('click') (el, event) ->
-		return unless event.target is @element()
+		return if event.target isnt @element()
 		if @isMoved
 			@isMoved = no
 			return
 
-		if @openMenu()
-			@openMenu null
-			@chooseEssential null
-			return
-
+		@openMenu null
+		@chooseEssential null
 		{left, top} = @element().getBoundingClientRect()
-		scaleFactor = @scaleFactor()
-		x = @originX() + (event.clientX - left) / scaleFactor
-		y = @originY() + (event.clientY - top)  / scaleFactor
-		@addEssential x, y
+		left = event.clientX - left
+		top  = event.clientY - top
+		@creatingMenuPosX left
+		@creatingMenuPosY top
+		@openMenu 'creating'
 
 	#### Clicking and moving essential
 
@@ -323,6 +324,19 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('click', '.essential-menu .btn-rm-param') (param, event) ->
 		oper = ko.contextFor(event.target).$parent
 		oper.removeParam param
+
+	#### Creating menu
+
+	@delegate('click', '.creating-menu .btn-make-class') (el, event) ->
+		realX = @creatingMenuPosX()
+		realY = @creatingMenuPosY()
+
+		scaleFactor = @scaleFactor()
+		relX = @originX() + realX / scaleFactor
+		relY = @originY() + realY / scaleFactor
+		@addEssential relX, relY
+		@chooseEssential @essentials().last()
+		@openMenu 'control'
 
 class EssentialViewModel extends BaseViewModel
 	viewRoot : '.essential'

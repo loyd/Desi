@@ -1,6 +1,5 @@
 @stroke-width   : 0.2mm;
 @btn-size       : 45px;
-@dist-to-vertex : @btn-size / 2;
 
 .class-diagram {
 
@@ -80,18 +79,7 @@
 	}
 
 	.control-menu {
-		position   : absolute;
-		background : none;
-
-		.btn {
-			border-radius : 50%;
-			position : absolute;
-			width    : @btn-size;
-			height   : @btn-size;
-			padding  : 0;
-		}
-
-		@diff : @dist-to-vertex - @btn-size;
+		@diff : -@btn-size / 2;
 
 		.btn-rm-essential {
 			top  : @diff;
@@ -113,6 +101,43 @@
 			left   : 50%;
 
 			margin-left : -@btn-size / 2;
+		}
+	}
+
+	.creating-menu {
+		width  : 0;
+		height : 0;
+
+		@diff : -@btn-size * 1.5;
+
+		.btn-make-class {
+			left : 0;
+			top  : @diff;
+
+			margin-left : -@btn-size / 2;
+		}
+
+		.btn-make-interface {
+			right  : @diff * 1.2;
+			bottom : @diff;
+		}
+
+		.btn-make-note {
+			left   : @diff * 1.2;
+			bottom : @diff;
+		}
+	}
+
+	.control-menu, .creating-menu {
+		position   : absolute;
+		background : none;
+
+		.btn {
+			border-radius : 50%;
+			position : absolute;
+			width    : @btn-size;
+			height   : @btn-size;
+			padding  : 0;
 		}
 	}
 

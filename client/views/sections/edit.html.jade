@@ -25,6 +25,17 @@
 		button.btn.btn-edit-essential: i.icon-edit
 		button.btn.btn-link-essential: i.icon-arrow-right
 
+	.creating-menu.fade(data-bind="\
+		css: { in: openMenu() === 'creating' },\
+		style: {\
+			left: creatingMenuPosX() + 'px',\
+			top: creatingMenuPosY() + 'px'\
+		}\
+	")
+		button.btn.btn-make-class C
+		button.btn.btn-make-interface I
+		button.btn.btn-make-note: i.icon-comment
+
 	.essential-menu.popover.fade(data-bind="\
 		bindElement: essentialMenuElement,\
 		css: {\
