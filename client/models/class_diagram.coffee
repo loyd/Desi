@@ -1,4 +1,4 @@
-{extend, number, string, array, object, boolean} = require 'libs/model_dsl'
+{extend, number, string, array, object, boolean, pointer} = require 'libs/model_dsl'
 
 stereotype = object
 
@@ -31,7 +31,6 @@ operation = extend member, {
 }
 
 validMultiplicity = /^(?:\d+\.{2})?(?:\d+|\*)$/
-between0and9 = (v) -> 0 <= v <= 9
 
 relationship = object {
 	type : (string in: [
@@ -39,30 +38,30 @@ relationship = object {
 		'composition', 'generalization',
 		'realization', 'dependency'
 	])
-	posModeFrom : (number valid: between0and9)
-	posModeTo : (number valid: between0and9)
-	indicatorFrom : string
-	indicatorTo : string
-	essentialFrom : essential
-	essentialTo : essential
-	multiplicityFrom : (string valid: (val) ->
+	mode : number
+	fromIndicator : string
+	toIndicator : string
+	fromEssential : (pointer to: essential)
+	toEssential : (pointer to: essential)
+	fromMultiplicity : (string valid: (val) ->
 		if @type is 'composition'
 			val in ['0', '0..1']
 		else
 			val.test validMultiplicity
 	)
-	multiplicityTo : (string test: validMultiplicity)
+	toMultiplicity : (string test: validMultiplicity)
 	stereotypes : (array of: stereotype)
 }
 
 essential = object {
-	posX  : number
-	posY  : number
-	name  : (string def: 'ClassName')
+	posX : number
+	posY : number
+	name : (string def: 'ClassName')
 	color : (string def: 'white')
 	stereotypes : (array of: stereotype)
 	attributes : (array of: attribute)
 	operations : (array of: operation)
+	relationships : (array of: (pointer to: relationship))
 }
 
 classDiagram = object {

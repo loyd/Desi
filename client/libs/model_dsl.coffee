@@ -18,6 +18,7 @@ module.exports = {
 
 		type : 'object'
 		data : hash
+		isTarget : no
 
 	array : (opts) ->
 		type : 'array'
@@ -39,6 +40,13 @@ module.exports = {
 			result.validate = (v) -> v.test opts.test
 		result.type = 'string'
 		result
+
+	pointer : (opts) ->
+		opts.to.isTarget = yes
+
+		type   : 'pointer'
+		target : opts.to
+		value  : null
 
 	extend : (parent = null, hash) ->
 		result = type : 'object'
