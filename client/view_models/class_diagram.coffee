@@ -339,8 +339,6 @@ class ClassDiagramViewModel extends BaseViewModel
 		@openMenu 'control'
 
 class EssentialViewModel extends BaseViewModel
-	viewRoot : '.essential'
-
 	MIN_HEADER_PADDING = 8
 
 	constructor : (@sync) ->
@@ -462,8 +460,6 @@ INTERVAL = 2
 textSize = (text) -> countTextSize ".member", text
 
 class MemberViewModel extends BaseViewModel
-	viewRoot : '.member'
-
 	constructor : (@sync) ->
 		@name       = sync.observer 'name'
 		@type       = sync.observer 'type'
@@ -596,5 +592,27 @@ class ParamViewModel extends BaseViewModel
 		@separatorPosX() + textSize(':').width + INTERVAL
 
 class RelationshipViewModel extends BaseViewModel
+	constructor : (@sync) ->
+		@type = sync.observer 'type'
+		@fromEssential = sync.observer 'fromEssential'
+		@toEssential = sync.observer 'toEssential'
+
+		super
+
+	@computed \
+	fromPosX : ->
+		@fromEssential().posX()
+
+	@computed \
+	toPosX : ->
+		@toEssential().posX()
+
+	@computed \
+	fromPosY : ->
+		@fromEssential().posY()
+
+	@computed \
+	toPosY : ->
+		@toEssential().posY()
 
 module.exports = ClassDiagramViewModel

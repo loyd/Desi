@@ -12,6 +12,11 @@
 		// ko template: { name: 'essential-tmpl', foreach: essentials }
 		// /ko
 
+		// ko foreach: relationships
+		// ko template: { name: type() + '-tmpl' }
+		// /ko
+		// /ko
+
 	.control-menu.fade(data-bind="\
 		css: { in: openMenu() === 'control' },\
 		style: {\
