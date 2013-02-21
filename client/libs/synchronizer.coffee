@@ -2,6 +2,12 @@ ko = require 'ko'
 ls = require 'libs/local_storage'
 
 class Synchronizer
+	ptrTable = {}
+	makePtr  = ->
+		profileId = ls ls.expand('profile', 0)['id']
+		console.assert(profileId?)
+		profileId + ':' + String(Math.random())[2..]
+
 	createDataFromSpec = (spec) ->
 		return switch spec.type
 			when 'object'
@@ -12,7 +18,7 @@ class Synchronizer
 			when 'array' then []
 			else spec.default
 
-	constructor : (@spec, @id) ->
+	constructor : (@spec, @id, @pid) ->
 		unless id?
 			data = createDataFromSpec spec
 			@id = ls.allocate data
@@ -21,7 +27,9 @@ class Synchronizer
 
 	leaveStorage : ->
 		ls.remove @id
-		@id = null
+		@id  = null
+		delete ptrTable[@pid]
+		@pid = null
 		for prop, obs of @observers
 			obs.id = null
 			if obs.type is 'array'
@@ -65,8 +73,8 @@ class Synchronizer
 	concretize : (prop) ->
 		new Synchronizer @spec.data[prop], ls.expand(@id, 0)[prop]
 
-	makeObserver = (spec, init) ->
-		obs = ko.observable init ? spec.default
+	makeObserver = (spec, init = spec.default) ->
+		obs = ko.observable init
 		obs.subscribe (v) ->
 			if obs.id?
 				v = "\"#{v}\"" if spec.type == 'string'
@@ -74,10 +82,25 @@ class Synchronizer
 
 			return
 
-		obs
+		if spec.type == 'pointer'
+			ko.computed {
+				read  : ->
+					console.assert(obs() of ptrTable)
+					ptrTable[obs()]
+				write : (v) ->
+					obs v.__id
+					ptrTable[v.__id] = v
+			}
+		else obs
 
 	makeArrayObserver = (spec, init, wrap) ->
 		obs = ko.observableArray(init.map wrap).extend(extMode: on)
+
+		if spec.item.isTarget
+			prevIds = []
+			for item in init
+				ptrTable[item.__id] = item
+				prevIds.push item.__id
 
 		table = {}
 		for event of handlers then do (event) ->
@@ -89,6 +112,12 @@ class Synchronizer
 					handlers[event] obs.peek(), obs.id, args if obs.id?
 
 		obs.subscribeAll table
+
+		if spec.item.isTarget
+			obs.subscribe (arr) ->
+				delete ptrTable[id] for id in prevIds
+				prevIds = (item.__id for item in arr)
+		
 		obs
 
 unwrap = (id) -> ls(id)[1...-1]
