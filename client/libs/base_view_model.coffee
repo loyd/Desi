@@ -29,6 +29,8 @@ class BaseViewModel
 						else
 							router.listen key, @bindMethod(val)
 
+	ref : -> @sync.pid
+
 	@computed = (hash) ->
 		for key, val of hash
 			@::["#{key}#computed"] = val

@@ -11,8 +11,18 @@ standardize = (opts) ->
 		when 'valid' of opts then opts.valid
 	default : opts.def
 
+waitingTarget = []
+revisionWaiters = ->
+	waitingTarget = waitingTarget.filter (targetAccs) ->
+		if target = targetAccs()
+			target.isTarget = no
+
+		!target
+
 module.exports = {
 	object : (hash) ->
+		do revisionWaiters
+
 		for prop, value of hash
 			hash[prop] = value?({}) || value
 
@@ -41,12 +51,14 @@ module.exports = {
 		result.type = 'string'
 		result
 
-	pointer : (opts) ->
-		opts.to.isTarget = yes
+	pointer : (to) ->
+		if target = to()
+			target.isTarget = yes
+		else
+			waitingTarget.push to
 
-		type   : 'pointer'
-		target : opts.to
-		value  : null
+		type    : 'pointer'
+		default : 0
 
 	extend : (parent = null, hash) ->
 		result = type : 'object'

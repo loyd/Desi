@@ -3,10 +3,12 @@ ls = require 'libs/local_storage'
 
 class Synchronizer
 	ptrTable = {}
-	makePtr  = ->
-		profileId = ls ls.expand('profile', 0)['id']
-		console.assert(profileId?)
-		profileId + ':' + String(Math.random())[2..]
+	makePtr = ->
+		profileTop = ls.expand 'profile', 0
+		profileId  = ls profileTop['id']
+		ptrId      = ls profileTop['freePtrId']
+		ls profileTop['freePtrId'], Number(ptrId) + 1
+		"#{profileId}:#{freePtrId}"
 
 	createDataFromSpec = (spec) ->
 		return switch spec.type
@@ -18,18 +20,21 @@ class Synchronizer
 			when 'array' then []
 			else spec.default
 
-	constructor : (@spec, @id, @pid) ->
-		unless id?
+	constructor : (@spec, @id) ->
+		if id?
+			if spec.isTarget
+				@pid = Number ls ls.expand(@id, 0)['__id']
+		else
 			data = createDataFromSpec spec
+			if spec.isTarget
+				@pid = data.__id = makePtr()
 			@id = ls.allocate data
 
 		@observers = {}
 
 	leaveStorage : ->
 		ls.remove @id
-		@id  = null
-		delete ptrTable[@pid]
-		@pid = null
+		@id = null
 		for prop, obs of @observers
 			obs.id = null
 			if obs.type is 'array'
@@ -51,8 +56,8 @@ class Synchronizer
 		else
 			{spec, id} = this
 
-		if spec.type is 'array' && !opts.adapter && !opts.classAdapter
-			return null
+		if spec.type is 'array' && !opts
+			opts = adapter : (sync) -> sync.observer()
 
 		obs = if spec.type is 'array'
 			adapter = if opts.classAdapter
@@ -83,24 +88,18 @@ class Synchronizer
 			return
 
 		if spec.type == 'pointer'
-			ko.computed {
-				read  : ->
-					console.assert(obs() of ptrTable)
-					ptrTable[obs()]
-				write : (v) ->
-					obs v.__id
-					ptrTable[v.__id] = v
-			}
+			obs.deref = -> ptrTable[obs()]
+
 		else obs
 
 	makeArrayObserver = (spec, init, wrap) ->
 		obs = ko.observableArray(init.map wrap).extend(extMode: on)
 
 		if spec.item.isTarget
-			prevIds = []
+			prevPids = []
 			for item in init
-				ptrTable[item.__id] = item
-				prevIds.push item.__id
+				ptrTable[item.sync.pid] = item
+				prevPids.push item.sync.pid
 
 		table = {}
 		for event of handlers then do (event) ->
@@ -115,8 +114,13 @@ class Synchronizer
 
 		if spec.item.isTarget
 			obs.subscribe (arr) ->
-				delete ptrTable[id] for id in prevIds
-				prevIds = (item.__id for item in arr)
+				delete ptrTable[id] for id in prevPids
+				prevPids = []
+				for item in arr
+					ptrTable[item.sync.pid] = item
+					prevPids.push item.sync.pid
+
+				return
 		
 		obs
 

@@ -357,6 +357,8 @@ class EssentialViewModel extends BaseViewModel
 		@operations.subscribe => do @placeOperations
 		do @placeOperations
 
+		@relationships = sync.observer 'relationships'
+
 		@isMoved   = ko.observable no
 		@isChosen  = ko.observable no
 
@@ -601,18 +603,18 @@ class RelationshipViewModel extends BaseViewModel
 
 	@computed \
 	fromPosX : ->
-		@fromEssential().posX()
+		@fromEssential.deref().posX()
 
 	@computed \
 	toPosX : ->
-		@toEssential().posX()
+		@toEssential.deref().posX()
 
 	@computed \
 	fromPosY : ->
-		@fromEssential().posY()
+		@fromEssential.deref().posY()
 
 	@computed \
 	toPosY : ->
-		@toEssential().posY()
+		@toEssential.deref().posY()
 
 module.exports = ClassDiagramViewModel

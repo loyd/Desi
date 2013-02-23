@@ -41,8 +41,8 @@ relationship = object {
 	mode : number
 	fromIndicator : string
 	toIndicator : string
-	fromEssential : (pointer to: essential)
-	toEssential : (pointer to: essential)
+	fromEssential : (pointer -> essential)
+	toEssential : (pointer -> essential)
 	fromMultiplicity : (string valid: (val) ->
 		if @type is 'composition'
 			val in ['0', '0..1']
@@ -61,7 +61,7 @@ essential = object {
 	stereotypes : (array of: stereotype)
 	attributes : (array of: attribute)
 	operations : (array of: operation)
-	relationships : (array of: (pointer to: relationship))
+	relationships : (array of: (pointer -> relationship))
 }
 
 classDiagram = object {
