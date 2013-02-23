@@ -34,6 +34,10 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		@isChosen = no
 		@isMoved  = no
+		@linking  = no
+
+		document.addEventListener 'mouseup', =>
+			(=> @linking = no).defer()
 
 		onresize '#main', =>
 			do @refreshSizes if @isChosen
@@ -68,11 +72,11 @@ class ClassDiagramViewModel extends BaseViewModel
 	stopEditing : ->
 		@isChosen = no
 
-	#### Adding essentials
+	#### Adding essentials and relationships
 
 	addEssential : (x, y) ->
 		sync = new Synchronizer @spec.data.essentials.item
-		ess = new EssentialViewModel sync
+		ess  = new EssentialViewModel sync
 		ess.posX x - ess.width() / 2
 		ess.posY y - ess.headerHeight() / 2
 		@essentials.push ess
@@ -84,6 +88,25 @@ class ClassDiagramViewModel extends BaseViewModel
 			ess.isChosen yes
 			index = @essentials.indexOf ess
 			@essentials.move index, @essentials().length-1
+
+	removeEssential : (ess) ->
+		@essentials.remove ess
+		if @chosenEssential() is ess
+			@chooseEssential null
+
+	addRelationship : (from, to) ->
+		sync = new Synchronizer @spec.data.relationships.item
+		rel  = new RelationshipViewModel sync
+		rel.fromEssential from.ref()
+		rel.toEssential to.ref()
+		from.addRelationship rel
+		to.addRelationship rel
+		@relationships.push rel
+
+	removeRelationship : (rel) ->
+		@relationships.remove rel
+		rel.fromEssential.deref().removeRelationship rel
+		rel.toEssential.deref().removeRelationship rel
 
 	@delegate('click') (el, event) ->
 		return if event.target isnt @element()
@@ -228,14 +251,23 @@ class ClassDiagramViewModel extends BaseViewModel
 			@calcExternSize @chosenEssential().height()
 
 	@delegate('click', '.btn-rm-essential') ->
-		@essentials.remove @chosenEssential()
 		@openMenu null
-		@chooseEssential null
+		@removeEssential @chosenEssential()
 
 	@delegate('click', '.btn-edit-essential') ->
 		@openMenu 'essential'
 
+	@delegate('mousedown', '.btn-link-essential') ->
+		@linking = yes
+
+	@delegate('mouseup', '.essential') (ess) ->
+		return unless @linking
+		return if ess is @chosenEssential()
+
+		@addRelationship @chosenEssential(), ess
+
 	@delegate('mousedown', '.control-menu') (el, event) ->
+		return unless ~" #{event.target.className} ".indexOf ' control-menu '
 		@essentialMouseDown @chosenEssential(), event
 
 	#### Essential menu
@@ -399,6 +431,14 @@ class EssentialViewModel extends BaseViewModel
 
 	removeOperation : (oper) ->
 		@operations.remove oper
+
+	addRelationship : (rel) ->
+		sync = new Synchronizer @spec.data.relationships.item
+		@relationships.push sync.observer()
+
+	removeRelationship : (rel) ->
+		@relationships.remove (ptr) ->
+			ptr.deref() is rel
 
 	#### Header section
 	

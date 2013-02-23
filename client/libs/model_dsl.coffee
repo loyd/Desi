@@ -15,7 +15,7 @@ waitingTarget = []
 revisionWaiters = ->
 	waitingTarget = waitingTarget.filter (targetAccs) ->
 		if target = targetAccs()
-			target.isTarget = no
+			target.isTarget = yes
 
 		!target
 

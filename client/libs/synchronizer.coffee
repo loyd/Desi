@@ -4,11 +4,11 @@ ls = require 'libs/local_storage'
 class Synchronizer
 	ptrTable = {}
 	makePtr = ->
-		profileTop = ls.expand 'profile', 0
+		profileTop = ls.expand ls('profile'), 0
 		profileId  = ls profileTop['id']
 		ptrId      = ls profileTop['freePtrId']
 		ls profileTop['freePtrId'], Number(ptrId) + 1
-		"#{profileId}:#{freePtrId}"
+		"#{profileId}:#{ptrId}"
 
 	createDataFromSpec = (spec) ->
 		return switch spec.type
@@ -23,7 +23,7 @@ class Synchronizer
 	constructor : (@spec, @id) ->
 		if id?
 			if spec.isTarget
-				@pid = Number ls ls.expand(@id, 0)['__id']
+				@pid = ls.expand ls.expand(@id, 0)['__id']
 		else
 			data = createDataFromSpec spec
 			if spec.isTarget
@@ -82,22 +82,26 @@ class Synchronizer
 		obs = ko.observable init
 		obs.subscribe (v) ->
 			if obs.id?
-				v = "\"#{v}\"" if spec.type == 'string'
+				v = "\"#{v}\"" if spec.type in ['string', 'pointer']
 				ls obs.id, v
 
 			return
 
 		if spec.type == 'pointer'
 			obs.deref = -> ptrTable[obs()]
+			obs.sync = obs
+			obs.leaveStorage = ->
+				ls.remove obs.id
+				obs.id = null
 
-		else obs
+		obs
 
 	makeArrayObserver = (spec, init, wrap) ->
 		obs = ko.observableArray(init.map wrap).extend(extMode: on)
 
 		if spec.item.isTarget
 			prevPids = []
-			for item in init
+			for item in obs()
 				ptrTable[item.sync.pid] = item
 				prevPids.push item.sync.pid
 

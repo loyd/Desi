@@ -37,7 +37,7 @@ relationship = object {
 		'association', 'aggregation',
 		'composition', 'generalization',
 		'realization', 'dependency'
-	])
+	], def: 'association')
 	mode : number
 	fromIndicator : string
 	toIndicator : string
