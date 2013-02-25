@@ -651,18 +651,18 @@ class RelationshipViewModel extends BaseViewModel
 		from  = @fromEssential.deref()
 		fromY = from.posY() + from.height() / 2
 
-	SHIFT_PART = 5
+	SHIFT_PART = 10
 	@computed \
 	midX : ->
-		fromPosX = @fromEssential.deref().posX()
-		toPosX = @toEssential.deref().posX()
+		fromPosX = @fromX()
+		toPosX   = @toX()
 
 		fromPosX + (toPosX - fromPosX) / SHIFT_PART
 
 	@computed \
 	midY : ->
-		fromPosY = @fromEssential.deref().posY()
-		toPosY = @toEssential.deref().posY()
+		fromPosY = @fromY()
+		toPosY   = @toY()
 
 		toPosY - (toPosY - fromPosY) / SHIFT_PART
 
