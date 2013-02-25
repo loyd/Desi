@@ -10,8 +10,9 @@ app.configure ->
 
 app.configure 'development', ->
 	app.use express.static path.join __dirname, '../public'
-	app.use express.errorHandler
+	app.use express.errorHandler {
 		dumpExceptions : on
 		showStack      : yes
+	}
 
 app.listen 3000
