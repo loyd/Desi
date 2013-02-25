@@ -238,5 +238,22 @@
 	.relationship {
 		stroke : black;
 		stroke-width : 1px;
+		fill : none;
+	}
+
+	.aggregation .tip, .generalization .tip, .realization .tip {
+		fill : white;
+	}
+
+	.composition .tip {
+		fill : black;
+	}
+
+	.realization, .dependency {
+		stroke-dasharray : 3, 3;
+
+		.tip {
+			stroke-dasharray : none;
+		}
 	}
 }

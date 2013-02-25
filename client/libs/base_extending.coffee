@@ -25,8 +25,11 @@ Number::signStr = ->
 Number::pow = (power) ->
 	Math.pow(@, power)
 
-Number::degree = ->
-	@ * Math.PI / 180
+Number::toRadian = ->
+	@ / 180 * Math.PI
+
+Number::toDegree = ->
+	@ / Math.PI * 180
 
 Number::toSecond = ->
 	@ / 1000

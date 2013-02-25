@@ -642,19 +642,113 @@ class RelationshipViewModel extends BaseViewModel
 		super
 
 	@computed \
-	fromPosX : ->
-		@fromEssential.deref().posX()
+	fromX : ->
+		from  = @fromEssential.deref()
+		fromX = from.posX() + from.width() / 2
 
 	@computed \
-	toPosX : ->
-		@toEssential.deref().posX()
+	fromY : ->
+		from  = @fromEssential.deref()
+		fromY = from.posY() + from.height() / 2
+
+	SHIFT_PART = 5
+	@computed \
+	midX : ->
+		fromPosX = @fromEssential.deref().posX()
+		toPosX = @toEssential.deref().posX()
+
+		fromPosX + (toPosX - fromPosX) / SHIFT_PART
 
 	@computed \
-	fromPosY : ->
-		@fromEssential.deref().posY()
+	midY : ->
+		fromPosY = @fromEssential.deref().posY()
+		toPosY = @toEssential.deref().posY()
+
+		toPosY - (toPosY - fromPosY) / SHIFT_PART
 
 	@computed \
-	toPosY : ->
-		@toEssential.deref().posY()
+	toX : ->
+		to  = @toEssential.deref()
+		toX = to.posX() + to.width() / 2
+
+	@computed \
+	toY : ->
+		to  = @toEssential.deref()
+		toY = to.posY() + to.height() / 2
+
+	@computed \
+	path : ->
+		"""M #{@fromX()} #{@fromY()} Q
+			#{@midX()}, #{@midY()}
+		#{@toX()} #{@toY()}"""
+
+	calcPart = (A, B, C, D) ->
+		d = -A + 2*B - C
+		if d == 0
+			if A != B
+				(A - D) / (2 * (A - B))
+			else null
+		else
+			r = (-A*C + A*D + B*B - 2*B*D + C*D).sqrt()
+			t = (r - A + B) / d
+			unless 0 <= t <= 1
+				t = (-r - A + B) / d
+
+			if 0 <= t <= 1 then t else null
+
+	calcPartAtX : (x) ->
+		calcPart(@fromX(), @midX(), @toX(), x)
+
+	calcPartAtY : (y) ->
+		calcPart(@fromY(), @midY(), @toY(), y)
+
+	INACCURACY = 2
+	@computed \
+	crossPart : ->
+		ess = @toEssential.deref()
+		eWidth  = ess.width()
+		eHeight = ess.height()
+		ePosX   = ess.posX()
+		ePosY   = ess.posY()
+
+		part = @calcPartAtX(ePosX) ? @calcPartAtX(ePosX + eWidth)
+		if part?
+			y = @calcY part
+			if ePosY - INACCURACY < y < ePosY + eHeight + INACCURACY
+				return part
+
+		part = @calcPartAtY(ePosY) ? @calcPartAtY(ePosY + eHeight)
+		if part?
+			x = @calcX part
+			if ePosX - INACCURACY < x < ePosX + eWidth + INACCURACY
+				return part
+
+	calcX : (p) ->
+		r = 1 - p
+		r * r * @fromX() + 2 * p * r * @midX() + p * p * @toX()
+
+	calcY : (p) ->
+		r = 1 - p
+		r * r * @fromY() + 2 * p * r * @midY() + p * p * @toY()
+
+	DELTA_PART = .05
+	@computed \
+	crossAngle : ->
+		helpPart = @crossPart() - DELTA_PART
+		helpX = @calcX helpPart
+		helpY = @calcY helpPart
+		Math.atan2(@crossY() - helpY, @crossX() - helpX).toDegree()
+
+	@computed \
+	crossX : ->
+		@calcX @crossPart()
+
+	@computed \
+	crossY : ->
+		@calcY @crossPart()
+
+	@computed \
+	tipTransform : ->
+		"translate(#{@crossX()}, #{@crossY()}) rotate(#{@crossAngle()})"
 
 module.exports = ClassDiagramViewModel
