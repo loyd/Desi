@@ -38,8 +38,14 @@
 		}
 
 		&.moved {
-			opacity : 0.4;
-			cursor  : move;
+			cursor : move;
+			stroke-dasharray : 1, 2;
+
+			text {
+				stroke : black;
+				fill   : none;
+				stroke-width : 1;
+			}
 		}
 
 		&.chosen {
