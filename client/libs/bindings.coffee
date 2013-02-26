@@ -1,5 +1,4 @@
-ko       = require 'ko'
-onresize = require './onresize'
+ko = require 'ko'
 
 register = (name, allowVirtual, cnf) ->
 	ko.bindingHandlers[name] = cnf
@@ -55,26 +54,22 @@ register 'svgcss', no, {
 	update : (elem, accs) ->
 		classes = " #{elem.getAttribute('class') || ''} "
 
-		for className, flagAccs of unwrap(accs())
-			flag  = unwrap flagAccs()
-			index = classes.indexOf(" #{className} ")
+		value = unwrap accs()
+		if typeof value == 'object'
+			for className, flagAccs of value
+				flag  = unwrap flagAccs()
+				index = classes.indexOf(" #{className} ")
 
-			continue if flag == Boolean(~index)
-			if flag
-				classes += "#{className} "
-			else
-				classes = classes.replace " #{className} ", ' '
+				continue if flag == Boolean(~index)
+				if flag
+					classes += "#{className} "
+				else
+					classes = classes.replace " #{className} ", ' '
+		else
+			value = String value || ''
+			classes = classes.replace " #{elem.__ko__cssValue} ", ' '
+			classes += value
+			elem.__ko__cssValue = value
 
 		elem.setAttribute 'class', classes.trim()
-}
-
-register 'resize', no, {
-	init : (elem, accs) ->
-		value = unwrap accs
-		onresize elem, ->
-			bbox = elem.getBoundingClientRect()
-			value.width  bbox.width  if value.width
-			value.height bbox.height if value.height
-
-	update : Function.empty
 }
