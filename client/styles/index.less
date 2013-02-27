@@ -1,13 +1,7 @@
 @sidebar-width : 200px;
 @top-height    : 42px;
 
-.transition (@what) {
-	-moz-transition    : @what;
-	-webkit-transition : @what;
-	-ms-transition     : @what;
-	-o-transition      : @what;
-	transition         : @what;
-}
+@import "utils";
 
 #top, #sidebar, #main {
 	position : fixed;

@@ -38,14 +38,13 @@ relationship = object {
 		'composition', 'generalization',
 		'realization', 'dependency'
 	], def: 'association')
-	mode : number
 	fromIndicator : string
 	toIndicator : string
 	fromEssential : (pointer -> essential)
 	toEssential : (pointer -> essential)
 	fromMultiplicity : (string valid: (val) ->
 		if @type is 'composition'
-			val in ['0', '0..1']
+			val in ['0..1', '1']
 		else
 			val.test validMultiplicity
 	)

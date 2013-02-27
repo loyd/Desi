@@ -3,6 +3,10 @@ ls = require 'libs/local_storage'
 
 class Synchronizer
 	ptrTable = {}
+
+	@registerPid = (pid, what) ->
+		ptrTable[pid] = what
+
 	makePtr = ->
 		profileTop = ls.expand ls('profile'), 0
 		profileId  = ls profileTop['id']
@@ -20,7 +24,7 @@ class Synchronizer
 			when 'array' then []
 			else spec.default
 
-	constructor : (@spec, @id) ->
+	constructor : (@spec, @id, isFake) ->
 		if id?
 			if spec.isTarget
 				@pid = ls.expand ls.expand(@id, 0)['__id']
@@ -28,7 +32,7 @@ class Synchronizer
 			data = createDataFromSpec spec
 			if spec.isTarget
 				@pid = data.__id = makePtr()
-			@id = ls.allocate data
+			@id = ls.allocate data unless isFake
 
 		@observers = {}
 
@@ -52,7 +56,7 @@ class Synchronizer
 
 		if prop
 			spec = @spec.data[prop]
-			id   = ls.expand(@id, 0)[prop]
+			id   = ls.expand(@id, 0)?[prop]
 		else
 			{spec, id} = this
 
@@ -67,7 +71,7 @@ class Synchronizer
 			else if opts.adapter
 				(itemId) -> opts.adapter new Synchronizer(spec.item, itemId)
 
-			makeArrayObserver(spec, ls.expand(id, 0), adapter)
+			makeArrayObserver(spec, ls.expand(id, 0) || [], adapter)
 		else
 			makeObserver(spec, ls.expand id)
 

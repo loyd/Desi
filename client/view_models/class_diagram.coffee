@@ -25,30 +25,49 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		@openMenu = ko.observable null
 		
-		@chosenEssential = ko.observable null
-		@openPopover     = ko.observable null
-		@essentialMenuElement = ko.observable null
+		@chosenEssential    = ko.observable null
+		@chosenRelationship = ko.observable null
+		@openPopover        = ko.observable null
+		@essentialMenuElement    = ko.observable null
+		@relationshipMenuElement = ko.observable null
+		@fakeRelationship = ko.observable null
+		@fakeEssential = ko.observable null
+		@fakeRelationshipIsVisible = ko.observable no
+		@fakeEssentialIsVisible = ko.observable no
 
 		@creatingMenuPosX = ko.observable()
 		@creatingMenuPosY = ko.observable()
 
 		@isChosen = no
 		@isMoved  = no
-		@linking  = no
+		@linking  = ko.observable no
+		@linking.subscribe (value) =>
+			if value
+				@fakeRelationshipIsVisible yes
+			else
+				@fakeRelationshipIsVisible no
+				@fakeEssentialIsVisible no
 
 		document.addEventListener 'mouseup', =>
-			(=> @linking = no).defer()
+			(=> @linking no).defer()
 
 		onresize '#main', =>
 			do @refreshSizes if @isChosen
 
-		subscr = @essentialMenuElement.subscribe (elem) =>
-			do subscr.dispose
+		essSubscr = @essentialMenuElement.subscribe (elem) =>
+			do essSubscr.dispose
 			onresize elem, =>
 				# I love this hack :D
 				@essentialMenuElement @essentialMenuElement()
 
+		relSubscr = @relationshipMenuElement.subscribe (elem) =>
+			do relSubscr.dispose
+			onresize elem, =>
+				@relationshipMenuElement @relationshipMenuElement()
+
 		super
+
+		do @makeFakeElements
 
 	calcExternSize : (size) ->
 		size * @scaleFactor()
@@ -72,6 +91,22 @@ class ClassDiagramViewModel extends BaseViewModel
 	stopEditing : ->
 		@isChosen = no
 
+	@delegate('click') (el, event) ->
+		return if event.target isnt @element()
+		if @isMoved
+			@isMoved = no
+			return
+
+		@openMenu null
+		@chooseRelationship null
+		@chooseEssential null
+		{left, top} = @element().getBoundingClientRect()
+		left = event.clientX - left
+		top  = event.clientY - top
+		@creatingMenuPosX left
+		@creatingMenuPosY top
+		@openMenu 'creating'
+
 	#### Adding essentials and relationships
 
 	addEssential : (x, y) ->
@@ -89,7 +124,18 @@ class ClassDiagramViewModel extends BaseViewModel
 			index = @essentials.indexOf ess
 			@essentials.move index, @essentials().length-1
 
+	chooseRelationship : (rel) ->
+		@chosenRelationship()?.isChosen no
+		@chosenRelationship rel
+		if rel?
+			rel.isChosen yes
+			index = @relationships.indexOf rel
+			@relationships.move index, @relationships().length-1
+
 	removeEssential : (ess) ->
+		for relPtr in ess.relationships()
+			@removeRelationship relPtr.deref()
+
 		@essentials.remove ess
 		if @chosenEssential() is ess
 			@chooseEssential null
@@ -103,31 +149,30 @@ class ClassDiagramViewModel extends BaseViewModel
 		to.addRelationship rel
 		@relationships.push rel
 
+	makeFakeElements : ->
+		relSync = new Synchronizer @spec.data.relationships.item, null, yes
+		rel = new RelationshipViewModel relSync
+		
+		essSync = new Synchronizer @spec.data.essentials.item, null, yes
+		ess = new EssentialViewModel essSync
+
+		Synchronizer.registerPid ess.sync.pid, ess
+
+		@fakeEssential ess
+		@fakeRelationship rel
+
 	removeRelationship : (rel) ->
 		@relationships.remove rel
 		rel.fromEssential.deref().removeRelationship rel
 		rel.toEssential.deref().removeRelationship rel
-
-	@delegate('click') (el, event) ->
-		return if event.target isnt @element()
-		if @isMoved
-			@isMoved = no
-			return
-
-		@openMenu null
-		@chooseEssential null
-		{left, top} = @element().getBoundingClientRect()
-		left = event.clientX - left
-		top  = event.clientY - top
-		@creatingMenuPosX left
-		@creatingMenuPosY top
-		@openMenu 'creating'
 
 	#### Clicking and moving essential
 
 	@delegate('mousedown', '.essential') \
 	essentialMouseDown : (ess, event) ->
 		if ess isnt @chosenEssential()
+			@openMenu null
+			@chooseRelationship null
 			@chooseEssential ess
 			@openMenu 'control'
 
@@ -161,6 +206,12 @@ class ClassDiagramViewModel extends BaseViewModel
 		document.addEventListener 'mouseup', mouseUp, on
 
 		do event.preventDefault
+
+	@delegate('click', '.relationship-zone') (rel) ->
+		@openMenu null
+		@chooseEssential null
+		@chooseRelationship rel
+		@openMenu 'relationship'
 
 	#### Scaling and shifting
 
@@ -258,30 +309,83 @@ class ClassDiagramViewModel extends BaseViewModel
 		@openMenu 'essential'
 
 	@delegate('mousedown', '.btn-link-essential') ->
-		@linking = yes
+		fakeRel = @fakeRelationship()
+		fakeEss = @fakeEssential()
+		fakeRel.fromEssential @chosenEssential().ref()
+		fakeRel.toEssential @fakeEssential().ref()
+		@linking yes
+		@fakeEssentialIsVisible yes
+
+		{left, top} = @element().getBoundingClientRect()
+		scaleFactor = @scaleFactor()
+		someX = @originX() - fakeEss.width() / 2
+		someY = @originY() - fakeEss.height() / 2
+
+		menuIsClosed = no
+		mouseMove = (event) =>
+			unless menuIsClosed
+				@openMenu null
+				menuIsClosed = yes
+
+			fakeEss.posX someX + (event.clientX - left) / scaleFactor
+			fakeEss.posY someY + (event.clientY - top) / scaleFactor
+
+		mouseUp = =>
+			document.removeEventListener 'mousemove', mouseMove, off
+			document.removeEventListener 'mouseup', mouseUp, off
+
+		document.addEventListener 'mousemove', mouseMove, off
+		document.addEventListener 'mouseup', mouseUp, off
+
+	@delegate('mouseover', '.essential') (ess) ->
+		if @linking()
+			if @fakeEssential() isnt ess
+				@fakeEssentialIsVisible no
+			@fakeRelationship().toEssential ess.ref()
+
+	@delegate('mouseout', '.essential') ->
+		if @linking()
+			@fakeRelationship().toEssential @fakeEssential().ref()
+			@fakeEssentialIsVisible yes
 
 	@delegate('mouseup', '.essential') (ess) ->
-		return unless @linking
-		return if ess is @chosenEssential()
+		return unless @linking()
+		@linking no
+		if ess is (fake = @fakeEssential())
+			@addEssential fake.posX() + fake.width() / 2,
+				fake.posY() + fake.height() / 2
 
 		@addRelationship @chosenEssential(), ess
+		@chooseRelationship @relationships().last()
+		@openMenu 'relationship'
 
 	@delegate('mousedown', '.control-menu') (el, event) ->
 		return unless ~" #{event.target.className} ".indexOf ' control-menu '
 		@essentialMouseDown @chosenEssential(), event
 
-	#### Essential menu
-	
-	essentialMenuWidth : ->
-		return unless @essentialMenuElement()
-		s = getComputedStyle(@essentialMenuElement(), null)
+	#### Utils for menu
+
+	calcMenuWidth = (elem) ->
+		return unless elem
+		s = getComputedStyle(elem, null)
 		[s.marginLeft, s.width, s.marginRight].reduce (res, size) ->
 			res + (parseInt(size, 10) || 0).abs()
 		, 0
 
+	calcMenuHeight = (elem) ->
+		return unless elem
+		s = getComputedStyle(elem, null)
+		[s.marginTop, s.height, s.marginBottom].reduce (res, size) ->
+			res + (parseInt(size, 10) || 0).abs()
+		, 0
+
+	#### Essential menu
+
+	essentialMenuWidth : ->
+		calcMenuWidth @essentialMenuElement()
+
 	essentialMenuHeight : ->
-		return unless @essentialMenuElement()
-		@essentialMenuElement().getBoundingClientRect().height
+		calcMenuHeight @essentialMenuElement()
 
 	@computed \
 	essentialMenuPosition : ->
@@ -313,9 +417,9 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		posY = centerPosY - popoverHeight / 2
 		if posY < 0
-			posY = 0
+			posY = Math.min 0, @calcExternPosY ess.posY() + ess.height()
 		else if posY + popoverHeight > @height()
-			posY = @height() - popoverHeight
+			posY = Math.max(@height(), @calcExternPosY ess.posY()) - popoverHeight
 
 		posY
 
@@ -356,6 +460,74 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('click', '.essential-menu .btn-rm-param') (param, event) ->
 		oper = ko.contextFor(event.target).$parent
 		oper.removeParam param
+
+	#### Relationship menu
+
+	relationshipMenuWidth : ->
+		calcMenuWidth @relationshipMenuElement()
+
+	relationshipMenuHeight : ->
+		calcMenuHeight @relationshipMenuElement()
+
+	@computed \
+	relationshipMenuPart : ->
+		return if @openMenu() != 'relationship'
+		rel = @chosenRelationship()
+		(rel.fromCrossPart() + rel.toCrossPart()) / 2
+
+	@computed \
+	relationshipMenuPosition : ->
+		return if @openMenu() != 'relationship'
+		rel   = @chosenRelationship()
+		part  = @relationshipMenuPart()
+		angle = rel.calcTangentAngle(part).abs()
+		if 45 < angle < 135
+			posX = @calcExternPosX rel.calcX part
+			if Math.max(posX, @width() - posX) == posX
+				'left'
+			else
+				'right'
+		else
+			posY = @calcExternPosY rel.calcY part
+			if Math.max(posY, @height() - posY) == posY
+				'top'
+			else
+				'bottom'
+
+	@computed \
+	relationshipMenuPosX : ->
+		return if @openMenu() != 'relationship'
+		rel  = @chosenRelationship()
+		patX = @calcExternPosX rel.calcX @relationshipMenuPart()
+		pos  = @relationshipMenuPosition()
+		if pos == 'left'
+			patX - @relationshipMenuWidth()
+		else if pos == 'right'
+			patX
+		else
+			patX - @relationshipMenuWidth() / 2
+
+	@computed \
+	relationshipMenuPosY : ->
+		return if @openMenu() != 'relationship'
+		rel  = @chosenRelationship()
+		patY = @calcExternPosY rel.calcY @relationshipMenuPart()
+		pos  = @relationshipMenuPosition()
+		if pos == 'top'
+			patY - @relationshipMenuHeight()
+		else if pos == 'bottom'
+			patY
+		else
+			patY - @relationshipMenuHeight() / 2
+
+	@delegate('click', '.relationship-menu .types .btn') (type) ->
+		rel = @chosenRelationship()
+		return if rel.isItself() && type in ['generalization', 'realization']
+		@chosenRelationship().type type
+
+	@delegate('click', '.relationship-menu .rm-relationship') (rel) ->
+		@removeRelationship rel
+		@openMenu null
 
 	#### Creating menu
 
@@ -434,7 +606,9 @@ class EssentialViewModel extends BaseViewModel
 
 	addRelationship : (rel) ->
 		sync = new Synchronizer @spec.data.relationships.item
-		@relationships.push sync.observer()
+		ptr = sync.observer()
+		ptr rel.ref()
+		@relationships.push ptr
 
 	removeRelationship : (rel) ->
 		@relationships.remove (ptr) ->
@@ -634,12 +808,37 @@ class ParamViewModel extends BaseViewModel
 		@separatorPosX() + textSize(':').width + INTERVAL
 
 class RelationshipViewModel extends BaseViewModel
+	freeID = 0
+
 	constructor : (@sync) ->
-		@type = sync.observer 'type'
-		@fromEssential = sync.observer 'fromEssential'
-		@toEssential = sync.observer 'toEssential'
+		@type             = sync.observer 'type'
+		@fromEssential    = sync.observer 'fromEssential'
+		@toEssential      = sync.observer 'toEssential'
+		@fromMultiplicity = sync.observer 'fromMultiplicity'
+		@toMultiplicity   = sync.observer 'toMultiplicity'
+		@fromIndicator    = sync.observer 'fromIndicator'
+		@toIndicator      = sync.observer 'toIndicator'
+
+		@isChosen = ko.observable no
+		@pathID = "__path__id__#{freeID++}"
+		@pathElement = ko.observable null
 
 		super
+
+		@isClassLevel.subscribe (value) =>
+			if value
+				@fromMultiplicity ''
+				@toMultiplicity ''
+				@fromIndicator ''
+				@toIndicator ''
+
+	@computed \
+	isClassLevel : ->
+		@type() in ['generalization', 'realization']
+
+	@computed \
+	isItself : ->
+		@fromEssential() == @toEssential()
 
 	@computed \
 	fromX : ->
@@ -648,16 +847,22 @@ class RelationshipViewModel extends BaseViewModel
 
 	@computed \
 	fromY : ->
-		from  = @fromEssential.deref()
-		fromY = from.posY() + from.height() / 2
+		from = @fromEssential.deref()
+		if @isItself()
+			from.posY() + from.height() * 4/5
+		else
+			from.posY() + from.height() / 2
 
 	SHIFT_PART = 10
 	@computed \
 	midX : ->
-		fromPosX = @fromX()
-		toPosX   = @toX()
+		if @isItself()
+			@fromX() + @fromEssential.deref().width() * 2
+		else
+			fromPosX = @fromX()
+			toPosX   = @toX()
 
-		fromPosX + (toPosX - fromPosX) / SHIFT_PART
+			fromPosX + (toPosX - fromPosX) / SHIFT_PART
 
 	@computed \
 	midY : ->
@@ -668,19 +873,28 @@ class RelationshipViewModel extends BaseViewModel
 
 	@computed \
 	toX : ->
-		to  = @toEssential.deref()
-		toX = to.posX() + to.width() / 2
+		to = @toEssential.deref()
+		to.posX() + to.width() / 2
 
 	@computed \
 	toY : ->
-		to  = @toEssential.deref()
-		toY = to.posY() + to.height() / 2
+		to = @toEssential.deref()
+		if @isItself()
+			to.posY() + to.height() / 5
+		else
+			to.posY() + to.height() / 2
 
 	@computed \
 	path : ->
 		"""M #{@fromX()} #{@fromY()} Q
 			#{@midX()}, #{@midY()}
 		#{@toX()} #{@toY()}"""
+
+	@computed \
+	reversedPath : ->
+		"""M #{@toX()} #{@toY()} Q
+			#{@midX()}, #{@midY()}
+		#{@fromX()} #{@fromY()}"""
 
 	calcPart = (A, B, C, D) ->
 		d = -A + 2*B - C
@@ -703,9 +917,7 @@ class RelationshipViewModel extends BaseViewModel
 		calcPart(@fromY(), @midY(), @toY(), y)
 
 	INACCURACY = 2
-	@computed \
-	crossPart : ->
-		ess = @toEssential.deref()
+	calcPartFor : (ess) ->
 		eWidth  = ess.width()
 		eHeight = ess.height()
 		ePosX   = ess.posX()
@@ -723,6 +935,14 @@ class RelationshipViewModel extends BaseViewModel
 			if ePosX - INACCURACY < x < ePosX + eWidth + INACCURACY
 				return part
 
+	@computed \
+	fromCrossPart : ->
+		@calcPartFor(@fromEssential.deref()) ? 0
+
+	@computed \
+	toCrossPart : ->
+		@calcPartFor(@toEssential.deref()) ? 1
+
 	calcX : (p) ->
 		r = 1 - p
 		r * r * @fromX() + 2 * p * r * @midX() + p * p * @toX()
@@ -732,23 +952,138 @@ class RelationshipViewModel extends BaseViewModel
 		r * r * @fromY() + 2 * p * r * @midY() + p * p * @toY()
 
 	DELTA_PART = .05
-	@computed \
-	crossAngle : ->
-		helpPart = @crossPart() - DELTA_PART
-		helpX = @calcX helpPart
-		helpY = @calcY helpPart
-		Math.atan2(@crossY() - helpY, @crossX() - helpX).toDegree()
+	calcTangentAngle : (part) ->
+		helpPart = if part > 0.5 then part - DELTA_PART else part + DELTA_PART
+		deltaX = @calcX(part) - @calcX(helpPart)
+
+		Math.atan2(
+			@calcY(part) - @calcY(helpPart), deltaX
+		).toDegree()
 
 	@computed \
-	crossX : ->
-		@calcX @crossPart()
+	fromCrossAngle : ->
+		part = @fromCrossPart()
+		help = part + DELTA_PART
+		Math.atan2(
+			@calcY(part) - @calcY(help),
+			@calcX(part) - @calcX(help)
+		).toDegree()
 
 	@computed \
-	crossY : ->
-		@calcY @crossPart()
+	toCrossAngle : ->
+		part = @toCrossPart()
+		help = part - DELTA_PART
+		Math.atan2(
+			@calcY(part) - @calcY(help),
+			@calcX(part) - @calcX(help)
+		).toDegree()
+
+	@computed \
+	fromCrossX : ->
+		@calcX @fromCrossPart()
+
+	@computed \
+	fromCrossY : ->
+		@calcY @fromCrossPart()
+
+	@computed \
+	toCrossX : ->
+		@calcX @toCrossPart()
+
+	@computed \
+	toCrossY : ->
+		@calcY @toCrossPart()
 
 	@computed \
 	tipTransform : ->
-		"translate(#{@crossX()}, #{@crossY()}) rotate(#{@crossAngle()})"
+		if @type() in ['aggregation', 'composition'] && !@isItself()
+			"translate(#{@fromCrossX()}, #{@fromCrossY()})" +
+			"rotate(#{@fromCrossAngle()})"
+		else
+			"translate(#{@toCrossX()}, #{@toCrossY()})" +
+			"rotate(#{@toCrossAngle()})"
+
+	MULTIPLICITY_DIST = 12
+	MULTIPLICITY_FACTOR = 1.2
+	calcMultiplicityAngle : (startAngle, indicator) ->
+		s = if indicator.length == 0
+			if 90 < startAngle < 180 || -90 < startAngle < 0 then -1 else 1
+		else if @pathMode() == 'def' then 1 else -1
+	
+		(startAngle + s * 45).toRadian()
+
+	@computed \
+	fromMultiplicityDist : ->
+		dist = MULTIPLICITY_DIST
+		if @type() in ['aggregation', 'composition']
+			dist *= MULTIPLICITY_FACTOR
+		if @fromMultiplicity().length > 1
+			dist *= MULTIPLICITY_FACTOR
+		if @fromIndicator().length > 0
+			dist *= MULTIPLICITY_FACTOR
+			
+		dist
+
+	@computed \
+	toMultiplicityDist : ->
+		dist = MULTIPLICITY_DIST
+		if @type() in ['association', 'dependency']
+			dist *= MULTIPLICITY_FACTOR
+		if @toMultiplicity().length > 1
+			dist *= MULTIPLICITY_FACTOR
+		if @toIndicator().length > 0
+			dist *= MULTIPLICITY_FACTOR
+
+		dist
+
+	@computed \
+	fromMultiplicityX : ->
+		angle = @calcMultiplicityAngle @fromCrossAngle(), @fromIndicator()
+		@fromCrossX() - @fromMultiplicityDist() * angle.cos()
+
+	@computed \
+	fromMultiplicityY : ->
+		angle = @calcMultiplicityAngle @fromCrossAngle(), @fromIndicator()
+		@fromCrossY() - @fromMultiplicityDist() * angle.sin()
+
+	@computed \
+	toMultiplicityX : ->
+		angle = @calcMultiplicityAngle @toCrossAngle(), @toIndicator()
+		@toCrossX() - @toMultiplicityDist() * angle.cos()
+
+	@computed \
+	toMultiplicityY : ->
+		angle = @calcMultiplicityAngle @toCrossAngle(), @toIndicator()
+		@toCrossY() - @toMultiplicityDist() * angle.sin()
+
+	@computed \
+	pathMode : ->
+		angle = @fromCrossAngle()
+		if -90 < angle < 90 then 'rev' else 'def'
+
+	@computed \
+	pathLength : ->
+		@fromX(); @fromY(); @toX(); @toY()
+		@pathElement().getTotalLength()
+
+	OFFSET_FACTOR = 1.3
+
+	@computed \
+	fromOffset : ->
+		diff = ((@fromX() - @fromCrossX()).sqr() +
+			(@fromY() - @fromCrossY()).sqr()).sqrt() * OFFSET_FACTOR
+
+		if @pathMode() == 'rev'
+			@pathLength() - diff
+		else diff
+	
+	@computed \
+	toOffset : ->
+		diff = ((@toX() - @toCrossX()).sqr() +
+			(@toY() - @toCrossY()).sqr()).sqrt() * OFFSET_FACTOR
+
+		if @pathMode() == 'def'
+			@pathLength() - diff
+		else diff
 
 module.exports = ClassDiagramViewModel

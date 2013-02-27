@@ -9,10 +9,16 @@
 		",
 		width="100%", height="100%"
 	)
-		// ko foreach: relationships
-		// ko template: { name: type() + '-tmpl' }
+		// ko template: { name: 'relationship-tmpl', foreach: relationships }
 		// /ko
-		// /ko
+
+		g.fake(data-bind="if: fakeRelationshipIsVisible")
+			// ko template: { name: 'relationship-tmpl', data: fakeRelationship }
+			// /ko
+
+		g.fake(data-bind="if: fakeEssentialIsVisible")
+			// ko template: { name: 'essential-tmpl', data: fakeEssential }
+			// /ko
 
 		// ko template: { name: 'essential-tmpl', foreach: essentials }
 		// /ko
@@ -40,6 +46,61 @@
 		button.btn.btn-make-class C
 		button.btn.btn-make-interface I
 		button.btn.btn-make-note: i.icon-comment
+
+	.relationship-menu.popover.fade(data-bind="\
+		bindElement: relationshipMenuElement,\
+		css: {\
+			in: openMenu() === 'relationship',\
+			left: relationshipMenuPosition() === 'left',\
+			right: relationshipMenuPosition() === 'right',\
+			top: relationshipMenuPosition() === 'top',\
+			bottom: relationshipMenuPosition() === 'bottom'\
+		},\
+		style: {\
+			top: relationshipMenuPosY() + 'px',\
+			left: relationshipMenuPosX() + 'px'\
+		}\
+	")
+		.arrow
+		.popover-inner
+			.popover-content(data-bind="with: chosenRelationship")
+				button.btn.rm-relationship: i.icon-remove
+				
+				.types(data-bind="foreach: 'association aggregation composition \
+					generalization realization dependency'.words()\
+				")
+					button.btn(data-bind="css: {\
+						'btn-inverse': $parent.type() === $data },\
+						attr: { disabled: $parent.isItself() &&\
+							($data === 'generalization' || $data === 'realization') }\
+					")
+						i(data-bind="css: 'icon-' + $data")
+
+				// ko ifnot: isClassLevel
+				hr
+				.from
+					select.multiplicity(data-bind="value: fromMultiplicity")
+						option(value="")
+						option(value="0..1") 0..1
+						option(value="1") 1
+						// ko if: type() !== 'composition'
+						option(value="*") *
+						option(value="1..*") 1..*
+						// /ko
+
+					input.indicator(type="text", data-bind="value: fromIndicator")
+
+				hr
+				.to
+					select.multiplicity(data-bind="value: toMultiplicity")
+						option(value="")
+						option(value="0..1") 0..1
+						option(value="1") 1
+						option(value="*") *
+						option(value="1..*") 1..*
+
+					input.indicator(type="text", data-bind="value: toIndicator")
+				// /ko
 
 	.essential-menu.popover.fade(data-bind="\
 		bindElement: essentialMenuElement,\

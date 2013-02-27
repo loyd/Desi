@@ -35,16 +35,22 @@ module.exports = {
 		item : opts.of?() || opts.of
 
 	number : (opts) ->
+		if 'def' not of opts
+			opts.def = 0
 		result = standardize opts
 		result.type = 'number'
 		result
 
 	boolean : (opts) ->
+		if 'def' not of opts
+			opts.def = yes
 		result = standardize opts
 		result.type = 'boolean'
 		result
 
 	string : (opts) ->
+		if 'def' not of opts
+			opts.def = ''
 		result = standardize opts
 		if 'test' of opts
 			result.validate = (v) -> v.test opts.test

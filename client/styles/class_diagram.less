@@ -1,5 +1,8 @@
 @stroke-width   : 0.2mm;
 @btn-size       : 45px;
+@relation-zone  : 10;
+
+@import "utils";
 
 .class-diagram {
 
@@ -84,6 +87,16 @@
 		}
 	}
 
+	hr {
+		margin : 10px 0;
+	}
+
+	
+	input, select {
+		margin-top    : 0;
+		margin-bottom : 0;
+	}
+
 	.control-menu {
 		@diff : -@btn-size / 2;
 
@@ -163,15 +176,6 @@
 	.essential-menu {
 		width : 335px;
 
-		input, select {
-			margin-top    : 0;
-			margin-bottom : 0;
-		}
-
-		hr {
-			margin : 10px 0;
-		}
-
 		.class-name {
 			display : block;
 			width   : 230px;
@@ -241,10 +245,46 @@
 		}
 	}
 
+	.relationship-menu {
+		width : 284px;
+
+		.types .btn, .rm-relationship {
+			width   : 32px;
+			height  : 32px;
+			padding : 0;
+		}
+
+		.rm-relationship {
+			float : left;
+			margin-right : 10px;
+		}
+
+		.multiplicity {
+			width : 66px;
+		}
+
+		.indicator {
+			width : 170px;
+		}
+	}
+
 	.relationship {
 		stroke : black;
 		stroke-width : 1px;
 		fill : none;
+
+		text {
+			text-anchor        : middle;
+			alignment-baseline : middle;
+			font-size : 8px;
+			fill : black;
+			stroke : none;
+			font-weight : bold;
+		}
+
+		.to-indicator {
+			alignment-baseline : hanging;
+		}
 	}
 
 	.aggregation .tip, .generalization .tip, .realization .tip {
@@ -261,5 +301,24 @@
 		.tip {
 			stroke-dasharray : none;
 		}
+	}
+
+	.relationship-zone {
+		stroke-width : @relation-zone;
+		fill    : none;
+		stroke  : black;
+		opacity : 0;
+
+		.transition(opacity 0.3s);
+
+		&.chosen {
+			opacity : .1;
+		}
+	}
+
+	.fake {
+		stroke : gray !important;
+		fill : gray !important;
+		stroke-dasharray : 3, 3;
 	}
 }

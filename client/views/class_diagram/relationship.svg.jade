@@ -1,0 +1,43 @@
+g.relationship(data-bind="svgcss: type")
+	path(data-bind="attr: { d: path, id: pathID + 'def' },\
+		bindElement: pathElement")
+
+	// ko if: fromMultiplicity().length > 0
+	text(data-bind="text: fromMultiplicity, attr:\
+		{ x: fromMultiplicityX, y: fromMultiplicityY }\
+	")
+	// /ko
+	
+	// ko if: toMultiplicity().length > 0
+	text(data-bind="text: toMultiplicity, attr:\
+		{ x: toMultiplicityX, y: toMultiplicityY }\
+	")
+	// /ko
+
+	// ko if: fromIndicator().length > 0
+	text: textpath.from-indicator(data-bind="\
+		xlinkhref: '#' + pathID + pathMode(),\
+		text: fromIndicator,\
+		attr: { startOffset: fromOffset },\
+		style: { 'text-anchor': pathMode() === 'def' ? 'start' : 'end' }\
+	")
+	// /ko
+
+	// ko if: toIndicator().length > 0
+	text: textpath.to-indicator(data-bind="\
+		xlinkhref: '#' + pathID + pathMode(),\
+		text: toIndicator,\
+		attr: { startOffset: toOffset },\
+		style: { 'text-anchor': pathMode() === 'rev' ? 'start' : 'end' }\
+	")
+	// /ko
+
+	g.tip(data-bind="attr: { transform: tipTransform }")
+		// ko template: { name: type() + '-tip-tmpl' }
+		// /ko
+
+g.relationship-zone(data-bind="svgcss: { chosen: isChosen }")
+	path(data-bind="attr: { d: reversedPath, id: pathID + 'rev' }")
+	g.tip(data-bind="attr: { transform: tipTransform }")
+		// ko template: { name: type() + '-tip-tmpl' }
+		// /ko

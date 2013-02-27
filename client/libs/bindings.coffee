@@ -73,3 +73,9 @@ register 'svgcss', no, {
 
 		elem.setAttribute 'class', classes.trim()
 }
+
+register 'xlinkhref', no, {
+	update : (elem, accs) ->
+		value = unwrap accs()
+		elem.setAttributeNS('http://www.w3.org/1999/xlink', 'href', value)
+}
