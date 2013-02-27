@@ -355,6 +355,8 @@ class ClassDiagramViewModel extends BaseViewModel
 			@addEssential fake.posX() + fake.width() / 2,
 				fake.posY() + fake.height() / 2
 
+			ess = @essentials().last()
+
 		@addRelationship @chosenEssential(), ess
 		@chooseRelationship @relationships().last()
 		@openMenu 'relationship'
