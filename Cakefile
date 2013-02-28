@@ -409,6 +409,18 @@ preparers['bintrees'] = (ipath, opath, dev, done) ->
 				fs.writeFile "#{opath}/#{name}.js", makeAMD(content), ok
 		, done
 
+preparers['jszip'] = (ipath, opath, dev, done) ->
+	async.waterfall [
+		(next) -> fs.readFile "#{ipath}/jszip.js", 'utf-8', next
+		(code, done) ->
+			try
+				code = makeAMD(code, null, 'JSZip')
+			catch error
+				handleExternError error
+			
+			fs.writeFile "#{opath}/index.js", code, done
+	], done
+
 ################################################################################
 caseChange = /([a-z])([A-Z])/g
 String::toPathName = ->
