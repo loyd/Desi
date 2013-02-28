@@ -40,6 +40,10 @@
 			}
 		}
 
+		&.abstract .header text {
+			font-style : italic;
+		}
+
 		&.moved {
 			cursor : move;
 			stroke-dasharray : 1, 2;
@@ -177,9 +181,7 @@
 		width : 335px;
 
 		.class-name {
-			display : block;
-			width   : 230px;
-			margin  : auto;
+			width : 256px;
 			text-align : center;
 		}
 
@@ -203,11 +205,12 @@
 		.attribute, .operation {
 			margin-bottom : 10px;
 
-			.btn {
-				width   : 32px;
-				height  : 32px;
-				padding : 0;
-			}
+		}
+
+		.btn {
+			width   : 32px;
+			height  : 32px;
+			padding : 0;
 		}
 
 		.visibility {

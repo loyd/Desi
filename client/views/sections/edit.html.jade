@@ -118,6 +118,8 @@
 		.popover-inner
 			.popover-content(data-bind="with: chosenEssential")
 				input.class-name(type="text", data-bind="value: name")
+				button.btn.btn-abstract-toggle(
+					data-bind="css: { 'btn-inverse': isAbstract }") A
 				hr
 				.colors(data-bind="foreach: 'white blue green yellow grey'.words()")
 					.color(data-bind="style: { backgroundColor: $data },\

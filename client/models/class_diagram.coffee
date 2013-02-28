@@ -57,6 +57,7 @@ essential = object {
 	posY : number
 	name : (string def: 'ClassName')
 	color : (string def: 'white')
+	isAbstract : (boolean def: no)
 	stereotypes : (array of: stereotype)
 	attributes : (array of: attribute)
 	operations : (array of: operation)

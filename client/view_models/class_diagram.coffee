@@ -459,6 +459,9 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('click', '.essential-menu .btn-static-toggle') (member) ->
 		member.isStatic !member.isStatic()
 
+	@delegate('click', '.essential-menu .btn-abstract-toggle') (ess) ->
+		ess.isAbstract !ess.isAbstract()
+
 	@delegate('click', '.essential-menu .btn-rm-param') (param, event) ->
 		oper = ko.contextFor(event.target).$parent
 		oper.removeParam param
@@ -552,6 +555,7 @@ class EssentialViewModel extends BaseViewModel
 		@posX  = sync.observer 'posX'
 		@posY  = sync.observer 'posY'
 		@color = sync.observer 'color'
+		@isAbstract = sync.observer 'isAbstract'
 
 		@attributes = sync.observer 'attributes',
 			classAdapter : AttributeViewModel
