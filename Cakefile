@@ -421,6 +421,13 @@ preparers['jszip'] = (ipath, opath, dev, done) ->
 			fs.writeFile "#{opath}/index.js", code, done
 	], done
 
+preparers['doT'] = (ipath, opath, dev, done) ->
+	async.waterfall [
+		(next) -> fs.readFile "#{ipath}/doT.js", 'utf-8', next
+		(code, done) ->
+			fs.writeFile "#{opath}/index.js", makeAMD(code), done
+	], done
+
 ################################################################################
 caseChange = /([a-z])([A-Z])/g
 String::toPathName = ->

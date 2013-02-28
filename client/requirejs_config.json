@@ -4,7 +4,8 @@
 			"ko"       : "vendors/knockout/index",
 			"bintrees" : "vendors/bintrees/index",
 			"domReady" : "vendors/requirejs-domready/index",
-			"jszip"    : "vendors/jszip/index"
+			"jszip"    : "vendors/jszip/index",
+			"dot"      : "vendors/doT/index"
 		}
 	},
 
