@@ -993,6 +993,14 @@ class RelationshipViewModel extends BaseViewModel
 		@calcY @fromCrossPart()
 
 	@computed \
+	fromIsThick : ->
+		@type() in ['aggregation', 'composition']
+
+	@computed \
+	toIsThick : ->
+		!@fromIsThick()
+
+	@computed \
 	toCrossX : ->
 		@calcX @toCrossPart()
 
@@ -1002,7 +1010,7 @@ class RelationshipViewModel extends BaseViewModel
 
 	@computed \
 	tipTransform : ->
-		if @type() in ['aggregation', 'composition'] && !@isItself()
+		if @fromIsThick() && !@isItself()
 			"translate(#{@fromCrossX()}, #{@fromCrossY()})" +
 			"rotate(#{@fromCrossAngle()})"
 		else
@@ -1021,7 +1029,7 @@ class RelationshipViewModel extends BaseViewModel
 	@computed \
 	fromMultiplicityDist : ->
 		dist = MULTIPLICITY_DIST
-		if @type() in ['aggregation', 'composition']
+		if @fromIsThick()
 			dist *= MULTIPLICITY_FACTOR
 		if @fromMultiplicity().length > 1
 			dist *= MULTIPLICITY_FACTOR
@@ -1033,7 +1041,7 @@ class RelationshipViewModel extends BaseViewModel
 	@computed \
 	toMultiplicityDist : ->
 		dist = MULTIPLICITY_DIST
-		if @type() in ['association', 'dependency']
+		if @toIsThick()
 			dist *= MULTIPLICITY_FACTOR
 		if @toMultiplicity().length > 1
 			dist *= MULTIPLICITY_FACTOR
@@ -1078,6 +1086,9 @@ class RelationshipViewModel extends BaseViewModel
 	fromOffset : ->
 		diff = ((@fromX() - @fromCrossX()).sqr() +
 			(@fromY() - @fromCrossY()).sqr()).sqrt() * OFFSET_FACTOR
+
+		if @fromIsThick() && 30 < @fromCrossAngle().abs() < 150
+			diff *= OFFSET_FACTOR
 
 		if @pathMode() == 'rev'
 			@pathLength() - diff
