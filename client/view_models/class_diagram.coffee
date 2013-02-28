@@ -265,7 +265,10 @@ class ClassDiagramViewModel extends BaseViewModel
 			@shift(e.clientX - prevX, e.clientY - prevY)
 			prevX    = e.clientX
 			prevY    = e.clientY
-			@isMoved = yes
+			unless @isMoved
+				@isMoved = yes
+				if @openMenu() == 'creating'
+					@openMenu null
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
