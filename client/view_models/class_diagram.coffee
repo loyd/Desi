@@ -162,9 +162,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		@fakeRelationship rel
 
 	removeRelationship : (rel) ->
-		@relationships.remove rel
 		rel.fromEssential.deref().removeRelationship rel
 		rel.toEssential.deref().removeRelationship rel
+		@relationships.remove rel
 
 	#### Clicking and moving essential
 
@@ -363,6 +363,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		@addRelationship @chosenEssential(), ess
 		@chooseRelationship @relationships().last()
 		@openMenu 'relationship'
+		@chooseEssential null
 
 	@delegate('mousedown', '.control-menu') (el, event) ->
 		return unless ~" #{event.target.className} ".indexOf ' control-menu '
