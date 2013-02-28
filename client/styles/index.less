@@ -3,6 +3,10 @@
 
 @import "utils";
 
+body, input, button, select, textarea {
+	font-family : "Josefin Sans" sans-serif;
+}
+
 #top, #sidebar, #main {
 	position : fixed;
 	overflow : hidden;
@@ -32,6 +36,8 @@
 	top   : @top-height;
 	left  : 0;
 	width : @sidebar-width;
+
+	font-weight : bold;
 
 	background-color : #fefefe;
 	border-right : 1px solid #dfdfdf;

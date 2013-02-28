@@ -233,7 +233,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	@computed \
 	bgSize : ->
-		value = 5 * @scaleFactor()
+		value = 1.5 * @scaleFactor()
 		"#{value}mm #{value}mm"
 
 	@computed \
