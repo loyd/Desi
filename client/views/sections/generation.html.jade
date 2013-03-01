@@ -1,0 +1,14 @@
+// ko if: generationCandidate
+h3(data-bind="text: locale().generation.preTitle + generationCandidate().title()")
+
+.container-fluid
+	.row-fluid
+		.span8.offset1.control-group(data-bind="css: { error: !templateFunction() }")
+			textarea.template-content(data-bind="value: templateContent")
+		.span2
+			select.template-select(data-bind="value: templateIndex, foreach: templates")
+				option(data-bind="value: $index, text: name")
+
+			button.btn.btn-generate-and-download(
+				data-bind="text: locale().generation.generateButton")
+// /ko

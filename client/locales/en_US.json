@@ -38,13 +38,19 @@
 	},
 
 	"lookup" : {
-		"number"        : "#",
-		"title"         : "Title",
-		"lastModified"  : "Last modified",
-		"createDiagram" : "Create diagram",
-		"closeButton"   : "close",
-		"removeButton"  : "remove",
-		"editButton"    : "edit",
-		"renameButton"  : "rename"
+		"number"         : "#",
+		"title"          : "Title",
+		"lastModified"   : "Last modified",
+		"createDiagram"  : "Create diagram",
+		"closeButton"    : "close",
+		"removeButton"   : "remove",
+		"editButton"     : "edit",
+		"renameButton"   : "rename",
+		"generateButton" : "generate"
+	},
+
+	"generation" : {
+		"preTitle"       : "Generation code for ",
+		"generateButton" : "Download"
 	}
 }

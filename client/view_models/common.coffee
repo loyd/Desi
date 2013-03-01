@@ -1,11 +1,16 @@
 ko               = require 'ko'
 ls               = require 'libs/local_storage'
+dot              = require 'dot'
+JsZip            = require 'jszip'
 profileSpec      = require 'models/profile'
 Synchronizer     = require 'libs/synchronizer'
 defLocal         = require 'locales/en_US'
+defTemplates     = require 'templates'
 
 BaseViewModel    = require 'libs/base_view_model'
 DiagramViewModel = require './class_diagram'
+
+dot.templateSettings['strip'] = off
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->
@@ -19,6 +24,18 @@ class CommonViewModel extends BaseViewModel
 		@sectionTemplate = ko.observable null
 		@openDiagrams    = ko.observableArray()
 		@chosenDiagram   = ko.observable null
+
+		@generationCandidate = ko.observable null
+
+		@templates       = defTemplates
+		@templateIndex   = ko.observable null
+		@templateContent = ko.observable null
+		@templateIsInvalid = ko.observable no
+
+		@templateIndex.subscribe (index) =>
+			@templateContent @templates[index].content
+
+		@templateIndex 0
 
 		super
 	
@@ -35,8 +52,20 @@ class CommonViewModel extends BaseViewModel
 				do @chosenDiagram().data.stopEditing
 				@chosenDiagram null
 		}
+		
 		':section, :section/*' : (name) ->
 			@sectionTemplate "#{name}-tmpl"
+
+		'generation' : ->
+			diag = @chosenDiagram() ? @generationCandidate()
+			if diag
+				@navigate "generation/#{diag.title()}"
+			else
+				@navigate ''
+
+		'generation/:title' : (title) ->
+			@generationCandidate @diagrams().scan (item) -> item.title() == title
+			do @toggleSidebar unless @sidebarIsClosed()
 	}
 
 	openDiagram : (title) ->
@@ -100,10 +129,89 @@ class CommonViewModel extends BaseViewModel
 	toRoot : ->
 		@navigate(if @isAuthorized() then 'lookup' else 'login')
 
+	@computed \
+	templateFunction : ->
+		return null if @templateIsInvalid()
+
+		try
+			fn = dot.template @templateContent()
+		catch error
+			return null
+
+		fn
+
+	@delegate('click', '#generation .btn-generate-and-download') ->
+		return unless @templateFunction()
+		model = ls.expand @generationCandidate().sync.id
+		return unless model
+
+		transformVisibility = (mem) ->
+			mem.visibility = switch mem.visibility
+				when '+' then 'public'
+				when '-' then 'private'
+				when '#' then 'protected'
+				when '~' then 'package'
+				when '/' then 'derived'
+
+		essTable = {}
+		for ess in model.essentials
+			essTable[ess.__id] = ess
+			ess.associations = []
+			ess.aggregations = []
+			ess.compositions = []
+			ess.generalizations = []
+			ess.realizations = []
+			ess.dependencies = []
+
+			transformVisibility attr for attr in ess.attributes
+			transformVisibility oper for oper in ess.operations
+
+		for rel in model.relationships
+			from = essTable[rel.fromEssential]
+			to   = essTable[rel.toEssential]
+			if rel.type == 'generalization'
+				from.parent = to
+			
+			if rel.type == 'dependency'
+				from.dependencies.push to
+			else
+				from["#{rel.type}s"].push to
+
+		try
+			for ess in model.essentials
+				ess.strView = @templateFunction() ess
+			
+		catch error
+			@templateIsInvalid yes
+			sbcr = @templateContent.subscribe =>
+				@templateIsInvalid no
+				do sbcr.despose
+			return
+
+		zip = new JsZip
+		ext = @templates[@templateIndex()].ext
+		for ess in model.essentials
+			zip.file "#{ess.name}#{ext}", ess.strView.trim()
+
+		if window.URL?.createObjectURL
+			blob = zip.generate type : "blob"
+			link = document.createElement 'a'
+			link.href = window.URL.createObjectURL blob
+			link.download = "#{model.title}.zip"
+			link.click()
+		else
+			content = zip.generate()
+			location.href = 'data:application/zip;base64,' + content
+
+		return
+
 	@delegate('click', '#lookup .btn-create-diagram') ->
 		do @createDiagram
 
 	@delegate('click', '#lookup .btn-remove-diagram') (item) ->
+		if item is @generationCandidate()
+			@generationCandidate null
+
 		@removeDiagram item.title()
 
 	@delegate('click', '#lookup .btn-edit-diagram') (item) ->
@@ -114,6 +222,10 @@ class CommonViewModel extends BaseViewModel
 
 	@delegate('click', '#lookup .btn-rename-diagram') (item) ->
 		item.isRenamed yes
+
+	@delegate('click', '#lookup .btn-generate-code') (item) ->
+		@generationCandidate item
+		@navigate 'generation'
 
 	oldActived = null
 	@delegate('click', '#lookup .diagram-item') (item) ->
