@@ -765,7 +765,10 @@ class OperationViewModel extends MemberViewModel
 
 	@computed \
 	minWidth : ->
-		@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
+		if @type() == 'void'
+			@closeScobePosX() + textSize(')').width + MIN_GOR_PADDING
+		else
+			@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
 
 	@computed \
 	openScobePosX : ->

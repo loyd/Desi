@@ -13,5 +13,7 @@ g.member(data-bind="svgcss: { static: isStatic }, translateY: posY")
 				text(data-bind="attr: { x: separatorPosX }") :
 				text.param-type(data-bind="attr: { x: typePosX }, text: type")
 		text(data-bind="attr: { x: closeScobePosX }") )
+		// ko if: type() !== 'void'
 		text(data-bind="attr: { x: separatorPosX }") :
 		text.type(data-bind="attr: { x: typePosX }, text: type")
+		// /ko
