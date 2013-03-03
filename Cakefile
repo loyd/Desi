@@ -208,7 +208,7 @@ formatJadeError = (err) ->
 
 compileJade = (filename, code) ->
 	try fn = jade.compile code,
-		{ filename, pretty : yes }
+		{ filename, pretty : no }
 	catch error
 		return [formatJadeError error, null]
 

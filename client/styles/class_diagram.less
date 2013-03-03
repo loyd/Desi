@@ -69,12 +69,15 @@
 			}
 		}
 
-		.member text {
-			alignment-baseline : middle;
-			font-size : 10px;
+		.member { 
+			text, tspan {
+				alignment-baseline : central;
+				font-size : 10px;
+				display : block;
+			}
 		}
 
-		.member.static text.name {
+		.member.static .name {
 			text-decoration : underline;
 		}
 

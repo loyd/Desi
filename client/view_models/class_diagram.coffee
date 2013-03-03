@@ -641,14 +641,14 @@ class EssentialViewModel extends BaseViewModel
 
 	attributesHeight : ->
 		@attributes().reduce (sum, attr) ->
-			sum + attr.height()
+			sum + attr.height
 		, 0
 
 	placeAttributes : ->
 		posY = 0
 		for member in @attributes()
 			member.posY posY
-			posY += member.height()
+			posY += member.height
 		return
 
 	@computed \
@@ -662,14 +662,14 @@ class EssentialViewModel extends BaseViewModel
 	
 	operationsHeight : ->
 		@operations().reduce (sum, oper) ->
-			sum + oper.height()
+			sum + oper.height
 		, 0
 
 	placeOperations : ->
 		posY = 0
 		for member in @operations()
 			member.posY posY
-			posY += member.height()
+			posY += member.height
 		return
 
 	@computed \
@@ -682,7 +682,6 @@ class EssentialViewModel extends BaseViewModel
 		
 MIN_GOR_PADDING = 5
 VERT_PADDING = 3
-INTERVAL = 2
 textSize = (text) -> countTextSize ".member", text
 
 class MemberViewModel extends BaseViewModel
@@ -697,48 +696,40 @@ class MemberViewModel extends BaseViewModel
 
 		super
 
-	@computed \
-	height : ->
-		textSize(@name()[0].up()).height + VERT_PADDING * 2
+	height : textSize('A').height + VERT_PADDING * 2
 
-	visibilityPosX : MIN_GOR_PADDING
-
-	@computed \
-	namePosX : ->
-		@visibilityPosX + textSize(@visibility()).width + INTERVAL
-
+	textPosX : MIN_GOR_PADDING
 	@computed \
 	textPosY : ->
-		@height() / 2
+		@height / 2
 
 	separatorLinePosX1 : MIN_GOR_PADDING / 2
-
 	@computed \
 	separatorLinePosX2 : ->
 		@width() - MIN_GOR_PADDING / 2
 
-class AttributeViewModel extends MemberViewModel
 	@computed \
 	minWidth : ->
-		@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
+		textSize(@text()).width + MIN_GOR_PADDING * 2
+
+class AttributeViewModel extends MemberViewModel
+	constructor : (@sync) ->
+		@textElement = ko.observable null
+
+		super
 
 	@computed \
-	separatorPosX : ->
-		@namePosX() + textSize(@name()).width + INTERVAL
-
-	@computed \
-	typePosX : ->
-		@separatorPosX() + textSize(':').width + INTERVAL
+	text : ->
+		"#{@visibility()} #{@name()} : #{@type()}"
 
 class OperationViewModel extends MemberViewModel
 	constructor : (@sync) ->
-		super
-
 		@params = sync.observer 'params',
 			classAdapter : ParamViewModel
-		do @placeParams
 
 		@paramsAreOpen = ko.observable no
+
+		super
 
 	addParam : ->
 		sync  = new Synchronizer @spec.data.params.item
@@ -749,76 +740,28 @@ class OperationViewModel extends MemberViewModel
 		@params.remove param
 
 	@computed \
-	widthParams : ->
-		last = @params().last()
-		if last
-			last.posX() + last.width()
-		else 0
+	paramsText : ->
+		@params().reduce((res, param) ->
+			res + param.text() + ', '
+		, '')[...-2]
 
 	@computed \
-	placeParams : ->
-		posX = -(textSize(',').width)
-		for param in @params()
-			param.posX posX
-			posX += param.width()
-		return
-
-	@computed \
-	minWidth : ->
-		if @type() == 'void'
-			@closeScobePosX() + textSize(')').width + MIN_GOR_PADDING
-		else
-			@typePosX() + textSize(@type()).width + MIN_GOR_PADDING
-
-	@computed \
-	openScobePosX : ->
-		@namePosX() + textSize(@name()).width + INTERVAL/2
-
-	@computed \
-	paramsPosX : ->
-		@openScobePosX() + textSize('(').width +
-			INTERVAL - textSize(',').width - INTERVAL
-
-	@computed \
-	closeScobePosX : ->
-		@paramsPosX() + @widthParams() + INTERVAL
-
-	@computed \
-	separatorPosX : ->
-		@closeScobePosX() + textSize(')').width + INTERVAL
-
-	@computed \
-	typePosX : ->
-		@separatorPosX() + textSize(':').width + INTERVAL
+	text : ->
+		str = "#{@visibility()} #{@name()}(#{@paramsText()})"
+		if @type() != 'void'
+			str += " : #{@type()}"
+		str
 
 class ParamViewModel extends BaseViewModel
 	constructor : (@sync) ->
 		@name = sync.observer 'name'
 		@type = sync.observer 'type'
 
-		@posX = ko.observable()
-
 		super
 
 	@computed \
-	width : ->
-		@typePosX() + textSize(@type()).width
-
-	@computed \
-	commaPosX : ->
-		INTERVAL / 2
-
-	@computed \
-	namePosX : ->
-		textSize(',').width + INTERVAL
-
-	@computed \
-	separatorPosX : ->
-		@namePosX() + textSize(@name()).width + INTERVAL
-
-	@computed \
-	typePosX : ->
-		@separatorPosX() + textSize(':').width + INTERVAL
+	text : ->
+		"#{@name()} : #{@type()}"
 
 class RelationshipViewModel extends BaseViewModel
 	freeID = 0

@@ -20,19 +20,22 @@ do ($ = div.style) ->
 	$.width      = '1px'
 	$.height     = '1px'
 
+div.querySelector('svg').setAttribute('viewBox', '0 0 1 1')
 document.body.appendChild div
 
 cache = {}
-
 module.exports = (selector, content) ->
 	if selector of cache
 		text = cache[selector]
 	else
 		text = div.querySelector selector
 		if text.tagName != 'text'
-			text = text.querySelector 'text'
+			text = text.querySelector('text')
 
 		cache[selector] = text
 
 	text.textContent = content
-	text.getBBox() || { width : 0, height : 0 }
+	bbox = text.getBBox()
+	
+	width  : bbox.width + 6 # fix incorrect letter spacing
+	height : bbox.height
