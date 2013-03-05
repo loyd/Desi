@@ -24,7 +24,8 @@ div.querySelector('svg').setAttribute('viewBox', '0 0 1 1')
 document.body.appendChild div
 
 cache = {}
-module.exports = (selector, content) ->
+
+count = (selector, content) ->
 	if selector of cache
 		text = cache[selector]
 	else
@@ -39,3 +40,12 @@ module.exports = (selector, content) ->
 	
 	width  : bbox.width + 6 # fix incorrect letter spacing
 	height : bbox.height
+
+count.specify = (baseSelector) ->
+	(selector, content) ->
+		if arguments.length == 1
+			count "#{baseSelector}", selector
+		else
+			count "#{baseSelector} #{selector}", content
+
+module.exports = count
