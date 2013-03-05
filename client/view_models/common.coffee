@@ -36,6 +36,7 @@ class CommonViewModel extends BaseViewModel
 			@templateContent @templates[index].content
 
 		@templateIndex 0
+		@title = ko.observable 'Desi'
 
 		super
 	
@@ -54,6 +55,7 @@ class CommonViewModel extends BaseViewModel
 		}
 		
 		':section, :section/*' : (name) ->
+			@title name
 			@sectionTemplate "#{name}-tmpl"
 
 		'generation' : ->

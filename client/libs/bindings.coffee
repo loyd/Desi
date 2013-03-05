@@ -79,3 +79,8 @@ register 'xlinkhref', no, {
 		value = unwrap accs()
 		elem.setAttributeNS('http://www.w3.org/1999/xlink', 'href', value)
 }
+
+register 'stopBindings', no, {
+	init : ->
+		controlsDescendantBindings : on
+}

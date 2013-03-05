@@ -1,7 +1,7 @@
 doctype 5
 head
 	meta(charset="UTF-8")
-	title(data-bind="text: title")
+	title(data-bind="text: 'Desi: ' + title()") Desi
 
 	// Icon
 	link(rel="shortcut icon", href=icon)
@@ -17,7 +17,7 @@ head
 	// Source loader
 	script(data-main=loader.main, src=loader.path)
 
-body: #ko-body
+body
 	#top.navbar.navbar-fixed-top: .navbar-inner
 		button#btn-sidebar.btn.btn-navbar(data-bind="\
 			click: toggleSidebar,\

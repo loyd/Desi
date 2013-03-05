@@ -1,7 +1,8 @@
 load = (tmpl, cb) ->
 	xhr = new XMLHttpRequest
+	xhr.overrideMimeType 'text/pain'
 	xhr.open 'GET', tmpl.src, true
-	xhr.onreadystatechange = -> 
+	xhr.onreadystatechange = ->
 		if xhr.readyState == 4
 			if xhr.status == 200
 				tmpl.text = xhr.responseText

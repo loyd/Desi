@@ -10,6 +10,7 @@ explainTmpl = (name) ->
 		.replace isTmplInclude, (str, b, tmplName) -> explainTmpl(tmplName)
 
 div = document.createElement 'div'
+div.dataset.bind = 'stopBindings: true'
 div.innerHTML = explainTmpl('edit-tmpl')
 
 do ($ = div.style) ->

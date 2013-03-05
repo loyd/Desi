@@ -11,4 +11,4 @@ common = new CommonViewModel
 
 do (new Router).refresh
 
-ko.applyBindings common, document.querySelector('#ko-body')
+ko.applyBindings common, document.querySelector('html')
