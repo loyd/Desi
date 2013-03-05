@@ -184,17 +184,29 @@ prepare = (opts, event, fpath, done) ->
 
 ################################################################################
 compileCoffee = (filename, code) ->
-	try code = coffee.compile code,
-		{ filename, bare : yes }
+	try {js : code, v3SourceMap : sourceMap} = coffee.compile code, {
+			filename,
+			bare      : on
+			header    : on
+			sourceMap : on
+		}
 	catch error
 		error.message = error.message[error.message.indexOf(',')+2..]
 			.replace /\son\sline\s(\d+)/, (str, line) ->
 				error.line = line
 				return ''
 
-		return [error, null]
+		return [error, null, null]
 
-	return [null, code]
+	code = """
+		//@ sourceMappingURL=#{path.basename(filename, '.coffee')}.map
+		#{AMD_DEFINITION_BEGIN}
+		#{code[code.indexOf('\n')+1...code.lastIndexOf('\n')]}
+		#{AMD_DEFINITION_END}
+
+	"""
+
+	return [null, code, sourceMap]
 
 formatJadeError = (err) ->
 	line = err.message.match(/^.*:(\d+)/)?[1]
@@ -338,20 +350,17 @@ builders['.less'] = ['.css', (ipath, opath, dev, done) ->
 	], done
 ]
 
-builders['.coffee'] = ['.js', (ipath, opath, dev, done) ->
+builders['.coffee'] = ['', (ipath, opath, dev, done) ->
 	async.waterfall [
 		(next) -> fs.readFile ipath, 'utf-8', next
 		(code, next) ->
-			[err, code] = compileCoffee ipath, code
-			return next err if err
-
-			try code = makeAMD code
-			catch error
-				return next error
-
-			next null, code
-		(code, done) ->
-			fs.writeFile opath, code, done
+			next compileCoffee(ipath, code)...
+		(code, sourceMap, done) ->
+			async.parallel [
+				fs.writeFile.bind fs, "#{opath}.js", code
+				fs.writeFile.bind fs, "#{opath}.map", sourceMap
+				clone.bind null, ipath, "#{opath}.coffee"
+			], done
 	], done
 ]
 
@@ -515,6 +524,9 @@ recurReaddir = (dpath, iterator, done) ->
 				else iterator fpath, stat, cmpl
 		, done
 
+AMD_DEFINITION_BEGIN = 'define(function(require, exports, module) {'
+AMD_DEFINITION_END   = '});'
+
 aliasSep  = /\s+as\s+/i
 rightName = /^[a-zA-Z_$][\w$]*$/
 # * (code, [imports], [exports]) ->
@@ -523,7 +535,7 @@ makeAMD = (code, args...) ->
 	return "define(#{code.trim()});\n" if args[0] is true
 
 	[imports, exports] = args
-	data = ['define(function(require, exports, module) {']
+	data = [AMD_DEFINITION_BEGIN]
 
 	if imports?
 		for imp in imports
@@ -546,7 +558,7 @@ makeAMD = (code, args...) ->
 		else
 			data.push "module.exports = #{exports};"
 
-	data.push '});\n'
+	data.push AMD_DEFINITION_END
 	data.join '\n'
 
 makeSandbox = (code) ->
