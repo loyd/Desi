@@ -3,11 +3,15 @@
 	svg(
 		data-bind="\
 			visible: $parent === $root.chosenDiagram(),\
-			attr: { viewBox: viewBox },\
+			attr: {\
+				viewBox: viewBox,\
+				width: width,\
+				height: height\
+			},\
 			bindElement: element,\
 			style: { backgroundPosition: bgPosition, backgroundSize: bgSize }\
 		",
-		width="100%", height="100%"
+		preserveAspectRatio="xMidYMid slice"
 	)
 		// ko template: { name: 'relationship-tmpl', foreach: relationships }
 		// /ko
@@ -64,21 +68,22 @@
 		.arrow
 		.popover-inner
 			.popover-content(data-bind="with: chosenRelationship")
-				button.btn.rm-relationship: i.icon-remove
-				
-				.types(data-bind="foreach: 'association aggregation composition \
-					generalization realization dependency'.words()\
-				")
-					button.btn(data-bind="css: {\
-						'btn-inverse': $parent.type() === $data },\
-						attr: { disabled: $parent.isItself() &&\
-							($data === 'generalization' || $data === 'realization') }\
+				.control-line
+					button.btn.rm-relationship: i.icon-remove
+					
+					.types(data-bind="foreach: 'association aggregation composition \
+						generalization realization dependency'.words()\
 					")
-						i(data-bind="css: 'icon-' + $data")
+						button.btn(data-bind="css: {\
+							'btn-inverse': $parent.type() === $data },\
+							attr: { disabled: $parent.isItself() &&\
+								($data === 'generalization' || $data === 'realization') }\
+						")
+							i(data-bind="css: 'icon-' + $data")
 
 				// ko ifnot: isClassLevel
 				hr
-				.from
+				.from.control-line
 					select.multiplicity(data-bind="value: fromMultiplicity")
 						option(value="")
 						option(value="0..1") 0..1
@@ -91,7 +96,7 @@
 					input.indicator(type="text", data-bind="value: fromIndicator")
 
 				hr
-				.to
+				.to.control-line
 					select.multiplicity(data-bind="value: toMultiplicity")
 						option(value="")
 						option(value="0..1") 0..1
@@ -117,16 +122,17 @@
 		.arrow(data-bind="style: { top: essentialMenuArrowPos() + '%' }")
 		.popover-inner
 			.popover-content(data-bind="with: chosenEssential")
-				input.class-name(type="text", data-bind="value: name")
-				button.btn.btn-abstract-toggle(
-					data-bind="css: { 'btn-inverse': isAbstract }") A
+				.control-line
+					input.class-name(type="text", data-bind="value: name")
+					button.btn.btn-abstract-toggle(
+						data-bind="css: { 'btn-inverse': isAbstract }") A
 				hr
 				.colors(data-bind="foreach: 'white blue green yellow grey'.words()")
 					.color(data-bind="style: { backgroundColor: $data },\
 						css: { 'active-color': $data === $parent.color() }")
 				hr
 				.attributes(data-bind="foreach: attributes")
-					.attribute
+					.attribute.control-line
 						select.visibility(data-bind="value: visibility")
 							option(value="+") +
 							option(value="-") -
@@ -143,7 +149,7 @@
 
 				hr
 				.operations(data-bind="foreach: operations")
-					.operation
+					.operation.control-line
 						select.visibility(data-bind="value: visibility")
 							option(value="+") +
 							option(value="-") -

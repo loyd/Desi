@@ -84,3 +84,11 @@ register 'stopBindings', no, {
 	init : ->
 		controlsDescendantBindings : on
 }
+
+'x x1 x2 y y1 y2 width height d id startOffset transform'.words()
+.forEach (attr) ->
+	register attr, no, {
+		update : (elem, accs) ->
+			value = unwrap accs()
+			elem.setAttribute attr, String(value)
+	}

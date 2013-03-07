@@ -7,6 +7,25 @@ body, input, button, select, textarea {
 	font-family : 'Josefin Sans', sans-serif;
 }
 
+input, input[type], select {
+	font-size: 110%;
+}
+
+.btn i {
+	display : block;
+	margin  : auto;
+}
+
+.control-line {
+	button, select, input {
+		margin-left : 4px;
+	
+		&:first-child {
+			margin-left : 0;
+		}
+	}
+}
+
 #top, #sidebar, #main {
 	position : fixed;
 	overflow : hidden;
@@ -87,11 +106,6 @@ body, input, button, select, textarea {
 }
 
 #lookup {
-	.btn-new-diagram {
-		display : block;
-		margin  : auto;
-	}
-
 	td {
 		vertical-align : middle;
 

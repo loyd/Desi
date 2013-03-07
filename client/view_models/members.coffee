@@ -3,8 +3,9 @@ Synchronizer  = require 'libs/synchronizer'
 countTextSize = require('libs/count_text_size').specify('.member')
 ko            = require 'ko'
 
-MIN_GOR_PADDING = 5 # [unit]
-VERT_PADDING    = 3 # [unit]
+MIN_GOR_PADDING  = 5  # [unit]
+VERT_PADDING     = 3  # [unit]
+UNDERLINE_MARGIN = .5 # [unit]
 
 class MemberViewModel extends BaseViewModel
 	constructor : (@sync) ->
@@ -18,12 +19,9 @@ class MemberViewModel extends BaseViewModel
 
 		super
 
-	height : countTextSize('A').height + VERT_PADDING * 2
-
+	height   : countTextSize('A').height + VERT_PADDING * 2
 	textPosX : MIN_GOR_PADDING
-	@computed \
-	textPosY : ->
-		@height / 2
+	textPosY : @::height - MIN_GOR_PADDING
 
 	separatorLinePosX1 : MIN_GOR_PADDING / 2
 	@computed \
@@ -33,6 +31,16 @@ class MemberViewModel extends BaseViewModel
 	@computed \
 	minWidth : ->
 		countTextSize(@text()).width + MIN_GOR_PADDING * 2
+
+	@computed \
+	underlinePosX1 : ->
+		countTextSize(@visibility()).width
+
+	@computed \
+	underlinePosX2 : ->
+		@minWidth() - MIN_GOR_PADDING
+
+	underlinePosY : @::height - VERT_PADDING + UNDERLINE_MARGIN
 
 class AttributeViewModel extends MemberViewModel
 	constructor : (@sync) ->

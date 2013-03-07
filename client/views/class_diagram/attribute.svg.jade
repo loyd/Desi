@@ -1,8 +1,8 @@
 g.member(data-bind="svgcss: { static: isStatic }, translateY: posY")
-	// ko template: { name: 'element-separator-tmpl', if: $index() !== 0 }
+	// ko template: { name: 'member-separator-tmpl', if: $index() !== 0 }
 	// /ko
 
-	text.test(data-bind="attr: { y: textPosY , x: textPosX }")
+	text.test(data-bind="x: textPosX, y: textPosY")
 		tspan.visibility(data-bind="text: visibility")
 		| &nbsp;
 		tspan.name(data-bind="text: name")
@@ -10,3 +10,6 @@ g.member(data-bind="svgcss: { static: isStatic }, translateY: posY")
 		tspan.separator :
 		| &nbsp;
 		tspan.type(data-bind="text: type")
+
+	// ko template: { name: 'member-underline-tmpl', if: isStatic }
+	// /ko

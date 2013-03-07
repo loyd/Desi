@@ -7,9 +7,6 @@
 .class-diagram {
 
 	svg {
-		width  : 100%;
-		height : 100%;
-
 		background-clip   : border-box;
 		background-image  : url('../imgs/class_diagram_bg.svg');
 		background-repeat : repeat;
@@ -34,8 +31,8 @@
 
 		.header {
 			text {
-				text-anchor        : middle;
-				alignment-baseline : middle;
+				text-anchor : middle;
+				.vertical-centering();
 				font-size : 14px;
 			}
 		}
@@ -57,11 +54,11 @@
 
 		&.chosen {
 			.border {
-				stroke-width : @stroke-width * 2;
+				stroke-width : @stroke-width * 1.7;
 			}
 
 			.section-separator {
-				stroke-width : @stroke-width * 2;
+				stroke-width : @stroke-width * 1.7;
 			}
 
 			.element-separator {
@@ -69,16 +66,15 @@
 			}
 		}
 
-		.member { 
+		.member {
 			text, tspan {
-				alignment-baseline : central;
 				font-size : 10px;
-				display : block;
 			}
 		}
 
-		.member.static .name {
-			text-decoration : underline;
+		.member .underline {
+			stroke : gray;
+			stroke-width : 1px;
 		}
 
 		.section-separator, .element-separator {
@@ -97,7 +93,6 @@
 	hr {
 		margin : 10px 0;
 	}
-
 	
 	input, select {
 		margin-top    : 0;
@@ -182,7 +177,7 @@
 	}
 
 	.essential-menu {
-		width : 335px;
+		width : 334px;
 
 		.class-name {
 			width : 256px;
@@ -208,7 +203,6 @@
 
 		.attribute, .operation {
 			margin-bottom : 10px;
-
 		}
 
 		.btn {
@@ -253,7 +247,7 @@
 	}
 
 	.relationship-menu {
-		width : 284px;
+		width : 283px;
 
 		.types .btn, .rm-relationship {
 			width   : 32px;
@@ -281,21 +275,16 @@
 		fill : none;
 
 		text {
-			text-anchor        : middle;
-			alignment-baseline : middle;
+			text-anchor : middle;
+			.vertical-centering();
 			font-size : 8px;
 			fill : black;
 			stroke : none;
 			font-weight : bold;
 		}
 
-		.from-indicator {
-			alignment-baseline : middle;
-			baseline-shift : super;
-		}
-
-		.to-indicator {
-			alignment-baseline : before-edge;
+		.from-indicator, .to-indicator {
+			.vertical-centering();
 		}
 	}
 

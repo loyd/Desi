@@ -142,7 +142,7 @@ class CommonViewModel extends BaseViewModel
 
 		fn
 
-	@delegate('click', '#generation .btn-generate-and-download') ->
+	@delegate('click', '#generation .btn-generate-and-download') (e, event) ->
 		return unless @templateFunction()
 		model = ls.expand @generationCandidate().sync.id
 		return unless model
@@ -200,7 +200,10 @@ class CommonViewModel extends BaseViewModel
 			link = document.createElement 'a'
 			link.href = window.URL.createObjectURL blob
 			link.download = "#{model.title}.zip"
+			link.style.display = 'none'
+			document.body.appendChild link
 			link.click()
+			document.body.removeChild link
 		else
 			content = zip.generate()
 			location.href = 'data:application/zip;base64,' + content

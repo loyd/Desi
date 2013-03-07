@@ -151,9 +151,33 @@ Array::scan = (fn) ->
 
 Array::each = Array::forEach
 
+#### RequestAnimationFrame
+window.requestAnimFrame = requestAnimationFrame = 
+	window.requestAnimationFrame       ||
+	window.webkitRequestAnimationFrame ||
+	window.mozRequestAnimationFrame    ||
+	window.oRequestAnimationFrame      ||
+	window.msRequestAnimationFrame     ||
+	(callback, element) ->
+		setTimeout(callback, 1000 / 60);
+
 #### Functions
 
 Function::defer = (time = 0) ->
 	setTimeout this, time
+
+Function::debounce = (time) ->
+	blocked = no
+
+	if arguments.length == 0 then =>
+		return if blocked
+		blocked = yes
+		this arguments...
+		requestAnimationFrame -> blocked = no
+	else =>
+		return if blocked
+		blocked = yes
+		this arguments...
+		setTimeout (-> blocked = no), time
 
 Function::empty = ->

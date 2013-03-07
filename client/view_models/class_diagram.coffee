@@ -5,12 +5,14 @@ Synchronizer          = require 'libs/synchronizer'
 onresize              = require 'libs/onresize'
 ko                    = require 'ko'
 
+SCALE_DIFF = 0.15
+MIN_SCALE  = 0.45
+MAX_SCALE  = 3
+
 class ClassDiagramViewModel extends BaseViewModel
 	viewRoot : '.class-diagram'
-
-	SCALE_DIFF = 0.15
-	MIN_SCALE  = 0.45
-	MAX_SCALE  = 3
+	
+	main = document.querySelector '#main'
 
 	constructor : (@sync) ->
 		@essentials = sync.observer 'essentials',
@@ -55,7 +57,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		document.addEventListener 'mouseup', =>
 			(=> @linking no).defer()
 
-		onresize '#main', =>
+		onresize main, =>
 			do @refreshSizes if @isChosen
 
 		essSubscr = @essentialMenuElement.subscribe (elem) =>
@@ -83,9 +85,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		(pos - @originY()) * @scaleFactor()
 
 	refreshSizes : ->
-		style = getComputedStyle(@element(), null)
+		style = getComputedStyle(main, null)
 
-		@width  parseInt style.width, 10
+		@width parseInt style.width, 10
 		@height parseInt style.height, 10
 
 	startEditing : ->
@@ -104,7 +106,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		@openMenu null
 		@chooseRelationship null
 		@chooseEssential null
-		{left, top} = @element().getBoundingClientRect()
+		{left, top} = main.getBoundingClientRect()
 		left = event.clientX - left
 		top  = event.clientY - top
 		@creatingMenuPosX left
@@ -183,20 +185,24 @@ class ClassDiagramViewModel extends BaseViewModel
 		menuName = @openMenu() ? 'control'
 
 		{posX, posY} = ess
-		prevX = event.clientX
-		prevY = event.clientY
+		{left, top} = main.getBoundingClientRect()
+		scaleFactor = @scaleFactor()
+		baseShiftX = posX() - (event.clientX - left) / scaleFactor
+		baseShiftY = posY() - (event.clientY - top)  / scaleFactor
 
-		mouseMove = (e) =>
-			unless ess.isMoved()
-				isClick = no
+		isMoving = no
+		mouseMove = ((e) =>
+			unless isMoving
+				isMoving = yes
 				ess.isMoved yes
 				@openMenu null
 				@chooseEssential null
 
-			scaleFactor = @scaleFactor()
-			posX posX() + (e.clientX - prevX) / scaleFactor
-			posY posY() + (e.clientY - prevY) / scaleFactor
-			{clientX : prevX, clientY : prevY} = e
+			posX baseShiftX + (e.clientX - left) / scaleFactor
+			posY baseShiftY + (e.clientY - top)  / scaleFactor
+
+			return
+		).debounce()
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
@@ -232,9 +238,11 @@ class ClassDiagramViewModel extends BaseViewModel
 	@computed \
 	viewBox : ->
 		scaleFactor = @scaleFactor()
-		uuWidth  = @width()  / scaleFactor
-		uuHeight = @height() / scaleFactor
-		"#{@originX()} #{@originY()} #{uuWidth} #{uuHeight}"
+		posX = @originX().toFixed(2)
+		posY = @originY().toFixed(2)
+		uuWidth  = (@width()  / scaleFactor).toFixed(2)
+		uuHeight = (@height() / scaleFactor).toFixed(2)
+		"#{posX} #{posY} #{uuWidth} #{uuHeight}"
 
 	@computed \
 	bgSize : ->
@@ -244,13 +252,15 @@ class ClassDiagramViewModel extends BaseViewModel
 	@computed \
 	bgPosition : ->
 		scaleFactor = @scaleFactor()
-		"#{-@originX() * scaleFactor} #{-@originY() * scaleFactor}"
+		posX = (-@originX() * scaleFactor).toFixed(2)
+		posY = (-@originY() * scaleFactor).toFixed(2)
+		"#{posX}px #{posY}px"
 
 	nameWheelEvent = ['wheel', 'mousewheel'].scan((name) ->
 		('on' + name) of document) || 'MozMousePixelScroll'
 
 	@delegate(nameWheelEvent) (el, event) ->
-		sign = (event.deltaY || event.detail || event.wheelDelta).sign()
+		sign = (-event.deltaY || event.detail || event.wheelDelta).sign()
 		
 		oldScaleFactor = @scaleFactor()
 		@scale sign
@@ -266,14 +276,15 @@ class ClassDiagramViewModel extends BaseViewModel
 		prevX = event.clientX
 		prevY = event.clientY
 
-		mouseMove = (e) =>
+		mouseMove = ((e) =>
 			@shift(e.clientX - prevX, e.clientY - prevY)
-			prevX    = e.clientX
-			prevY    = e.clientY
+			prevX = e.clientX
+			prevY = e.clientY
 			unless @isMoved
 				@isMoved = yes
 				if @openMenu() == 'creating'
 					@openMenu null
+		).debounce()
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
@@ -324,19 +335,20 @@ class ClassDiagramViewModel extends BaseViewModel
 		@linking yes
 		@fakeEssentialIsVisible yes
 
-		{left, top} = @element().getBoundingClientRect()
+		{left, top} = main.getBoundingClientRect()
 		scaleFactor = @scaleFactor()
 		someX = @originX() - fakeEss.width() / 2
 		someY = @originY() - fakeEss.height() / 2
 
 		menuIsClosed = no
-		mouseMove = (event) =>
+		mouseMove = ((e) =>
 			unless menuIsClosed
 				@openMenu null
 				menuIsClosed = yes
 
-			fakeEss.posX someX + (event.clientX - left) / scaleFactor
-			fakeEss.posY someY + (event.clientY - top) / scaleFactor
+			fakeEss.posX someX + (e.clientX - left) / scaleFactor
+			fakeEss.posY someY + (e.clientY - top) / scaleFactor
+		).debounce()
 
 		mouseUp = =>
 			document.removeEventListener 'mousemove', mouseMove, off
