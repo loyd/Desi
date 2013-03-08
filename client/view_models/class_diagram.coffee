@@ -57,8 +57,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		document.addEventListener 'mouseup', =>
 			(=> @linking no).defer()
 
-		onresize main, =>
+		onresize main, (=>
 			do @refreshSizes if @isChosen
+		).debounce()
 
 		essSubscr = @essentialMenuElement.subscribe (elem) =>
 			do essSubscr.dispose
@@ -85,10 +86,10 @@ class ClassDiagramViewModel extends BaseViewModel
 		(pos - @originY()) * @scaleFactor()
 
 	refreshSizes : ->
-		style = getComputedStyle(main, null)
-
-		@width parseInt style.width, 10
-		@height parseInt style.height, 10
+		bbox = main.getBoundingClientRect()
+		@width  bbox.width
+		@height bbox.height
+		return
 
 	startEditing : ->
 		@isChosen = yes
@@ -404,9 +405,11 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	#### Essential menu
 
+	@computed \
 	essentialMenuWidth : ->
 		calcMenuWidth @essentialMenuElement()
 
+	@computed \
 	essentialMenuHeight : ->
 		calcMenuHeight @essentialMenuElement()
 

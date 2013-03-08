@@ -3,13 +3,12 @@
 	svg(
 		data-bind="\
 			visible: $parent === $root.chosenDiagram(),\
-			attr: {\
-				viewBox: viewBox,\
-				width: width,\
-				height: height\
-			},\
+			viewBox: viewBox,\
+			width: width,\
+			height: height,\
 			bindElement: element,\
-			style: { backgroundPosition: bgPosition, backgroundSize: bgSize }\
+			backgroundPosition: bgPosition,\
+			backgroundSize: bgSize\
 		",
 		preserveAspectRatio="xMidYMid slice"
 	)

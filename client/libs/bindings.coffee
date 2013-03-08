@@ -85,10 +85,15 @@ register 'stopBindings', no, {
 		controlsDescendantBindings : on
 }
 
-'x x1 x2 y y1 y2 width height d id startOffset transform'.words()
+'x x1 x2 y y1 y2 width height d id startOffset transform viewBox'.words()
 .forEach (attr) ->
 	register attr, no, {
 		update : (elem, accs) ->
-			value = unwrap accs()
-			elem.setAttribute attr, String(value)
+			elem.setAttribute attr, unwrap accs()
+	}
+
+['backgroundPosition', 'backgroundSize'].forEach (style) ->
+	register style, no, {
+		update : (elem, accs) ->
+			elem.style[style] = unwrap accs()
 	}
