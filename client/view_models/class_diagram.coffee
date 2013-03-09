@@ -49,7 +49,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		@visibleShifter = ko.observable()
 
 		@isChosen = no
-		@isMoved  = no
+		@shifting = no
 		@linking  = ko.observable no
 		@moving   = ko.observable no
 		@linking.subscribe (value) =>
@@ -105,8 +105,8 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	@delegate('click') (el, event) ->
 		return if event.target isnt @element()
-		if @isMoved
-			@isMoved = no
+		if @shifting
+			@shifting = no
 			return
 
 		@openMenu null
@@ -310,6 +310,8 @@ class ClassDiagramViewModel extends BaseViewModel
 		('on' + name) of document) || 'MozMousePixelScroll'
 
 	@delegate(nameWheelEvent) (el, event) ->
+		return if @moving() || @linking()
+
 		sign = (-event.deltaY || event.detail || event.wheelDelta).sign()
 		
 		oldScaleFactor = @scaleFactor()
@@ -330,8 +332,8 @@ class ClassDiagramViewModel extends BaseViewModel
 			@shift(e.clientX - prevX, e.clientY - prevY)
 			prevX = e.clientX
 			prevY = e.clientY
-			unless @isMoved
-				@isMoved = yes
+			unless @shifting
+				@shifting = yes
 				if @openMenu() == 'creating'
 					@openMenu null
 		).throttle()
@@ -341,7 +343,7 @@ class ClassDiagramViewModel extends BaseViewModel
 			document.removeEventListener 'mouseup', mouseUp, on
 
 			if e.target isnt event.target
-				@isMoved = no
+				@shifting = no
 
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
@@ -424,15 +426,15 @@ class ClassDiagramViewModel extends BaseViewModel
 		document.addEventListener 'mouseup', mouseUp, off
 
 	@delegate('mouseover', '.essential') (ess) ->
-		if @linking()
-			if @fakeEssential() isnt ess
-				@fakeEssentialIsVisible no
-			@fakeRelationship().toEssential ess.ref()
+		return unless @linking()
+		if @fakeEssential() isnt ess
+			@fakeEssentialIsVisible no
+		@fakeRelationship().toEssential ess.ref()
 
 	@delegate('mouseout', '.essential') ->
-		if @linking()
-			@fakeRelationship().toEssential @fakeEssential().ref()
-			@fakeEssentialIsVisible yes
+		return unless @linking()
+		@fakeRelationship().toEssential @fakeEssential().ref()
+		@fakeEssentialIsVisible yes
 
 	@delegate('mouseup', '.essential') (ess) ->
 		return unless @linking()
