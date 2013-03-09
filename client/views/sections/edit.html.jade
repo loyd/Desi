@@ -173,4 +173,12 @@
 						// /ko
 						
 				button.btn.btn-add-operation: i.icon-plus
+
+	// ko if: linking() || moving()
+	// ko foreach: 'top right left bottom top-left top-right bottom-left bottom-right'.words()
+	.shifter(data-bind="\
+		css: $data + '-shifter' + ($parent.visibleShifter() === $data ? ' active' : '')\
+	")
+	// /ko
+	// /ko
 // /ko

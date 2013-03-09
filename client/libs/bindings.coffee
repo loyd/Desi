@@ -92,7 +92,7 @@ register 'stopBindings', no, {
 			elem.setAttribute attr, unwrap accs()
 	}
 
-['backgroundPosition', 'backgroundSize'].forEach (style) ->
+['backgroundPosition', 'backgroundSize', 'opacity'].forEach (style) ->
 	register style, no, {
 		update : (elem, accs) ->
 			elem.style[style] = unwrap accs()

@@ -1,6 +1,7 @@
-@stroke-width   : 0.2mm;
-@btn-size       : 45px;
-@relation-zone  : 10;
+@stroke-width  : 0.2mm;
+@btn-size      : 45px;
+@shifter-width : 35px;
+@relation-zone : 10;
 
 @import 'utils';
 
@@ -321,5 +322,72 @@
 		stroke : gray !important;
 		fill : gray !important;
 		stroke-dasharray : 3, 3;
+	}
+
+	.shifter {
+		position : absolute;
+		opacity  : 0;
+		background-color : black;
+
+		.transition(opacity 0.3s);
+
+		&.active {
+			opacity : 0.2;
+		}
+	}
+
+	.top-shifter, .bottom-shifter {
+		left   : 0;
+		right  : 0;
+		height : @shifter-width;
+	}
+
+	.left-shifter, .right-shifter {
+		top    : 0;
+		bottom : 0;
+		width  : @shifter-width;
+	}
+
+	.top-shifter {
+		top : 0;
+	}
+
+	.right-shifter {
+		right : 0;
+	}
+
+	.bottom-shifter {
+		bottom : 0;
+	}
+
+	.left-shifter {
+		left : 0;
+	}
+
+	.top-left-shifter,  .bottom-left-shifter,
+	.top-right-shifter, .bottom-right-shifter {
+		width  : @shifter-width * 2;
+		height : @shifter-width * 2;
+		border-radius : @shifter-width * 2/3;
+	}
+
+	.top-left-shifter {
+		top  : -@shifter-width;
+		left : -@shifter-width;
+	}
+
+	.top-right-shifter {
+		top   : -@shifter-width;
+		right : -@shifter-width;
+	}
+
+	.bottom-right-shifter {
+		bottom : -@shifter-width;
+		left   : -@shifter-width;
+	}
+
+	.bottom-left-shifter {
+		bottom : -@shifter-width;
+		right  : -@shifter-width;
 	}
 }

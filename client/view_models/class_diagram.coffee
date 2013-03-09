@@ -5,9 +5,11 @@ Synchronizer          = require 'libs/synchronizer'
 onresize              = require 'libs/onresize'
 ko                    = require 'ko'
 
-SCALE_DIFF = 0.15
-MIN_SCALE  = 0.45
-MAX_SCALE  = 3
+SCALE_DIFF      = 0.15
+MIN_SCALE       = 0.45
+MAX_SCALE       = 3
+AUTOSHIFT_SPEED = 200 # [unit/sec]
+AUTOSHIFT_RATE  = 25
 
 class ClassDiagramViewModel extends BaseViewModel
 	viewRoot : '.class-diagram'
@@ -44,9 +46,12 @@ class ClassDiagramViewModel extends BaseViewModel
 		@creatingMenuPosX = ko.observable()
 		@creatingMenuPosY = ko.observable()
 
+		@visibleShifter = ko.observable()
+
 		@isChosen = no
 		@isMoved  = no
 		@linking  = ko.observable no
+		@moving   = ko.observable no
 		@linking.subscribe (value) =>
 			if value
 				@fakeRelationshipIsVisible yes
@@ -191,10 +196,23 @@ class ClassDiagramViewModel extends BaseViewModel
 		baseShiftX = posX() - (event.clientX - left) / scaleFactor
 		baseShiftY = posY() - (event.clientY - top)  / scaleFactor
 
-		isMoving = no
+		prevOriginX = @originX()
+		originXSubsrc = @originX.subscribe (v) ->
+			baseShiftX += v - prevOriginX
+			posX posX() + v - prevOriginX
+			prevOriginX = v
+
+		prevOriginY = @originY()
+		originYSubsrc = @originY.subscribe (v) ->
+			baseShiftY += v - prevOriginY
+			posY posY() + v - prevOriginY
+			prevOriginY = v
+
+		moving = no
 		mouseMove = ((e) =>
-			unless isMoving
-				isMoving = yes
+			unless moving
+				@moving yes
+				moving = yes
 				ess.isMoved yes
 				@openMenu null
 				@chooseEssential null
@@ -209,6 +227,10 @@ class ClassDiagramViewModel extends BaseViewModel
 			document.removeEventListener 'mousemove', mouseMove, on
 			document.removeEventListener 'mouseup', mouseUp, on
 
+			do originXSubsrc.dispose
+			do originYSubsrc.dispose
+			@visibleShifter null
+			@moving no
 			ess.isMoved no
 			@chooseEssential ess
 			@openMenu menuName
@@ -217,6 +239,33 @@ class ClassDiagramViewModel extends BaseViewModel
 		document.addEventListener 'mouseup', mouseUp, on
 
 		do event.preventDefault
+
+	SHIFT_PER_FRAME = AUTOSHIFT_SPEED / AUTOSHIFT_RATE
+	
+	@delegate('mouseover', '.shifter') (type) ->
+		@visibleShifter type
+
+		shift = SHIFT_PER_FRAME
+		intId = setInterval =>
+			if @visibleShifter() != type
+				clearInterval intId
+				return
+
+			switch type
+				when 'left' then @shift shift, 0
+				when 'right' then @shift -shift, 0
+				when 'top' then @shift 0, shift
+				when 'bottom' then @shift 0, -shift
+				when 'top-left' then @shift shift, shift
+				when 'top-right' then @shift -shift, shift
+				when 'bottom-left' then @shift -shift, -shift
+				when 'bottom-right' then @shift shift, -shift
+
+			return
+		, 1000 / AUTOSHIFT_RATE
+
+	@delegate('mouseout', '.shifter') (type) ->
+		@visibleShifter null
 
 	@delegate('click', '.relationship-zone') (rel) ->
 		@openMenu null
@@ -336,10 +385,23 @@ class ClassDiagramViewModel extends BaseViewModel
 		@linking yes
 		@fakeEssentialIsVisible yes
 
+		{posX, posY} = fakeEss
 		{left, top} = main.getBoundingClientRect()
 		scaleFactor = @scaleFactor()
 		someX = @originX() - fakeEss.width() / 2
 		someY = @originY() - fakeEss.height() / 2
+
+		prevSomeX = @originX()
+		originXSubsrc = @originX.subscribe (v) ->
+			someX += v - prevSomeX
+			posX posX() + v - prevSomeX
+			prevSomeX = v
+
+		prevSomeY = @originY()
+		originYSubsrc = @originY.subscribe (v) ->
+			someY += v - prevSomeY
+			posY posY() + v - prevSomeY
+			prevSomeY = v
 
 		menuIsClosed = no
 		mouseMove = ((e) =>
@@ -347,11 +409,14 @@ class ClassDiagramViewModel extends BaseViewModel
 				@openMenu null
 				menuIsClosed = yes
 
-			fakeEss.posX someX + (e.clientX - left) / scaleFactor
-			fakeEss.posY someY + (e.clientY - top) / scaleFactor
+			posX someX + (e.clientX - left) / scaleFactor
+			posY someY + (e.clientY - top) / scaleFactor
 		).debounce()
 
 		mouseUp = =>
+			do originXSubsrc.dispose
+			do originYSubsrc.dispose
+
 			document.removeEventListener 'mousemove', mouseMove, off
 			document.removeEventListener 'mouseup', mouseUp, off
 
