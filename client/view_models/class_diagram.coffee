@@ -64,7 +64,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		onresize main, (=>
 			do @refreshSizes if @isChosen
-		).debounce()
+		).throttle()
 
 		essSubscr = @essentialMenuElement.subscribe (elem) =>
 			do essSubscr.dispose
@@ -221,7 +221,7 @@ class ClassDiagramViewModel extends BaseViewModel
 			posY baseShiftY + (e.clientY - top)  / scaleFactor
 
 			return
-		).debounce()
+		).throttle()
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
@@ -334,7 +334,7 @@ class ClassDiagramViewModel extends BaseViewModel
 				@isMoved = yes
 				if @openMenu() == 'creating'
 					@openMenu null
-		).debounce()
+		).throttle()
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
@@ -411,7 +411,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 			posX someX + (e.clientX - left) / scaleFactor
 			posY someY + (e.clientY - top) / scaleFactor
-		).debounce()
+		).throttle()
 
 		mouseUp = =>
 			do originXSubsrc.dispose

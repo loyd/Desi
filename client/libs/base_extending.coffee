@@ -152,7 +152,7 @@ Array::scan = (fn) ->
 Array::each = Array::forEach
 
 #### RequestAnimationFrame
-window.requestAnimFrame = requestAnimationFrame = 
+window.requestAnimationFrame = requestAnimationFrame = 
 	window.requestAnimationFrame       ||
 	window.webkitRequestAnimationFrame ||
 	window.mozRequestAnimationFrame    ||
@@ -169,15 +169,36 @@ Function::defer = (time = 0) ->
 Function::debounce = (time) ->
 	blocked = no
 
-	if arguments.length == 0 then =>
+	timer = if arguments.length == 0
+		(fn) -> requestAnimationFrame fn
+	else setTimeout
+
+	return =>
 		return if blocked
 		blocked = yes
 		this arguments...
-		requestAnimationFrame -> blocked = no
-	else =>
-		return if blocked
-		blocked = yes
+		timer (-> blocked = no), time
+
+Function::throttle = (time) ->
+	state = 0
+	args  = null
+
+	timer = if arguments.length == 0
+		(fn) -> requestAnimationFrame fn
+	else setTimeout
+
+	return =>
+		if state > 0
+			++state if state == 1
+			args = arguments
+			return
+		else
+			++state
+
 		this arguments...
-		setTimeout (-> blocked = no), time
+		timer (=>
+			this args... if state == 2
+			state = 0
+		), time
 
 Function::empty = ->
