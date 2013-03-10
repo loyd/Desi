@@ -37,6 +37,14 @@ class EssentialViewModel extends BaseViewModel
 		countTextSize '.name', @name()
 
 	@computed \
+	centerX : ->
+		@posX() + @width() / 2
+	
+	@computed \
+	centerY : ->
+		@posY() + @height() / 2
+
+	@computed \
 	width : ->
 		w = Math.max(
 			MIN_HEADER_PADDING * 2 + @nameSize().width

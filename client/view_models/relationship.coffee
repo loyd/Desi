@@ -3,7 +3,7 @@ Synchronizer  = require 'libs/synchronizer'
 ko            = require 'ko'
 
 MID_SHIFT_PART     = .1
-CROSS_ACCURACY     = 0.1 # [unit]
+CROSS_ACCURACY     = .1  # [unit]
 DELTA_PART         = .07
 DIST_FACTOR        = 1.3
 TIP_OFFSET         = 15
@@ -23,6 +23,8 @@ class RelationshipViewModel extends BaseViewModel
 		@fromIndicator    = sync.observer 'fromIndicator'
 		@toIndicator      = sync.observer 'toIndicator'
 
+		@level    = ko.observable 0
+		@maxLevel = ko.observable 0
 		@isChosen = ko.observable no
 		@pathID = "#{PATH_ID_PREFIX}#{freeID++}"
 		@pathElement = ko.observable null
@@ -45,9 +47,20 @@ class RelationshipViewModel extends BaseViewModel
 		@fromEssential() == @toEssential()
 
 	@computed \
+	shiftPart : ->
+		2 * @level() / (@maxLevel() + 1) - 1
+
+	@computed \
+	placeFactor : ->
+		if @fromEssential.deref().centerX() > @toEssential.deref().centerX()
+			-1
+		else
+			1
+
+	@computed \
 	fromX : ->
 		from  = @fromEssential.deref()
-		fromX = from.posX() + from.width() / 2
+		from.centerX() + (@level() && from.width()/2 * @shiftPart())
 
 	@computed \
 	fromY : ->
@@ -55,7 +68,7 @@ class RelationshipViewModel extends BaseViewModel
 		if @isItself()
 			from.posY() + from.height() * 4/5
 		else
-			from.posY() + from.height() / 2
+			from.centerY() + (@level() && from.height()/2 * @shiftPart())
 
 	@computed \
 	midX : ->
@@ -64,20 +77,27 @@ class RelationshipViewModel extends BaseViewModel
 		else
 			fromPosX = @fromX()
 			toPosX   = @toX()
+			level    = @level()
 
-			fromPosX + (toPosX - fromPosX) * MID_SHIFT_PART
+			if level == 0 || @shiftPart() * @placeFactor() < 0
+				fromPosX + (toPosX - fromPosX) * MID_SHIFT_PART
+			else
+				toPosX - (toPosX - fromPosX) * MID_SHIFT_PART
 
 	@computed \
 	midY : ->
 		fromPosY = @fromY()
 		toPosY   = @toY()
-
-		toPosY - (toPosY - fromPosY) * MID_SHIFT_PART
+		level    = @level()
+		if level == 0 || @shiftPart() * @placeFactor() < 0
+			toPosY - (toPosY - fromPosY) * MID_SHIFT_PART
+		else
+			fromPosY + (toPosY - fromPosY) * MID_SHIFT_PART
 
 	@computed \
 	toX : ->
 		to = @toEssential.deref()
-		to.posX() + to.width() / 2
+		to.centerX() + (@level() && to.width()/2 * @shiftPart())
 
 	@computed \
 	toY : ->
@@ -85,7 +105,7 @@ class RelationshipViewModel extends BaseViewModel
 		if @isItself()
 			to.posY() + to.height() / 5
 		else
-			to.posY() + to.height() / 2
+			to.centerY() + (@level() && to.height()/2 * @shiftPart())
 
 	@computed \
 	path : ->

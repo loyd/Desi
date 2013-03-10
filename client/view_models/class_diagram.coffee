@@ -80,6 +80,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		super
 
 		do @makeFakeElements
+		@redefineRelationshipsLevel ess for ess in @essentials()
 
 	calcExternSize : (size) ->
 		size * @scaleFactor()
@@ -145,12 +146,41 @@ class ClassDiagramViewModel extends BaseViewModel
 			@relationships.move index, @relationships().length-1
 
 	removeEssential : (ess) ->
-		for relPtr in ess.relationships()
+		rels = ess.relationships()[..]
+		for relPtr in rels
 			@removeRelationship relPtr.deref()
 
 		@essentials.remove ess
 		if @chosenEssential() is ess
 			@chooseEssential null
+
+	redefineRelationshipsLevel : (from, to, fake) ->
+		fromRef = from.ref()
+		unless to
+			for relRef in from.relationships()
+				continue if relRef.deref().fromEssential() isnt fromRef
+				thisTo = relRef.deref().toEssential.deref()
+				@redefineRelationshipsLevel from, thisTo
+			
+			return
+
+		toRef = to.ref()
+		relList = from.relationships()
+			.map((relRef) -> relRef.deref() )
+			.filter (rel) ->
+				rel.fromEssential() == fromRef && rel.toEssential() == toRef
+
+		relList.push fake if fake
+
+		if relList.length > 1
+			for rel, lvl in relList
+				rel.maxLevel relList.length
+				rel.level lvl + 1
+		else if relList.length == 1
+			relList[0].level 0
+			relList[0].maxLevel 0
+
+		return
 
 	addRelationship : (from, to) ->
 		sync = new Synchronizer @spec.data.relationships.item
@@ -158,8 +188,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		rel.fromEssential from.ref()
 		rel.toEssential to.ref()
 		from.addRelationship rel
-		to.addRelationship rel
+		to.addRelationship rel if from isnt to
 		@relationships.push rel
+		@redefineRelationshipsLevel from, to
 
 	makeFakeElements : ->
 		relSync = new Synchronizer @spec.data.relationships.item, null, yes
@@ -174,9 +205,12 @@ class ClassDiagramViewModel extends BaseViewModel
 		@fakeRelationship rel
 
 	removeRelationship : (rel) ->
-		rel.fromEssential.deref().removeRelationship rel
-		rel.toEssential.deref().removeRelationship rel
+		from = rel.fromEssential.deref()
+		to   = rel.toEssential.deref()
+		from.removeRelationship rel
+		to.removeRelationship rel if from isnt to
 		@relationships.remove rel
+		@redefineRelationshipsLevel from, to
 
 	#### Clicking and moving essential
 
@@ -427,14 +461,17 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	@delegate('mouseover', '.essential') (ess) ->
 		return unless @linking()
+		fakeRel = @fakeRelationship()
 		if @fakeEssential() isnt ess
 			@fakeEssentialIsVisible no
+			@redefineRelationshipsLevel @chosenEssential(), ess, fakeRel
 		@fakeRelationship().toEssential ess.ref()
 
-	@delegate('mouseout', '.essential') ->
+	@delegate('mouseout', '.essential') (ess) ->
 		return unless @linking()
 		@fakeRelationship().toEssential @fakeEssential().ref()
 		@fakeEssentialIsVisible yes
+		@redefineRelationshipsLevel @chosenEssential(), ess
 
 	@delegate('mouseup', '.essential') (ess) ->
 		return unless @linking()
