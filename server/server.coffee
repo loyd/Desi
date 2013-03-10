@@ -1,18 +1,7 @@
-express = require 'express'
+connect = require 'connect'
 path    = require 'path'
 
-app = express()
-
-app.configure ->
-	app.use do express.methodOverride
-	app.use do express.bodyParser
-	app.use app.router
-
-app.configure 'development', ->
-	app.use express.static path.join __dirname, '../public'
-	app.use express.errorHandler {
-		dumpExceptions : on
-		showStack      : yes
-	}
-
-app.listen 3000
+app = connect()
+	.use(connect.logger 'dev')
+	.use(connect.static path.join __dirname, '../public')
+	.listen 3000
