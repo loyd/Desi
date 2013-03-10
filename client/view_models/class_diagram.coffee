@@ -58,6 +58,10 @@ class ClassDiagramViewModel extends BaseViewModel
 			else
 				@fakeRelationshipIsVisible no
 				@fakeEssentialIsVisible no
+				fakeRel = @fakeRelationship()
+				fakeEssRef = @fakeEssential().ref()
+				fakeRel.fromEssential fakeEssRef
+				fakeRel.toEssential fakeEssRef
 
 		document.addEventListener 'mouseup', =>
 			(=> @linking no).defer()
@@ -126,7 +130,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		sync = new Synchronizer @spec.data.essentials.item
 		ess  = new EssentialViewModel sync
 		ess.posX x - ess.width() / 2
-		ess.posY y - ess.headerHeight() / 2
+		ess.posY y - ess.height() / 2
 		@essentials.push ess
 
 	chooseEssential : (ess) ->
@@ -166,7 +170,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		toRef = to.ref()
 		relList = from.relationships()
-			.map((relRef) -> relRef.deref() )
+			.map((relRef) -> relRef.deref())
 			.filter (rel) ->
 				rel.fromEssential() == fromRef && rel.toEssential() == toRef
 
@@ -211,6 +215,10 @@ class ClassDiagramViewModel extends BaseViewModel
 		to.removeRelationship rel if from isnt to
 		@relationships.remove rel
 		@redefineRelationshipsLevel from, to
+
+		# Fix bug with updating removed relationships
+		rel.fromEssential @fakeEssential().ref()
+		rel.toEssential   @fakeEssential().ref()
 
 	#### Clicking and moving essential
 
@@ -465,7 +473,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		if @fakeEssential() isnt ess
 			@fakeEssentialIsVisible no
 			@redefineRelationshipsLevel @chosenEssential(), ess, fakeRel
-		@fakeRelationship().toEssential ess.ref()
+		fakeRel.toEssential ess.ref()
 
 	@delegate('mouseout', '.essential') (ess) ->
 		return unless @linking()
@@ -477,9 +485,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		return unless @linking()
 		@linking no
 		if ess is (fake = @fakeEssential())
-			@addEssential fake.posX() + fake.width() / 2,
-				fake.posY() + fake.height() / 2
-
+			@addEssential fake.centerX(), fake.centerY()
 			ess = @essentials().last()
 
 		@addRelationship @chosenEssential(), ess

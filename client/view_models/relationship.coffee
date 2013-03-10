@@ -59,7 +59,7 @@ class RelationshipViewModel extends BaseViewModel
 
 	@computed \
 	fromX : ->
-		from  = @fromEssential.deref()
+		from = @fromEssential.deref()
 		from.centerX() + (@level() && from.width()/2 * @shiftPart())
 
 	@computed \
