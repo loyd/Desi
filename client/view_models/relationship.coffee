@@ -4,8 +4,9 @@ ko            = require 'ko'
 
 MID_SHIFT_PART     = .1
 CROSS_ACCURACY     = 0.1 # [unit]
-DELTA_PART         = .05
+DELTA_PART         = .07
 DIST_FACTOR        = 1.3
+TIP_OFFSET         = 15
 MULTIPLICITY_DIST  = 12  # [unit]
 MULTIPLICITY_ANGLE = 35  # [°]
 PATH_ID_PREFIX     = '__path__id__'
@@ -153,30 +154,23 @@ class RelationshipViewModel extends BaseViewModel
 		r * r * @fromY() + 2 * p * r * @midY() + p * p * @toY()
 
 	calcTangentAngle : (part) ->
-		helpPart = if part > 0.5 then part - DELTA_PART else part + DELTA_PART
-		deltaX = @calcX(part) - @calcX(helpPart)
+		if part + DELTA_PART > 1
+			helpPart = 1
+			part = 1 - DELTA_PART
+		else
+			helpPart = part + DELTA_PART
 
 		Math.atan2(
-			@calcY(part) - @calcY(helpPart), deltaX
+			@calcY(helpPart) - @calcY(part), @calcX(helpPart) - @calcX(part)
 		).toDegree()
 
 	@computed \
 	fromCrossAngle : ->
-		part = @fromCrossPart()
-		help = part + DELTA_PART
-		Math.atan2(
-			@calcY(part) - @calcY(help),
-			@calcX(part) - @calcX(help)
-		).toDegree()
+		@calcTangentAngle @fromCrossPart()
 
 	@computed \
 	toCrossAngle : ->
-		part = @toCrossPart()
-		help = part - DELTA_PART
-		Math.atan2(
-			@calcY(part) - @calcY(help),
-			@calcX(part) - @calcX(help)
-		).toDegree()
+		@calcTangentAngle @toCrossPart()
 
 	@computed \
 	fromCrossX : ->
@@ -206,7 +200,7 @@ class RelationshipViewModel extends BaseViewModel
 	tipTransform : ->
 		if @fromIsThick() && !@isItself()
 			"translate(#{@fromCrossX()}, #{@fromCrossY()})" +
-			"rotate(#{@fromCrossAngle()})"
+			"rotate(#{@fromCrossAngle() - 180})"
 		else
 			"translate(#{@toCrossX()}, #{@toCrossY()})" +
 			"rotate(#{@toCrossAngle()})"
@@ -216,7 +210,7 @@ class RelationshipViewModel extends BaseViewModel
 			if 90 < startAngle < 180 || -90 < startAngle < 0 then -1 else 1
 		else if @pathMode() == 'def' then 1 else -1
 	
-		(startAngle + s * MULTIPLICITY_ANGLE).toRadian()
+		(startAngle - 180 + s * MULTIPLICITY_ANGLE).toRadian()
 
 	@computed \
 	fromMultiplicityDist : ->
@@ -243,29 +237,32 @@ class RelationshipViewModel extends BaseViewModel
 		dist
 
 	@computed \
+	fromMultiplicityAngle : ->
+		@calcMultiplicityAngle @fromCrossAngle(), @fromIndicator()
+
+	@computed \
+	toMultiplicityAngle : ->
+		@calcMultiplicityAngle @toCrossAngle() + 180, @toIndicator()
+		
+	@computed \
 	fromMultiplicityX : ->
-		angle = @calcMultiplicityAngle @fromCrossAngle(), @fromIndicator()
-		@fromCrossX() - @fromMultiplicityDist() * angle.cos()
+		@fromCrossX() - @fromMultiplicityDist() * @fromMultiplicityAngle().cos()
 
 	@computed \
 	fromMultiplicityY : ->
-		angle = @calcMultiplicityAngle @fromCrossAngle(), @fromIndicator()
-		@fromCrossY() - @fromMultiplicityDist() * angle.sin()
+		@fromCrossY() - @fromMultiplicityDist() * @fromMultiplicityAngle().sin()
 
 	@computed \
 	toMultiplicityX : ->
-		angle = @calcMultiplicityAngle @toCrossAngle(), @toIndicator()
-		@toCrossX() - @toMultiplicityDist() * angle.cos()
+		@toCrossX() - @toMultiplicityDist() * @toMultiplicityAngle().cos()
 
 	@computed \
 	toMultiplicityY : ->
-		angle = @calcMultiplicityAngle @toCrossAngle(), @toIndicator()
-		@toCrossY() - @toMultiplicityDist() * angle.sin()
+		@toCrossY() - @toMultiplicityDist() * @toMultiplicityAngle().sin()
 
 	@computed \
 	pathMode : ->
-		angle = @fromCrossAngle()
-		if -90 < angle < 90 then 'rev' else 'def'
+		if -90 < @fromCrossAngle() < 90 then 'def' else 'rev'
 
 	@computed \
 	pathLength : ->
@@ -274,23 +271,24 @@ class RelationshipViewModel extends BaseViewModel
 
 	@computed \
 	fromOffset : ->
-		diff = ((@fromX() - @fromCrossX()).sqr() +
-			(@fromY() - @fromCrossY()).sqr()).sqrt() * DIST_FACTOR
+		dist = ((@fromX() - @fromCrossX()).sqr() +
+			(@fromY() - @fromCrossY()).sqr()).sqrt()
 
-		if @fromIsThick() && 30 < @fromCrossAngle().abs() < 150
-			diff *= DIST_FACTOR
+		dist += if @fromIsThick() then TIP_OFFSET else TIP_OFFSET / 3
 
 		if @pathMode() == 'rev'
-			@pathLength() - diff
-		else diff
+			@pathLength() - dist
+		else dist
 	
 	@computed \
 	toOffset : ->
-		diff = ((@toX() - @toCrossX()).sqr() +
-			(@toY() - @toCrossY()).sqr()).sqrt() * DIST_FACTOR
+		dist = ((@toX() - @toCrossX()).sqr() +
+			(@toY() - @toCrossY()).sqr()).sqrt()
+
+		dist += if @toIsThick() then TIP_OFFSET else TIP_OFFSET / 3
 
 		if @pathMode() == 'def'
-			@pathLength() - diff
-		else diff
+			@pathLength() - dist
+		else dist
 
 module.exports = RelationshipViewModel

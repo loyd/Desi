@@ -22,7 +22,7 @@ g.relationship(data-bind="svgcss: type")
 		xlinkhref: '#' + pathID + pathMode(),\
 		text: fromIndicator,\
 		startOffset: fromOffset,\
-		style: { 'text-anchor': pathMode() === 'def' ? 'start' : 'end' }\
+		style: { textAnchor: pathMode() === 'def' ? 'start' : 'end' }\
 	")
 	// /ko
 
@@ -31,7 +31,7 @@ g.relationship(data-bind="svgcss: type")
 		xlinkhref: '#' + pathID + pathMode(),\
 		text: toIndicator,\
 		startOffset: toOffset,\
-		style: { 'text-anchor': pathMode() === 'rev' ? 'start' : 'end' }\
+		style: { textAnchor: pathMode() === 'rev' ? 'start' : 'end' }\
 	")
 	// /ko
 
