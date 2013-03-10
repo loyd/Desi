@@ -2,7 +2,7 @@
 	"name"        : "Desi",
 	"description" : "Tiny UML-editor",
 	"author"      : "Paul Pavelko aka loyd",
-	"version"     : "0.1.1",
+	"version"     : "0.1.2",
 	"keywords"    : ["editor", "uml", "design"],
 
 	"engines" : {
