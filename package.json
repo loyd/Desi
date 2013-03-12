@@ -10,8 +10,11 @@
 	},
 
 	"dependencies" : {
-		"connect" : ">=2.0.0",
-		"async"   : ">=0.1.22"
+		"mongodb"  : "~1",
+		"connect"  : "~2",
+		"async"    : "~0.1.22",
+		"share"    : "~0.5",
+		"passport" : "~0.1.16"
 	},
 
 	"devDependencies" : {
