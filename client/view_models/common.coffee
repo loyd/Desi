@@ -45,6 +45,10 @@ class CommonViewModel extends BaseViewModel
 		@templateIndex 0
 		@title = ko.observable 'Desi'
 
+		@online = ko.observable navigator.onLine
+		addEventListener 'online',  (=> @online yes), off
+		addEventListener 'offline', (=> @online no),  off
+
 		super
 	
 	reqAuth = (propName) -> ->
