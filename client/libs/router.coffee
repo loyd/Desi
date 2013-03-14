@@ -20,8 +20,11 @@ class Router
 		newHashValue = location.hash[1..]
 		return if @currentHash == newHashValue
 
-		@tmplsTree.each (tmpl) =>
+		@hashIsChanged = no
+		iter = @tmplsTree.iterator()
+		while (tmpl = iter.next()) != null
 			tmpl.apply @currentHash, newHashValue
+			return if @hashIsChanged
 
 		@currentHash = newHashValue
 
@@ -46,7 +49,8 @@ class Router
 			tmpl.rmCallbackOut cbOut if cbOut
 
 	navigate : (urlHash) =>
-		location.hash = '#' + urlHash
+		@hashIsChanged = yes
+		(=> location.hash = '#' + urlHash).defer()
 
 class Tmpl
 	@compare = (one, two) ->

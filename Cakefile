@@ -437,6 +437,18 @@ preparers['doT'] = (ipath, opath, dev, done) ->
 			fs.writeFile "#{opath}/index.js", makeAMD(code), done
 	], done
 
+preparers['jssha'] = (ipath, opath, dev, done) ->
+	async.waterfall [
+		(next) -> fs.readFile "#{ipath}/src/sha1.js", 'utf-8', next
+		(code, done) ->
+			try
+				code = makeAMD code
+			catch error
+				handleExternError error
+			
+			fs.writeFile "#{opath}/index.js", code, done
+	], done
+
 ################################################################################
 caseChange = /([a-z])([A-Z])/g
 String::toPathName = ->

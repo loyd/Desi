@@ -11,10 +11,14 @@
 
 	"dependencies" : {
 		"mongodb"  : "~1",
-		"connect"  : "~2",
 		"async"    : "~0.1.22",
 		"share"    : "~0.5",
-		"passport" : "~0.1.16"
+		
+		"connect" : "~2",
+		"connect-mongo" : "~0.3",
+
+		"passport" : "~0.1.16",
+		"passport-local" : "~0.1"
 	},
 
 	"devDependencies" : {

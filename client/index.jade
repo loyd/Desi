@@ -21,7 +21,7 @@ body
 	#top.navbar.navbar-fixed-top: .navbar-inner
 		button#btn-sidebar.btn.btn-navbar(data-bind="\
 			click: toggleSidebar,\
-			css: { disabled: !isAuthorized(), active: !sidebarIsClosed() }\
+			css: { disabled: !isAuthorized(), active: sidebarIsOpen() }\
 		")
 			span.icon-bar
 			span.icon-bar
@@ -39,7 +39,7 @@ body
 			// /ko
 
 	// ko if: isAuthorized
-	#sidebar.closed(data-bind="css: { closed: sidebarIsClosed }")
+	#sidebar(data-bind="css: { closed: sidebarIsOpen }")
 		ul.nav.nav-list
 			li(data-bind="css: { active: sectionTemplate() === 'lookup' }")
 				a(href="#lookup")

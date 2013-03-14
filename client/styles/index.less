@@ -1,5 +1,8 @@
 @sidebar-width : 200px;
 @top-height    : 42px;
+@form-width    : 540px;
+@login-height  : 180px;
+@signup-height  : 280px;
 
 @import 'utils';
 
@@ -53,7 +56,7 @@ input, input[type], select {
 
 #sidebar {
 	top   : @top-height;
-	left  : 0;
+	left  : -@sidebar-width;
 	width : @sidebar-width;
 
 	font-weight : bold;
@@ -63,8 +66,8 @@ input, input[type], select {
 
 	.transition(left 1s);
 
-	&.closed {
-		left : -@sidebar-width;
+	&.open {
+		left : 0;
 	}
 
 	ul > li {
@@ -96,12 +99,12 @@ input, input[type], select {
 #main {
 	top   : @top-height - 2;
 	right : 0;
-	left  : @sidebar-width;
+	left  : 0;
 
 	.transition(left 1s);
 
-	#sidebar.closed + & {
-		left : 0;
+	#sidebar.open + & {
+		left : @sidebar-width;
 	}
 }
 
@@ -162,4 +165,22 @@ input, input[type], select {
 		display : block;
 		margin  : auto;
 	}
+}
+
+#signup, #login {
+	width       : @form-width;
+	margin-left : -@form-width/2;
+	position    : absolute;
+	left        : 50%;
+	top         : 50%;
+}
+
+#signup {
+	height     : @signup-height;
+	margin-top : -@signup-height/2;
+}
+
+#login {
+	height     : @login-height;
+	margin-top : -@login-height/2;
 }

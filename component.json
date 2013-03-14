@@ -6,8 +6,9 @@
 		"jszip"      : "~1",
 		"doT"        : "~0.2",
 		"bootswatch" : "~2.3",
-		"bintrees"   : "git://github.com/vadimg/js_bintrees.git",
 
+		"jssha"      : "*",
+		"bintrees"   : "git://github.com/vadimg/js_bintrees.git",
 		"requirejs-domready" : "~2"
 	}
 }

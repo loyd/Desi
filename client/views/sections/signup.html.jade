@@ -1,28 +1,28 @@
-form.form-horizontal(data-bind="with: locale().signup")
+form.form-horizontal(data-bind="with: locale().auth")
+
+	.control-group(data-bind="css: { error: $root.invalidLogin }")
+		label.control-label(for="signup-login", data-bind="text: login")
+		.controls: input(type="text", id="signup-login",
+			data-bind="attr: { placeholder: loginHolder }, value: $root.inputLogin")
 
 	.control-group
-		label.control-label(for="input-login", data-bind="text: login")
-		.controls: input(type="text", id="input-login",
-			data-bind="attr: { placeholder: loginHolder }")
-
-	.control-group
-		label.control-label(for="input-email", data-bind="text: email")
-		.controls: input(type="text", id="input-email",
+		label.control-label(for="signup-email", data-bind="text: email")
+		.controls: input(type="text", id="signup-email",
 			data-bind="attr: { placeholder: emailHolder }")
 
-	.control-group
-		label.control-label(for="input-password", data-bind="text: password")
-		.controls: input(type="password", id="input-password",
-			data-bind="attr: { placeholder: passwordHolder }")
+	.control-group(data-bind="css: { error: $root.invalidPassword }")
+		label.control-label(for="signup-password", data-bind="text: password")
+		.controls: input(type="password", id="signup-password",
+			data-bind="attr: { placeholder: passwordHolder }, value: $root.inputPassword")
 
-	.control-group
-		label.control-label(for="input-password", data-bind="text: password")
-		.controls: input(type="password", id="input-password",
-			data-bind="attr: { placeholder: passwordHolder }")
+	.control-group(data-bind="css: { error: $root.invalidPassword2() }")
+		label.control-label(for="signup-password", data-bind="text: password")
+		.controls: input(type="password", id="signup-password",
+			data-bind="attr: { placeholder: passwordHolder }, value: $root.inputPassword2")
 
 	.control-group
 		.controls
 			label.checkbox
 				input(type="checkbox")
 				p(data-bind="text: remember")
-			button.btn(type="submit", data-bind="text: text")
+			button.btn(type="submit", data-bind="text: submit")

@@ -5,10 +5,6 @@
 		"signup" : "Signup"
 	},
 
-	"signup" : {
-
-	},
-
 	"sidebar" : {
 		"lookup"      : "Lookup",
 		"share"       : "Share",
@@ -17,21 +13,12 @@
 		"generation"  : "Generation"
 	},
 
-	"login" : {
-		"email"          : "Email",
-		"password"       : "Password",
-		"remember"       : "Remember me",
-		"text"           : "Login",
-		"emailHolder"    : "your email",
-		"passwordHolder" : "your password"
-	},
-
-	"signup" : {
+	"auth" : {
 		"login"          : "Login",
 		"email"          : "Email",
 		"password"       : "Password",
 		"remember"       : "Remember me",
-		"text"           : "Login",
+		"submit"         : "Submit",
 		"loginHolder"    : "your login",
 		"emailHolder"    : "your email",
 		"passwordHolder" : "your password"		

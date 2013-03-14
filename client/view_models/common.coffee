@@ -1,11 +1,12 @@
-ko               = require 'ko'
-ls               = require 'libs/local_storage'
-dot              = require 'dot'
-JsZip            = require 'jszip'
-profileSpec      = require 'models/profile'
-Synchronizer     = require 'libs/synchronizer'
-defLocal         = require 'locales/en_US'
-defTemplates     = require 'templates'
+ko           = require 'ko'
+ls           = require 'libs/local_storage'
+dot          = require 'dot'
+JsZip        = require 'jszip'
+{jsSHA}      = require 'jssha'
+profileSpec  = require 'models/profile'
+Synchronizer = require 'libs/synchronizer'
+defLocal     = require 'locales/en_US'
+defTemplates = require 'templates'
 
 BaseViewModel    = require 'libs/base_view_model'
 DiagramViewModel = require './class_diagram'
@@ -14,12 +15,18 @@ dot.templateSettings['strip'] = off
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->
-		@isAuthorized    = ko.observable ls.has('profile')
-		@sidebarIsClosed = ko.observable yes
+		@isAuthorized    = ko.observable no#ls.has('profile')
+		@sidebarIsOpen   = ko.observable no
 		@locale          = ko.observable defLocal
 
 		if @isAuthorized()
 			do @authorize
+
+		@invalidLogin    = ko.observable no
+		@invalidPassword = ko.observable no
+		@inputLogin      = ko.observable ''
+		@inputPassword   = ko.observable ''
+		@inputPassword2  = ko.observable ''
 
 		@sectionTemplate = ko.observable null
 		@openDiagrams    = ko.observableArray()
@@ -48,15 +55,27 @@ class CommonViewModel extends BaseViewModel
 		'edit/:title' : {
 			in : (title) ->
 				@openDiagram title
-				do @toggleSidebar unless @sidebarIsClosed()
+				do @toggleSidebar if @sidebarIsOpen()
 			out : ->
 				do @chosenDiagram().data.stopEditing
 				@chosenDiagram null
 		}
 		
 		':section, :section/*' : (name) ->
-			@title name
-			@sectionTemplate "#{name}-tmpl"
+			if @isAuthorized() || name in ['login', 'signup']
+				@title name
+				@sectionTemplate "#{name}-tmpl"
+			else
+				@navigate 'login'
+
+		'logout' : ->
+			xhr = new XMLHttpRequest
+			xhr.open 'GET', '/logout', yes
+			xhr.onreadystatechange = =>
+				return if xhr.readyState != 4
+				do @deauthorize if xhr.status == 200
+
+			xhr.send null
 
 		'generation' : ->
 			diag = @chosenDiagram() ? @generationCandidate()
@@ -67,7 +86,7 @@ class CommonViewModel extends BaseViewModel
 
 		'generation/:title' : (title) ->
 			@generationCandidate @diagrams().scan (item) -> item.title() == title
-			do @toggleSidebar unless @sidebarIsClosed()
+			do @toggleSidebar if @sidebarIsOpen()
 	}
 
 	openDiagram : (title) ->
@@ -111,22 +130,21 @@ class CommonViewModel extends BaseViewModel
 		@diagrams.push diag
 
 	authorize : ->
-		@profileSync = new Synchronizer profileSpec, ls('profile')
-		@diagramsSync = @profileSync.concretize 'diagrams'
+		# @profileSync = new Synchronizer profileSpec, ls('profile')
+		# @diagramsSync = @profileSync.concretize 'diagrams'
 
-		@diagrams = @diagramsSync.observer
-			classAdapter : DiagramItemViewModel
-		
-		@account = null
-		@generation = null
-		@exportation = null
-		@share = null
+		# @diagrams = @diagramsSync.observer
+		# 	classAdapter : DiagramItemViewModel
+		@isAuthorized yes
+		console.log 'auth'
 
 	deauthorize : ->
+		@isAuthorized no
+		console.log 'deauth'
 
 	toggleSidebar : =>
-		val = @sidebarIsClosed()
-		@sidebarIsClosed !val
+		val = @sidebarIsOpen()
+		@sidebarIsOpen !val
 
 	toRoot : ->
 		@navigate(if @isAuthorized() then 'lookup' else 'login')
@@ -237,6 +255,80 @@ class CommonViewModel extends BaseViewModel
 		oldActived?.isActive no
 		oldActived = item
 		item.isActive yes
+
+	#### Authorization
+	
+	@computed \
+	invalidPassword2 : ->
+		@inputPassword() != @inputPassword2()
+
+	calcSHA1 = (str) ->
+		new jsSHA(str, 'TEXT').getHash('SHA-1', 'HEX')
+
+	checkFields : ->
+		if @invalidLogin() || @invalidPassword()
+			return false
+
+		unless /^\w{4,}$/.test @inputLogin()
+			@invalidLogin yes
+			return false
+
+		if @inputPassword().length == 0
+			@invalidPassword yes
+			return false
+
+		return true
+
+	@delegate('submit', '#login form') (v, event) ->
+		do event.preventDefault
+		return unless @checkFields()
+
+		xhr = new XMLHttpRequest
+		xhr.open 'POST', '/login', yes
+		xhr.onreadystatechange = =>
+			return if xhr.readyState != 4
+
+			if xhr.status == 401
+				if xhr.statusText == 'Unknown user'
+					@invalidLogin yes
+				else if xhr.statusText == 'Invalid password'
+					@invalidPassword yes
+			else if xhr.status == 200
+				do @authorize
+
+		xhr.setRequestHeader 'Content-Type', 'application/json'
+		xhr.send JSON.stringify {
+			username : @inputLogin()
+			password : calcSHA1 @inputPassword()
+		}
+
+	@delegate('submit', '#signup form') (v, event) ->
+		do event.preventDefault
+		return unless @checkFields()
+		return if @invalidPassword2()
+
+		xhr = new XMLHttpRequest
+		xhr.open 'POST', '/signup', yes
+		xhr.onreadystatechange = =>
+			return if xhr.readyState != 4
+
+			if xhr.status == 401
+				if xhr.statusText == 'Existing user'
+					@invalidLogin yes
+			else if xhr.status == 200
+				do @authorize
+
+		xhr.setRequestHeader 'Content-Type', 'application/json'
+		xhr.send JSON.stringify {
+			username : @inputLogin()
+			password : calcSHA1 @inputPassword()
+		}
+
+	@delegate('change', '#login-login, #signup-login') ->
+		@invalidLogin no
+
+	@delegate('change', '#login-password, #signup-password') ->
+		@invalidPassword no
 
 class DiagramItemViewModel extends BaseViewModel
 	constructor : (@sync) ->
