@@ -49,6 +49,11 @@ class CommonViewModel extends BaseViewModel
 		addEventListener 'online',  (=> @online yes), off
 		addEventListener 'offline', (=> @online no),  off
 
+		@remember = ko.observable yes
+		addEventListener 'unload', =>
+			do @deauthorize unless @remember()
+		, off
+
 		super
 	
 	reqAuth = (propName) -> ->

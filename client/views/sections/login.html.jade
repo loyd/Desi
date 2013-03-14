@@ -13,6 +13,6 @@ form.form-horizontal(data-bind="with: locale().auth")
 	.control-group
 		.controls
 			label.checkbox
-				input(type="checkbox")
+				input(type="checkbox", data-bind="checked: $root.remember")
 				p(data-bind="text: remember")
 			button.btn(type="submit", data-bind="text: submit")
