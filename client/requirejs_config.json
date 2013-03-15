@@ -6,7 +6,8 @@
 			"domReady" : "vendors/requirejs-domready/index",
 			"jszip"    : "vendors/jszip/index",
 			"jssha"    : "vendors/jssha/index",
-			"dot"      : "vendors/doT/index"
+			"dot"      : "vendors/doT/index",
+			"share"    : "vendors/share/index"
 		}
 	},
 

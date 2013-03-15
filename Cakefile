@@ -449,6 +449,31 @@ preparers['jssha'] = (ipath, opath, dev, done) ->
 			fs.writeFile "#{opath}/index.js", code, done
 	], done
 
+preparers['share'] = (ipath, opath, dev, done) ->
+	async.parallel [
+		(add) ->
+			fs.readFile "#{ipath}/node_modules/browserchannel/dist/" +
+				'bcsocket-uncompressed.js', 'utf-8', add
+		(add) ->
+			fs.readFile "#{ipath}/webclient/share.uncompressed.js",
+				'utf-8', add
+		(add) ->
+			fs.readFile "#{ipath}/webclient/json.uncompressed.js",
+				'utf-8', add
+	], (err, sources) ->
+		return done err if err
+		code = """
+			var window = Object.create(this), WEB = true;
+			#{sources.join '\n'}
+			return window.sharejs;
+		"""
+		try
+			code = makeAMD makeSandbox(code, yes), yes
+		catch error
+			handleExternError error
+
+		fs.writeFile "#{opath}/index.js", code, done
+
 ################################################################################
 caseChange = /([a-z])([A-Z])/g
 String::toPathName = ->
@@ -573,5 +598,5 @@ makeAMD = (code, args...) ->
 	data.push AMD_DEFINITION_END
 	data.join '\n'
 
-makeSandbox = (code) ->
-	"!function() {\n#{code}\n}\n"
+makeSandbox = (code, isOpen) ->
+	"(function() {\n#{code}\n}).call(this)#{[';' unless isOpen]}\n"
