@@ -67,7 +67,7 @@ class OperationViewModel extends MemberViewModel
 		@params.push param
 
 	removeParam : (param) ->
-		@params.remove param
+		@params.delete param
 
 	@computed \
 	paramsText : ->

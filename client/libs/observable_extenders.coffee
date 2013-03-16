@@ -5,29 +5,17 @@ ko.extenders.extMode = (self) ->
 	return self
 
 extModeMethods = do (obsFns = ko.observableArray.fn) ->
-	methods =
-		subscribeAll : (hash, self) ->
-			for event, handler of hash
-				@subscribe handler, self, event
-
-			this
-
-	makeMethod = (name, body) ->
+	methods = {}
+	aProto = Array.prototype
+	Object.keys(obsFns).concat(['move', 'delete']).forEach (name) ->
 		methods[name] = ->
-			args = Array.from(arguments)
-			@notifySubscribers args, "#{name}:before"
-			res = body.apply(@, arguments)
-			@notifySubscribers [args, res], "#{name}:after"
+			do @valueWillMutate
+			res = if name of aProto
+				aProto[name].apply(@peek(), arguments)
+			else
+				obsFns[name].apply(@, arguments)
+			do @valueHasMutated
+			@notifySubscribers [arguments, res], name
 			res
-
-	for name in Object.keys(obsFns)
-		makeMethod name, obsFns[name]
-
-	makeMethod 'move', ->
-		arr = @peek()
-		do @valueWillMutate
-		res = arr.move arguments...
-		do @valueHasMutated
-		res
 
 	methods

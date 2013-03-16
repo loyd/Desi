@@ -1,4 +1,5 @@
 connect      = require 'connect'
+share        = require('share').server
 path         = require 'path'
 passport     = require 'passport'
 SessionStore = require('connect-mongo')(connect)
@@ -11,12 +12,30 @@ app = connect()
 	.use(connect.bodyParser())
 	.use(connect.methodOverride())
 	.use(connect.session {
+		key    : 'sid'
 		store  : new SessionStore db : 'sessions'
 		secret : Math.random().toString(36)[2..]
 	})
 	.use(passport.initialize())
 	.use(passport.session())
 	.use(connect.static path.join __dirname, '../public')
+
+share.attach app, {
+	db :
+		type : 'none'
+
+	auth : (agent, action) ->
+		if action.type != 'connect'
+			return do action.accept
+
+		[username, password] = agent.authentication.split ':'
+		unless username && password
+			return do action.reject
+
+		auth.authenticate username, password, (err, user) ->
+			agent.name = user._id if user
+			if err? then do action.reject else do action.accept
+}
 
 isAuthorization = (fn) -> (req, res, next) ->
 	return unless req.method == 'POST'

@@ -12,7 +12,8 @@
 	"dependencies" : {
 		"mongodb"  : "~1",
 		"async"    : "~0.1.22",
-		"share"    : "~0.5",
+		// "share"    : "~0.6", 
+		"share"    : "git://github.com/josephg/ShareJS.git#ff092ec4ebb1ba3b0dc487954d09c9f5488c75a9",
 		
 		"connect" : "~2",
 		"connect-mongo" : "~0.3",

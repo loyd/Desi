@@ -64,9 +64,12 @@ essential = object {
 	relationships : (array of: (pointer -> relationship))
 }
 
-classDiagram = object {
+diagramMeta = object {
 	title : (string def: 'Untitled')
 	lastModified : number
+}
+
+classDiagram = object {
 	essentials : (array of: essential)
 	relationships : (array of: relationship)
 }

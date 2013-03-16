@@ -1,13 +1,17 @@
 {extend, number, string, array, object, boolean} = require 'libs/model_dsl'
-classDiagram = require './class_diagram'
+
+diagramMeta = object {
+	id : string
+	title : (string def: 'Untitled')
+	lastModified : number
+	lastSynchronized : number
+}
 
 profile = object {
-	id : (number def: 0) # 0 - Ghost
 	freePtrId : (number def: 1)
 	login : (string test: /^\w+$/i)
 	email : (string test: /^(\S+)@([a-z0-9-]+)(\.)([a-z]{2,4})(\.?)([a-z]{0,4})+$/i)
-	pswHash : string
-	diagrams : (array of: classDiagram)
+	diagrams : (array of: diagramMeta)
 }
 
 module.exports = profile

@@ -1,6 +1,7 @@
 ko           = require 'ko'
 ls           = require 'libs/local_storage'
 dot          = require 'dot'
+share        = require 'share'
 JsZip        = require 'jszip'
 {jsSHA}      = require 'jssha'
 profileSpec  = require 'models/profile'
@@ -20,7 +21,7 @@ class CommonViewModel extends BaseViewModel
 		@locale          = ko.observable defLocal
 
 		if @isAuthorized()
-			do @authorize
+			do @localAuthorize
 
 		@invalidLogin    = ko.observable no
 		@invalidPassword = ko.observable no
@@ -116,7 +117,7 @@ class CommonViewModel extends BaseViewModel
 		return
 
 	closeDiagram : (title) ->
-		res = @openDiagrams.remove (item) ->
+		res = @openDiagrams.delete (item) ->
 			item.title() == title
 
 		do res[0].close if res.length
@@ -125,13 +126,13 @@ class CommonViewModel extends BaseViewModel
 
 	removeDiagram : (title) ->
 		@closeDiagram title
-		@diagrams.remove (item) ->
+		@diagrams.delete (item) ->
 			item.title() == title
 
 		return
 
 	createDiagram : ->
-		sync = new Synchronizer @diagramsSync.spec.item
+		sync = new Synchronizer profileSpec.data.diagrams.item
 		diag = new DiagramItemViewModel sync
 		date = new Date
 		diag.lastModifiedInMs +date + date.getTimezoneOffset() * 1000
@@ -139,19 +140,44 @@ class CommonViewModel extends BaseViewModel
 		@diagrams.push diag
 
 	authorize : ->
-		# @profileSync = new Synchronizer profileSpec, ls('profile')
-		# @diagramsSync = @profileSync.concretize 'diagrams'
+		do ls.clear
 
-		# @diagrams = @diagramsSync.observer
-		# 	classAdapter : DiagramItemViewModel
-		@isAuthorized yes
-		console.log 'auth'
+		makeSync = (key) =>
+			@profileSync = new Synchronizer profileSpec, key
+			do @profileSync.markAsMaster
+			@diagrams = @profileSync.observer 'diagrams',
+				classAdapter : DiagramItemViewModel
+			ls 'profile', key
+
+		[login, psw] = [@inputLogin(), @inputPassword()]
+		share.open "profile:#{login}", 'json', {
+			authentication : "#{login}:#{calcSHA1 psw}"
+		}, (err, doc) =>
+			return if err?
+
+			if r = doc.get()
+				makeSync ls.allocate r
+				(=>
+					@profileSync.attach doc
+					@isAuthorized yes
+				).defer()
+			else
+				key = ls.allocate { freePtrId : 1, login, diagrams : [] }
+				makeSync key
+				doc.set ls.expand(@profileSync.id), =>
+					@profileSync.attach doc
+					@isAuthorized yes
+
+	localAuthorize : ->
 
 	deauthorize : ->
-		@isAuthorized no
-		console.log 'deauth'
+		# @isAuthorized no
 
-	toggleSidebar : =>
+	@delegate('click', '#btn-sidebar') \
+	toggleSidebar : ->
+		unless @isAuthorized()
+			return @sidebarIsOpen no
+
 		val = @sidebarIsOpen()
 		@sidebarIsOpen !val
 
@@ -325,7 +351,8 @@ class CommonViewModel extends BaseViewModel
 				if xhr.statusText == 'Existing user'
 					@invalidLogin yes
 			else if xhr.status == 200
-				do @authorize
+				console.log 'signup!'
+				# do @authorize
 
 		xhr.setRequestHeader 'Content-Type', 'application/json'
 		xhr.send JSON.stringify {

@@ -67,7 +67,7 @@ class EssentialViewModel extends BaseViewModel
 		@attributes.push attr
 
 	removeAttribute : (attr) ->
-		@attributes.remove attr
+		@attributes.delete attr
 
 	addOperation : ->
 		sync = new Synchronizer @spec.data.operations.item
@@ -75,7 +75,7 @@ class EssentialViewModel extends BaseViewModel
 		@operations.push oper
 
 	removeOperation : (oper) ->
-		@operations.remove oper
+		@operations.delete oper
 
 	addRelationship : (rel) ->
 		sync = new Synchronizer @spec.data.relationships.item
@@ -84,7 +84,7 @@ class EssentialViewModel extends BaseViewModel
 		@relationships.push ptr
 
 	removeRelationship : (rel) ->
-		@relationships.remove (ptr) ->
+		@relationships.delete (ptr) ->
 			ptr.deref() is rel
 
 	#### Header section

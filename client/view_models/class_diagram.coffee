@@ -154,7 +154,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		for relPtr in rels
 			@removeRelationship relPtr.deref()
 
-		@essentials.remove ess
+		@essentials.delete ess
 		if @chosenEssential() is ess
 			@chooseEssential null
 
@@ -213,7 +213,7 @@ class ClassDiagramViewModel extends BaseViewModel
 		to   = rel.toEssential.deref()
 		from.removeRelationship rel
 		to.removeRelationship rel if from isnt to
-		@relationships.remove rel
+		@relationships.delete rel
 		@redefineRelationshipsLevel from, to
 
 		# Fix bug with updating removed relationships

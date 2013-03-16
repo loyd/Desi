@@ -28,22 +28,31 @@ passport.deserializeUser (strID, done) ->
 			done new UnknownUserError
 
 passport.use new LocalStrategy (username, password, done) ->
-	users.find({username}).nextObject (err, user) ->
-		return done err if err?
-
-		unless user?
-			return done null, null, new UnknownUserError
-
-		if user.password == password
+	exports.authenticate username, password, (err, user) ->
+		unless err
 			done null, user
+		else if err instanceof AuthError
+			done null, null, err
 		else
-			done null, null, new InvalidPasswordError
+			done err
 
 exports.AuthError = class AuthError extends Error
 	constructor : -> super # fix extending Error (CS 1.6)
 exports.InvalidPasswordError = class InvalidPasswordError extends AuthError
 exports.UnknownUserError = class UnknownUserError extends AuthError
 exports.ExistingUserError = class ExistingUserError extends AuthError
+
+exports.authenticate = (username, password, done) ->
+	users.find({username}).nextObject (err, user) ->
+		return done err if err?
+
+		unless user?
+			return done new UnknownUserError
+
+		if user.password == password
+			done null, user
+		else
+			done new InvalidPasswordError
 
 exports.register = (username, password, done) ->
 	async.waterfall [
