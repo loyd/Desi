@@ -35,7 +35,7 @@ class CommonViewModel extends BaseViewModel
 		@openDiagrams    = ko.observableArray()
 		@chosenDiagram   = ko.observable null
 
-		@generationCandidate = ko.observable null
+		@candidate = ko.observable null
 
 		@templates       = defTemplates
 		@templateIndex   = ko.observable null
@@ -90,18 +90,33 @@ class CommonViewModel extends BaseViewModel
 			xhr.send null
 
 		'generation' : ->
-			diag = @chosenDiagram() ? @generationCandidate()
+			diag = @chosenDiagram() ? @candidate()
 			if diag
 				@navigate "generation/#{diag.title()}"
 			else
 				@navigate ''
 
 		'generation/:title' : (title) ->
-			@generationCandidate @diagrams().scan (item) -> item.title() == title
-			do @toggleSidebar if @sidebarIsOpen()
+			@openDiagram title, (res) =>
+				return @navigate '' unless res
+				@candidate res
+				do @toggleSidebar if @sidebarIsOpen()
+
+		'share, share/*' : ->
+			unless @candidate()
+				if @chosenDiagram()
+					@candidate @chosenDiagram()
+				else
+					@navigate ''
+
+		'remote' : -> @navigate ''
+		'remote/:id' : (id) ->
+			diag = @createDiagram()
+			diag.id id
+			@navigate 'lookup'
 	}
 
-	openDiagram : (title) ->
+	openDiagram : (title, cb) ->
 		res = @diagrams().scan (item) ->
 			item.title() == title
 
@@ -109,6 +124,7 @@ class CommonViewModel extends BaseViewModel
 			@chosenDiagram()?.data?.stopEditing()
 			@chosenDiagram res
 			do res.data.startEditing
+			cb? res
 
 		unless res
 			@navigate ''
@@ -148,6 +164,7 @@ class CommonViewModel extends BaseViewModel
 		profileId  = ls profileTop['login']
 		diag.id calcSHA1 profileId + now
 		@diagrams.push diag
+		diag
 
 	authorize : ->
 		do ls.clear
@@ -213,7 +230,7 @@ class CommonViewModel extends BaseViewModel
 
 	@delegate('click', '#generation .btn-generate-and-download') (e, event) ->
 		return unless @templateFunction()
-		model = ls.expand @generationCandidate().sync.id
+		model = ls.expand @candidate().data?.sync.id
 		return unless model
 
 		transformVisibility = (mem) ->
@@ -283,8 +300,8 @@ class CommonViewModel extends BaseViewModel
 		do @createDiagram
 
 	@delegate('click', '#lookup .btn-remove-diagram') (item) ->
-		if item is @generationCandidate()
-			@generationCandidate null
+		if item is @candidate()
+			@candidate null
 
 		@removeDiagram item.title()
 
@@ -298,14 +315,25 @@ class CommonViewModel extends BaseViewModel
 		item.isRenamed yes
 
 	@delegate('click', '#lookup .btn-generate-code') (item) ->
-		@generationCandidate item
+		@candidate item
 		@navigate 'generation'
+
+	@delegate('click', '#lookup .btn-share-diagram') (item) ->
+		@candidate item
+		@navigate 'share'
 
 	oldActived = null
 	@delegate('click', '#lookup .diagram-item') (item) ->
 		oldActived?.isActive no
 		oldActived = item
 		item.isActive yes
+
+	@computed \
+	shareLink : ->
+		if @candidate()
+			"#{location.origin}/#remote/#{@candidate().id()}"
+		else
+			''
 
 	#### Authorization
 	

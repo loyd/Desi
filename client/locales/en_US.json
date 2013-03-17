@@ -33,11 +33,16 @@
 		"removeButton"   : "remove",
 		"editButton"     : "edit",
 		"renameButton"   : "rename",
-		"generateButton" : "generate"
+		"generateButton" : "generate",
+		"shareButton"    : "share"
 	},
 
 	"generation" : {
 		"preTitle"       : "Generation code for ",
 		"generateButton" : "Download"
+	},
+
+	"share" : {
+		"preTitle" : "Share "
 	}
 }
