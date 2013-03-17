@@ -142,6 +142,8 @@ class CommonViewModel extends BaseViewModel
 	authorize : ->
 		do ls.clear
 
+		@docs = []
+
 		makeSync = (key) =>
 			@profileSync = new Synchronizer profileSpec, key
 			do @profileSync.markAsMaster
@@ -150,6 +152,7 @@ class CommonViewModel extends BaseViewModel
 			ls 'profile', key
 
 		work = (doc) =>
+			@docs.push doc
 			@profileSync.attach doc
 			@isAuthorized yes
 			@navigate 'lookup'
@@ -171,7 +174,10 @@ class CommonViewModel extends BaseViewModel
 	localAuthorize : ->
 
 	deauthorize : ->
-		# @isAuthorized no
+		do doc.close for doc in @docs
+		do ls.clear
+		@isAuthorized no
+		@navigate 'login'
 
 	@delegate('click', '#btn-sidebar') \
 	toggleSidebar : ->
