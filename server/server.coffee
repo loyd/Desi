@@ -22,7 +22,7 @@ app = connect()
 
 share.attach app, {
 	db :
-		type : 'none'
+		type : 'mongo'
 
 	auth : (agent, action) ->
 		if action.type != 'connect'
