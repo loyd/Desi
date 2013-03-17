@@ -41,41 +41,44 @@ class Synchronizer
 	markAsMaster : ->
 		@isMaster = yes
 
-	attach : (@doc) ->
-		doc.on 'remoteop', (op) =>
-			target = this
-			if op.li || op.ld || op.lm
-				index = op.p.pop()
-				console.assert(index in [0, target.peek().length])
+	applyOp : (op) ->
+		target = this
+		if op.li || op.ld || op.lm
+			index = op.p.pop()
 
-			for prop in op.p
-				target = if target.type == 'object'
-					target.children[prop] || target.observers[prop]
-				else if target.type == 'array'
-					target[prop]
-				else
-					debugger
-
-			target.localMutation = yes
-
-			if op.li
-				if index == 0
-					target.unshift target.adapter(ls.allocate op.li)
-				else
-					target.push target.adapter(ls.allocate op.li)
-			else if op.ld
-				if index == 0
-					do target.shift
-				else
-					do target.pop
-			else if op.lm
-				target.move index, op.lm, 1
-			else if op.od && op.oi
-				target op.oi
+		for prop in op.p
+			target = if target.type == 'object'
+				target.observers[prop] ? target.children[prop].sync
+			else if target.type == 'array'
+				target.peek()[prop].sync
 			else
 				debugger
 
-			target.localMutation = no
+		index && console.assert(index in [0, target.peek().length])
+		target.localMutation = yes
+
+		if op.li
+			if index == 0
+				target.unshift target.adapter(ls.allocate op.li)
+			else
+				target.push target.adapter(ls.allocate op.li)
+		else if op.ld
+			if index == 0
+				do target.shift
+			else
+				do target.pop
+		else if op.lm
+			target.move index, op.lm, 1
+		else if op.od && op.oi
+			target op.oi
+		else
+			debugger
+
+		target.localMutation = no
+
+	attach : (@doc) ->
+		doc.on 'remoteop', (ops) =>
+			@applyOp op for op in ops
 
 	submit : (action) ->
 		@doc?.submitOp action
@@ -112,7 +115,7 @@ class Synchronizer
 			current = null
 
 		do path.reverse
-		console.log 'path: ', path.join(':')
+		console.log 'path: ', path.join(':'), String([if current then 'fire'])
 		return [current, path]
 
 	leaveStorage : ->
@@ -176,11 +179,12 @@ class Synchronizer
 		obs = ko.observable init
 		old = init
 		obs.subscribe (v) ->
-			old = v
+			return old = v unless obs.id?
 
-			if obs.id?
-				wv = "\"#{v}\"" if spec.type in ['string', 'pointer']
-				ls obs.id, wv
+			wv = if spec.type in ['string', 'pointer'] then "\"#{v}\"" else v
+			ls obs.id, wv
+
+			return old = v if obs.localMutation
 
 			[master, path] = route obs
 			return unless master
@@ -191,7 +195,7 @@ class Synchronizer
 				oi : v
 			}
 
-			return
+			old = v
 
 		if spec.type == 'pointer'
 			obs.deref = -> ptrTable[obs()]
