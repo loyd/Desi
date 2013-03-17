@@ -149,6 +149,11 @@ class CommonViewModel extends BaseViewModel
 				classAdapter : DiagramItemViewModel
 			ls 'profile', key
 
+		work = (doc) =>
+			@profileSync.attach doc
+			@isAuthorized yes
+			@navigate 'lookup'
+
 		[login, psw] = [@inputLogin(), @inputPassword()]
 		share.open "profile:#{login}", 'json', {
 			authentication : "#{login}:#{calcSHA1 psw}"
@@ -157,16 +162,11 @@ class CommonViewModel extends BaseViewModel
 
 			if r = doc.get()
 				makeSync ls.allocate r
-				(=>
-					@profileSync.attach doc
-					@isAuthorized yes
-				).defer()
+				(-> work doc).defer()
 			else
 				key = ls.allocate { freePtrId : 1, login, diagrams : [] }
 				makeSync key
-				doc.set ls.expand(@profileSync.id), =>
-					@profileSync.attach doc
-					@isAuthorized yes
+				doc.set ls.expand(@profileSync.id), -> work doc
 
 	localAuthorize : ->
 
