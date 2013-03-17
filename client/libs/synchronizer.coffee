@@ -9,7 +9,7 @@ class Synchronizer
 
 	makePtr = ->
 		profileTop = ls.expand ls('profile'), 0
-		profileId  = ls profileTop['login']
+		profileId  = ls.expand profileTop['login']
 		ptrId      = ls profileTop['freePtrId']
 		ls profileTop['freePtrId'], Number(ptrId) + 1
 		"#{profileId}:#{ptrId}"
@@ -54,22 +54,21 @@ class Synchronizer
 			else
 				debugger
 
-		index && console.assert(index in [0, target.peek().length])
 		target.localMutation = yes
 
-		if op.li
+		if op.li?
 			if index == 0
 				target.unshift target.adapter(ls.allocate op.li)
 			else
 				target.push target.adapter(ls.allocate op.li)
-		else if op.ld
+		else if op.ld?
 			if index == 0
 				do target.shift
 			else
 				do target.pop
-		else if op.lm
+		else if op.lm?
 			target.move index, op.lm, 1
-		else if op.od && op.oi
+		else if op.od? && op.oi?
 			target op.oi
 		else
 			debugger
@@ -115,7 +114,7 @@ class Synchronizer
 			current = null
 
 		do path.reverse
-		console.log 'path: ', path.join(':'), String([if current then 'fire'])
+		# console.log 'path: ', path.join(':'), String([if current then 'fire'])
 		return [current, path]
 
 	leaveStorage : ->
@@ -161,11 +160,12 @@ class Synchronizer
 		else
 			makePrimeObserver(spec, ls.expand id)
 
-		obs.id     = id
-		obs.type   = spec.type
-		obs.title  = prop || @title
-		obs.parent = this
-		obs.sync   = obs
+		obs.id       = id
+		obs.type     = spec.type
+		obs.title    = prop || @title
+		obs.parent   = this
+		obs.sync     = obs
+		obs.snapshot = @snapshot
 		@observers[prop] = obs
 
 	concretize : (prop) ->
@@ -231,7 +231,6 @@ class Synchronizer
 					prevPids.push item.sync.pid
 
 				return
-		
 		obs
 
 	unwrap = (id) -> ls(id)[1...-1]
@@ -249,7 +248,7 @@ class Synchronizer
 			do master.touch
 			return if @localMutation
 
-			lastIndex = @peek().length - 1
+			lastIndex = @peek().length - 2
 			return unless master
 			for arg in args
 				master.submit {
@@ -263,11 +262,12 @@ class Synchronizer
 			val = unwrap @id
 			arr = @peek()
 			lastComma = val.lastIndexOf ','
-			lastIndex = arr.length - 1
+			lastIndex = arr.length
+			snapshot = res.sync.snapshot() unless @localMutation
 
 			if ~lastComma
 				ls @id, "[#{val[...lastComma]}]"
-				do arr[lastIndex].sync.leaveStorage
+				do res.sync.leaveStorage
 			else
 				ls @id, "[]"
 
@@ -279,7 +279,7 @@ class Synchronizer
 			path.push lastIndex
 			master.submit {
 				p  : path
-				ld : res.sync.snapshot()
+				ld : snapshot
 			}
 
 		unshift : (args) ->
@@ -315,7 +315,9 @@ class Synchronizer
 			else
 				ls @id, "[]"
 
-			do @peek()[0].sync.leaveStorage
+			snapshot = res.sync.snapshot() unless @localMutation
+
+			do res.sync.leaveStorage
 			[master, path] = route this
 			do master.touch
 			return if @localMutation
@@ -324,7 +326,7 @@ class Synchronizer
 			path.push 0
 			master.submit {
 				p  : path
-				ld : res.sync.snapshot()
+				ld : snapshot
 			}
 
 		splice : ([start, count, elems...]) ->
@@ -386,7 +388,7 @@ class Synchronizer
 			else
 				refreshFromWrap.apply this, arguments
 
-		delete : ([elem], index) ->
+		delete : (args, [index, elem]) ->
 			val = unwrap @id
 			if index == 0
 				ls @id, "[#{val[val.indexOf(',')+1..]}]"
@@ -396,6 +398,7 @@ class Synchronizer
 				newVal = val.replace ",#{@id},", ''
 				ls @id, "[#{newVal}]"
 			
+			snapshot = elem.sync.snapshot() unless @localMutation
 			do elem.sync.leaveStorage
 			[master, path] = route this
 			do master.touch
@@ -405,7 +408,7 @@ class Synchronizer
 			path.push index
 			master.submit {
 				p  : path
-				ld : elem.sync.snapshot()
+				ld : snapshot
 			}
 
 		remove : (args, res) ->

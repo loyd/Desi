@@ -5,6 +5,7 @@ share        = require 'share'
 JsZip        = require 'jszip'
 {jsSHA}      = require 'jssha'
 profileSpec  = require 'models/profile'
+diagramSpec  = require 'models/class_diagram'
 Synchronizer = require 'libs/synchronizer'
 defLocal     = require 'locales/en_US'
 defTemplates = require 'templates'
@@ -13,6 +14,7 @@ BaseViewModel    = require 'libs/base_view_model'
 DiagramViewModel = require './class_diagram'
 
 dot.templateSettings['strip'] = off
+authField = null
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->
@@ -67,7 +69,7 @@ class CommonViewModel extends BaseViewModel
 				@openDiagram title
 				do @toggleSidebar if @sidebarIsOpen()
 			out : ->
-				do @chosenDiagram().data.stopEditing
+				do @chosenDiagram().data?.stopEditing
 				@chosenDiagram null
 		}
 		
@@ -103,21 +105,24 @@ class CommonViewModel extends BaseViewModel
 		res = @diagrams().scan (item) ->
 			item.title() == title
 
+		fire = =>
+			@chosenDiagram()?.data?.stopEditing()
+			@chosenDiagram res
+			do res.data.startEditing
+
 		unless res
 			@navigate ''
 		else
-			unless res.isOpen()
-				do res.open
+			if res.isOpen()
+				do fire
+			else res.open =>
 				@openDiagrams.push res
-
-			@chosenDiagram()?.data.stopEditing()
-			@chosenDiagram res
-			do res.data.startEditing
+				do fire
 
 		return
 
 	closeDiagram : (title) ->
-		res = @openDiagrams.delete (item) ->
+		res = @openDiagrams.remove (item) ->
 			item.title() == title
 
 		do res[0].close if res.length
@@ -135,14 +140,17 @@ class CommonViewModel extends BaseViewModel
 		sync = new Synchronizer profileSpec.data.diagrams.item
 		diag = new DiagramItemViewModel sync
 		date = new Date
-		diag.lastModifiedInMs +date + date.getTimezoneOffset() * 1000
-		diag.title diag.title() + +date
+		now  = Date.now()
+		diag.lastModifiedInMs now + date.getTimezoneOffset() * 1000
+		diag.title diag.title() + now
+
+		profileTop = ls.expand ls('profile'), 0
+		profileId  = ls profileTop['login']
+		diag.id calcSHA1 profileId + now
 		@diagrams.push diag
 
 	authorize : ->
 		do ls.clear
-
-		@docs = []
 
 		makeSync = (key) =>
 			@profileSync = new Synchronizer profileSpec, key
@@ -152,14 +160,14 @@ class CommonViewModel extends BaseViewModel
 			ls 'profile', key
 
 		work = (doc) =>
-			@docs.push doc
 			@profileSync.attach doc
 			@isAuthorized yes
 			@navigate 'lookup'
 
 		[login, psw] = [@inputLogin(), @inputPassword()]
+		authField = "#{login}:#{calcSHA1 psw}"
 		share.open "profile:#{login}", 'json', {
-			authentication : "#{login}:#{calcSHA1 psw}"
+			authentication : authField
 		}, (err, doc) =>
 			return if err?
 
@@ -174,7 +182,9 @@ class CommonViewModel extends BaseViewModel
 	localAuthorize : ->
 
 	deauthorize : ->
-		do doc.close for doc in @docs
+		do @profileSync.doc.close
+		for diag in @openDiagrams()
+			do diag.close
 		do ls.clear
 		@isAuthorized no
 		@navigate 'login'
@@ -374,7 +384,8 @@ class CommonViewModel extends BaseViewModel
 
 class DiagramItemViewModel extends BaseViewModel
 	constructor : (@sync) ->
-		@title            = sync.observer 'title'
+		@title = sync.observer 'title'
+		@id    = sync.observer 'id'
 		@lastModifiedInMs = sync.observer 'lastModified'
 
 		@isRenamed = ko.observable no
@@ -383,11 +394,33 @@ class DiagramItemViewModel extends BaseViewModel
 
 		super
 
-	open : ->
-		@data = new DiagramViewModel @sync
-		@isOpen yes
+	open : (cb) ->
+		work = (key, doc) =>
+			sync = new Synchronizer diagramSpec, key
+			sync.onchange = (=>
+				@lastModifiedInMs Date.now()
+			).throttle(1000)
+
+			sync.attach doc
+			do sync.markAsMaster
+			@data = new DiagramViewModel sync
+			@isOpen yes
+			do cb
+
+		share.open "edit:#{@id()}", 'json', {
+			authentication : authField
+		}, (err, doc) =>
+			return if err?
+
+			if r = doc.get()
+				(-> work ls.allocate(r), doc).defer()
+			else
+				data = { essentials : [], relationships : [] }
+				doc.set data, -> work ls.allocate(data), doc
 
 	close : ->
+		do @data.sync.doc.close
+		ls.remove @data.sync.id
 		@data = null
 		@isOpen no
 

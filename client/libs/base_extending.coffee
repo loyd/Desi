@@ -115,11 +115,11 @@ Array::delete = (deleted) ->
 	if typeof deleted == 'function'
 		for item, index in this when deleted item, index, this
 			@splice index, 1
-			return index
+			return [index, item]
 	else
 		for item, index in this when item is deleted
 			@splice index, 1
-			return index
+			return [index, item]
 
 Array::empty = ->
 	@length == 0
