@@ -18,7 +18,7 @@ class Router
 
 	onchange : =>
 		newHashValue = location.hash[1..]
-		return if @currentHash == newHashValue
+		return if @currentHash == newHashValue && !@hashIsChanged
 
 		@hashIsChanged = no
 		iter = @tmplsTree.iterator()
