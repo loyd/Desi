@@ -9,7 +9,7 @@ SCALE_DIFF      = 0.15
 MIN_SCALE       = 0.45
 MAX_SCALE       = 3
 AUTOSHIFT_SPEED = 200 # [unit/sec]
-AUTOSHIFT_RATE  = 25
+FRAME_RATE      = 28
 
 class ClassDiagramViewModel extends BaseViewModel
 	viewRoot : '.class-diagram'
@@ -68,7 +68,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		onresize main, (=>
 			do @refreshSizes if @isChosen
-		).throttle()
+		).throttle(FRAME_RATE)
 
 		essSubscr = @essentialMenuElement.subscribe (elem) =>
 			do essSubscr.dispose
@@ -263,7 +263,7 @@ class ClassDiagramViewModel extends BaseViewModel
 			posY baseShiftY + (e.clientY - top)  / scaleFactor
 
 			return
-		).throttle()
+		).throttle(FRAME_RATE)
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
@@ -282,7 +282,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		do event.preventDefault
 
-	SHIFT_PER_FRAME = AUTOSHIFT_SPEED / AUTOSHIFT_RATE
+	SHIFT_PER_FRAME = AUTOSHIFT_SPEED / FRAME_RATE
 	
 	@delegate('mouseover', '.shifter') (type) ->
 		@visibleShifter type
@@ -304,7 +304,7 @@ class ClassDiagramViewModel extends BaseViewModel
 				when 'bottom-right' then @shift shift, -shift
 
 			return
-		, 1000 / AUTOSHIFT_RATE
+		, 1000 / FRAME_RATE
 
 	@delegate('mouseout', '.shifter') (type) ->
 		@visibleShifter null
@@ -378,7 +378,7 @@ class ClassDiagramViewModel extends BaseViewModel
 				@shifting = yes
 				if @openMenu() == 'creating'
 					@openMenu null
-		).throttle()
+		).throttle(FRAME_RATE)
 
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
@@ -455,7 +455,7 @@ class ClassDiagramViewModel extends BaseViewModel
 
 			posX someX + (e.clientX - left) / scaleFactor
 			posY someY + (e.clientY - top) / scaleFactor
-		).throttle()
+		).throttle(FRAME_RATE)
 
 		mouseUp = =>
 			do originXSubsrc.dispose

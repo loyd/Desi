@@ -176,6 +176,13 @@ class CommonViewModel extends BaseViewModel
 				classAdapter : DiagramItemViewModel
 			ls 'profile', key
 
+			ptrId = @profileSync.observer 'freePtrId'
+			login = @profileSync.observer 'login'
+			Synchronizer.registerPidGetter =>
+				freePtr = ptrId()
+				ptrId freePtr + 1
+				"#{login()}:#{freePtr}"
+
 		work = (doc) =>
 			@profileSync.attach doc
 			@isAuthorized yes

@@ -7,12 +7,11 @@ class Synchronizer
 	@registerPid = (pid, what) ->
 		ptrTable[pid] = what
 
-	makePtr = ->
-		profileTop = ls.expand ls('profile'), 0
-		profileId  = ls.expand profileTop['login']
-		ptrId      = ls profileTop['freePtrId']
-		ls profileTop['freePtrId'], Number(ptrId) + 1
-		"#{profileId}:#{ptrId}"
+	pidGetter = null
+	@registerPidGetter = (getter) ->
+		pidGetter = getter
+
+	makePtr = -> pidGetter()
 
 	createDataFromSpec = (spec) ->
 		return switch spec.type
