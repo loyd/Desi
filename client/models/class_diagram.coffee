@@ -38,6 +38,8 @@ relationship = object {
 		'composition', 'generalization',
 		'realization', 'dependency'
 	], def: 'association')
+	level : (number def: 0)
+	maxLevel : (number def: 0)
 	fromIndicator : string
 	toIndicator : string
 	fromEssential : (pointer -> essential)

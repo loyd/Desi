@@ -22,11 +22,11 @@ class RelationshipViewModel extends BaseViewModel
 		@toMultiplicity   = sync.observer 'toMultiplicity'
 		@fromIndicator    = sync.observer 'fromIndicator'
 		@toIndicator      = sync.observer 'toIndicator'
-
-		@level    = ko.observable 0
-		@maxLevel = ko.observable 0
-		@isChosen = ko.observable no
-		@pathID = "#{PATH_ID_PREFIX}#{freeID++}"
+		@level            = sync.observer 'level'
+		@maxLevel         = sync.observer 'maxLevel'
+		
+		@isChosen    = ko.observable no
+		@pathID      = "#{PATH_ID_PREFIX}#{freeID++}"
 		@pathElement = ko.observable null
 
 		super

@@ -180,7 +180,7 @@ class CommonViewModel extends BaseViewModel
 			login = @profileSync.observer 'login'
 			Synchronizer.registerPidGetter =>
 				freePtr = ptrId()
-				ptrId freePtr + 1
+				ptrId +freePtr + 1
 				"#{login()}:#{freePtr}"
 
 		work = (doc) =>

@@ -42,7 +42,7 @@ class Synchronizer
 
 	applyOp : (op) ->
 		target = this
-		if op.li || op.ld || op.lm
+		if op.li? || op.ld? || op.lm?
 			index = op.p.pop()
 
 		for prop in op.p
@@ -56,15 +56,20 @@ class Synchronizer
 		target.localMutation = yes
 
 		if op.li?
+			item = target.adapter(ls.allocate op.li)
 			if index == 0
-				target.unshift target.adapter(ls.allocate op.li)
+				target.unshift item
+			else if index == target.peek().length
+				target.push item
 			else
-				target.push target.adapter(ls.allocate op.li)
+				target.splice index, 0, item
 		else if op.ld?
 			if index == 0
 				do target.shift
-			else
+			else if index == target.peek().length
 				do target.pop
+			else
+				target.splice index, 1
 		else if op.lm?
 			target.move index, op.lm, 1
 		else if op.od? && op.oi?
@@ -245,10 +250,9 @@ class Synchronizer
 			
 			[master, path] = route this
 			do master.touch
-			return if @localMutation
+			return if @localMutation || !master
 
 			lastIndex = @peek().length - 2
-			return unless master
 			for arg in args
 				master.submit {
 					p  : path.concat [++lastIndex]
@@ -272,9 +276,8 @@ class Synchronizer
 
 			[master, path] = route this
 			do master.touch
-			return if @localMutation
+			return if @localMutation || !master
 
-			return unless master
 			path.push lastIndex
 			master.submit {
 				p  : path
@@ -293,9 +296,8 @@ class Synchronizer
 
 			[master, path] = route this
 			do master.touch
-			return if @localMutation
+			return if @localMutation || !master
 
-			return unless master
 			path.push 0
 			for arg in args by -1
 				master.submit {
@@ -319,43 +321,44 @@ class Synchronizer
 			do res.sync.leaveStorage
 			[master, path] = route this
 			do master.touch
-			return if @localMutation
+			return if @localMutation || !master
 
-			return unless master
 			path.push 0
 			master.submit {
 				p  : path
 				ld : snapshot
 			}
 
-		splice : ([start, count, elems...]) ->
-			# Sync with sharejs not implemented
-			debugger
+		splice : ([start, count, elems...], deleted) ->
+			if count == 1 && elems.length == 0
+				return handlers.delete.call this, null, [start, deleted[0]]
 
 			val = unwrap @id
-			arr = @peek()
-			start = arr.length + start if start < 0
+			ids = elems.map (elem) -> elem.sync.id
+			val = val.split(',').spliсe(start, count, ids...).join(',')
+			ls @id, "[#{val}]"
 
-			addition = ''
-			if elems.length > 0
-				for arg in args
-					addition += arg.sync.id + ','
+			[master, path] = route this
+			do master.touch
+			sharing = @localMutation || !master
 
-			startIndex = 0
-			while start--
-				startIndex = str.indexOf ',', startIndex + 1
+			if sharing
+				path.push start
+				for del in deleted
+					master.submit {
+						p  : path
+						ld : del.sync.snapshot()
+					}
 
-			endIndex = startIndex
-			while count--
-				endIndex = str.indexOf ',', endIndex + 1
+			for del in deleted
+				do del.sync.leaveStorage
 
-			if ~endIndex
-				ls @id, "[#{str[..startIndex] + addition +  + str[endIndex+1..]}]"
-			else
-				ls @id, "[#{str[..startIndex] + addition[...-1]}]"
-
-			for i in [start...start+count] by 1
-				do arr[i].sync.leaveStorage
+			if sharing
+				for elem in elems by -1
+					master.submit {
+						p  : path
+						li : elem.sync.snapshot()
+					}
 
 			return
 
