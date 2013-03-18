@@ -7,6 +7,7 @@ async     = require 'async'
 jade      = require 'jade'
 less      = require 'less'
 coffee    = require 'coffee-script'
+requirejs = require 'requirejs'
 {exec}    = require 'child_process'
 {inspect} = require 'util'
 
@@ -17,23 +18,29 @@ option '-v', '--verbose [LVL]', 'level of message about errors (0..2)'
 option '-n', '--name [NAME]', 'name of new view-model class/model'
 
 task 'build:dev', 'build a development version', (options) ->
-	do (o = options) ->
-		o.verbose ?= 2
-		o.output  ?= 'public'
-		o.devMode  = on
-		o.watching = no
+	buildAll {
+		verbose  : options.verbose ? 2
+		output   : options.output  ? 'public'
+		devMode  : on
+		watching : no
+	}
 
-	buildAll options
+task 'build:prod', 'build a production version', (options) ->
+	buildAll {
+		verbose  : options.verbose ? 2
+		output   : options.output  ? 'public'
+		devMode  : off
+		watching : no
+	}
 
 task 'watch:dev', 'build and watch development', (options) ->
 	do setupJadeWatching
-	do (o = options) ->
-		o.verbose ?= 0
-		o.output  ?= 'public'
-		o.devMode  = on
-		o.watching = yes
-
-	buildAll options
+	buildAll {
+		verbose  : options.verbose ? 0
+		output   : options.output  ? 'public'
+		devMode  : on
+		watching : yes
+	}
 
 task 'create:view-model', 'create view-model class', (options) ->
 	{name}   = options
@@ -75,8 +82,12 @@ task 'create:model', 'create model', (options) ->
 
 ################################################################################
 buildAll = (opts, done) ->
+	output = opts.output
+	unless opts.devMode
+		opts.output += '/.tmp'
+
 	async.waterfall [
-		clear.bind null, opts.output
+		clear.bind null, output
 		async.parallel.bind async, [
 			(ok) ->
 				recurLook 'client', build.bind(null, opts, null), (err) ->
@@ -96,15 +107,89 @@ buildAll = (opts, done) ->
 
 				if opts.watching
 					recurWatch 'components', prepare.bind(null, opts), ok
-		], done
+		]
+
+		(l, next) ->
+			return do next if opts.devMode
+			requirejs.optimize {
+				baseUrl        : opts.output
+				mainConfigFile : "#{opts.output}/requirejs_config.js"
+				name           : 'vendors/requirejs/index'
+				include        : ['main']
+				optimize       : 'none'#'uglify2'
+				logLevel       : 3 # errors
+				out            : "#{output}/app.js"
+			}, (-> do next), next
+
+		(next) ->
+			return do next if opts.devMode
+			console.log msg "compressed js to #{output}/app.js"
+			requirejs.optimize {
+				cssIn       : "#{opts.output}/styles.css"
+				out         : "#{output}/styles.css"
+				optimizeCss : 'default'
+			}, (-> do next), next
+
+		(next) ->
+			return do next if opts.devMode
+			console.log msg "compressed css to #{output}/styles.css"
+			relPathReg = /<script type=.*?(html|svg).*?>.*?<\/script>/g
+			fs.readFile "#{opts.output}/index.html", 'utf-8', (err, code) ->
+				return next err if err
+				next null, code, code.match(relPathReg).map (res) ->
+					res[res.indexOf('>')+1...res.lastIndexOf('<')]
+
+		(code, paths, next) ->
+			return do code if opts.devMode
+			async.map paths, (path, ok) ->
+				fs.readFile "#{opts.output}/#{path}", 'utf-8', ok
+			, (err, results) ->
+				return next err if err
+				for p, i in paths
+					code = code.replace p, results[i]
+				next null, code
+
+		(code, next) ->
+			return do code if opts.devMode
+			fs.writeFile "#{output}/index.html", code, (err) ->
+				return next err if err
+				console.log msg "compressed svg and html to #{output}/index.html"
+				do next
+
+		(next) ->
+			return do next if opts.devMode
+			relPathToIcons = "vendors/bootswatch/img/glyphicons-halflings.png"
+			async.parallel [
+				clone.bind null, "#{opts.output}/imgs", "#{output}/imgs"
+				clone.bind null, "#{opts.output}/favicon.png",
+					"#{output}/favicon.png"
+				(ok) ->
+					dirname = path.dirname "#{output}/#{relPathToIcons}"
+					mkdir dirname, (err) ->
+						return ok err if err
+						clone "#{opts.output}/#{relPathToIcons}",
+							"#{output}/#{relPathToIcons}", (err) ->
+								return ok err if err
+								do ok
+			], next
+
+		(l, done) ->
+			return do l if opts.devMode
+			console.log msg "prepared images and favicon"
+			# rmdir opts.output, done
+			do done
+
 	], (err) -> if err then handleExternError(err) else done?()
 
 now = -> new Date().toTimeString()[0..7]
 b   = (str) -> "\u001b[31m#{str}\u001b[0m"
+msg = (text) ->
+	"#{now()} | #{text}"
+
 handleBuildError = (err, path, verbose, next) ->
 	next?() unless err
 	makeErrorText path, +err.line, (text) ->
-		console.log b "#{now()} - error at #{path}"
+		console.log b msg "error at #{path}"
 		console.log b text if text
 		switch +verbose
 			when 0 then console.log b err.message
@@ -162,7 +247,7 @@ build = (opts, event, fpath, done) ->
 		if err
 			handleBuildError(err, fpath, opts.verbose, done)
 		else
-			console.log "#{now()} - #{proc} #{fpath}"
+			console.log msg "#{proc} #{fpath}"
 			done?()
 
 prepare = (opts, event, fpath, done) ->
@@ -179,17 +264,27 @@ prepare = (opts, event, fpath, done) ->
 		if err
 			handleBuildError(err, dpath, opts.verbose, done)
 		else
-			console.log "#{now()} - prepared #{dpath}"
+			console.log msg "prepared #{dpath}"
 			done?()
 
 ################################################################################
-compileCoffee = (filename, code) ->
-	try {js : code, v3SourceMap : sourceMap} = coffee.compile code, {
-			filename,
-			bare      : on
-			header    : on
-			sourceMap : on
-		}
+compileCoffee = (filename, code, dev) ->
+	try
+		if dev
+			{js : code, v3SourceMap : sourceMap} = coffee.compile code, {
+				filename,
+				bare      : on
+				header    : on
+				sourceMap : on
+			}
+		else
+			code = coffee.compile code, {
+				filename,
+				bare      : on
+				header    : off
+				sourceMap : off
+			}
+
 	catch error
 		error.message = error.message[error.message.indexOf(',')+2..]
 			.replace /\son\sline\s(\d+)/, (str, line) ->
@@ -199,12 +294,14 @@ compileCoffee = (filename, code) ->
 		return [error, null, null]
 
 	code = """
-		//@ sourceMappingURL=#{path.basename(filename, '.coffee')}.map
 		#{AMD_DEFINITION_BEGIN}
 		#{code[code.indexOf('\n')+1...code.lastIndexOf('\n')]}
 		#{AMD_DEFINITION_END}
-
 	"""
+
+	if dev then code = """
+		//@ sourceMappingURL=#{path.basename(filename, '.coffee')}.map\n
+	""" + code
 
 	return [null, code, sourceMap]
 
@@ -249,6 +346,7 @@ builders['index.jade'] = ['.html', (ipath, opath, dev, done) ->
 			next err if err
 
 			locals =
+				devMode : dev
 				icon : 'favicon.png'
 				templates : []
 				styles : ['vendors/bootswatch/index.css']
@@ -272,13 +370,27 @@ builders['index.jade'] = ['.html', (ipath, opath, dev, done) ->
 						msg = "Incorrect or unsupported type of #{fpath}"
 						return ok(new Error msg)
 
-					locals.templates.push
+					locals.templates.push {
 						path : tmplPath
 						type : types[type]
 						id   : path.basename(tmplPath, ".#{type}")
 							.replace(/_/g, '-') + '-tmpl'
+					}
 					do ok
+
 			], (err) -> next(err, fn, locals)
+
+		(fn, locals, next) ->
+			return next null, fn, locals if dev
+
+			cssContent = locals.styles.reduce (res, path) ->
+				res + "@import url('#{path}');\n"
+			, ''
+
+			cssPath = "#{path.dirname opath}/styles.css"
+
+			fs.writeFile cssPath, cssContent, (err) ->
+				next err, fn, locals
 
 		(fn, locals, next) ->
 			try code = fn(locals)
@@ -301,15 +413,12 @@ builders['requirejs_config.json'] = ['.js', (ipath, opath, dev, done) ->
 				code.replace /\}\s*$/, '"bust=" + new Date().getTime()\n}'
 
 			code = "require.config(#{code});\n\n"
-			code += "define(['libs/base_extending'], function() {"
-			code += if dev
-				"""
-					require(['libs/tmpl_loader'], function(load) {
-						load(require.bind(null, ['main']));
-					});\n
-				"""
-			else "require(['main'], null);\n"
-			code += '});'
+
+			if dev then code += """
+				define(['libs/tmpl_loader'], function(load) {
+					load(require.bind(null, ['main']));
+				});
+			"""
 
 			next null, code
 		(code, done) ->
@@ -354,13 +463,16 @@ builders['.coffee'] = ['', (ipath, opath, dev, done) ->
 	async.waterfall [
 		(next) -> fs.readFile ipath, 'utf-8', next
 		(code, next) ->
-			next compileCoffee(ipath, code)...
+			next compileCoffee(ipath, code, dev)...
 		(code, sourceMap, done) ->
-			async.parallel [
-				fs.writeFile.bind fs, "#{opath}.js", code
-				fs.writeFile.bind fs, "#{opath}.map", sourceMap
-				clone.bind null, ipath, "#{opath}.coffee"
-			], done
+			if dev
+				async.parallel [
+					fs.writeFile.bind fs, "#{opath}.js", code
+					fs.writeFile.bind fs, "#{opath}.map", sourceMap
+					clone.bind null, ipath, "#{opath}.coffee"
+				], done
+			else
+				fs.writeFile "#{opath}.js", code, done
 	], done
 ]
 
@@ -491,6 +603,7 @@ Function::only = (num) ->
 	return => this Array::slice.call(arguments, 0, num)...
 
 mkdir = (dpath, done) -> exec "mkdir -p #{dpath}", done.only 1
+rmdir = (dpath, done) -> exec "rm -rf #{dpath}",   done.only 1
 clear = (dpath, done) -> exec "rm -rf #{dpath}/*", done.only 1
 clone = (f, to, done) -> exec "cp -R #{f} #{to}",  done.only 1
 touch = (fpath, done) -> exec "touch #{fpath}",    done.only 1

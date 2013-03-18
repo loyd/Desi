@@ -7,15 +7,22 @@ head
 	link(rel="shortcut icon", href=icon)
 
 	// Styles
-	each sheet in styles
-		link(rel="stylesheet", href=sheet)
+	if devMode
+		each sheet in styles
+			link(rel="stylesheet", href=sheet)
+	else
+		link(rel="stylesheet", href="styles.css")
 
 	// Templates
 	each tmpl in templates
-		script(type=tmpl.type, id=tmpl.id, src=tmpl.path)= tmpl.content
+		if devMode
+			script(type=tmpl.type, id=tmpl.id, src=tmpl.path)
+		else
+			script(type=tmpl.type, id=tmpl.id)= tmpl.path
 
 	// Source loader
-	script(data-main=loader.main, src=loader.path)
+	if devMode
+		script(data-main=loader.main, src=loader.path)
 
 body
 	#top.navbar.navbar-fixed-top: .navbar-inner
@@ -74,3 +81,6 @@ body
 		#login(data-bind="section: 'login'")
 		#signup(data-bind="section: 'signup'")
 		// /ko
+
+	unless devMode
+		script(src="app.js")

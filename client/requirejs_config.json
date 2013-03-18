@@ -11,6 +11,8 @@
 		}
 	},
 
+	"deps" : ["libs/base_extending"],
+
 	"enforceDefine" : true,
 	"scriptType" : ""
 }
