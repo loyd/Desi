@@ -18,12 +18,12 @@ authField = null
 
 class CommonViewModel extends BaseViewModel
 	constructor : ->
-		@isAuthorized    = ko.observable no#ls.has('profile')
+		@isAuthorized    = ko.observable no#ls.has('remember')
 		@sidebarIsOpen   = ko.observable no
 		@locale          = ko.observable defLocal
 
-		if @isAuthorized()
-			do @localAuthorize
+		# if @isAuthorized()
+		# 	do @localAuthorize
 
 		@invalidLogin    = ko.observable no
 		@invalidPassword = ko.observable no
@@ -56,6 +56,12 @@ class CommonViewModel extends BaseViewModel
 		addEventListener 'unload', =>
 			do @deauthorize unless @remember()
 		, off
+
+		if ls.has 'remember'
+			data = ls.expand ls('remember')
+			@inputLogin data.login
+			@inputPassword data.psw
+			do @authorize
 
 		super
 	
@@ -186,6 +192,8 @@ class CommonViewModel extends BaseViewModel
 		work = (doc) =>
 			@profileSync.attach doc
 			@isAuthorized yes
+			if @remember()
+				ls 'remember', ls.allocate { login, psw }
 			@navigate 'lookup'
 
 		[login, psw] = [@inputLogin(), @inputPassword()]
