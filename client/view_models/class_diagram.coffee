@@ -682,7 +682,8 @@ class ClassDiagramViewModel extends BaseViewModel
 
 	#### Creating menu
 
-	@delegate('click', '.creating-menu .btn-make-class') (el, event) ->
+	@delegate('click', '.creating-menu .btn-make-class') \
+	makeClassFromCreatingMenu : ->
 		realX = @creatingMenuPosX()
 		realY = @creatingMenuPosY()
 
@@ -692,5 +693,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		@addEssential relX, relY
 		@chooseEssential @essentials().last()
 		@openMenu 'control'
+
+	@delegate('click', '.creating-menu .btn-make-interface') ->
+		do @makeClassFromCreatingMenu
+		@essentials().last().addStereotype 'interface'
 
 module.exports = ClassDiagramViewModel

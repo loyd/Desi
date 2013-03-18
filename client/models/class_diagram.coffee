@@ -1,7 +1,5 @@
 {extend, number, string, array, object, boolean, pointer} = require 'libs/model_dsl'
 
-stereotype = object
-
 visibilities =
 	public    : '+'
 	private   : '-'
@@ -13,7 +11,7 @@ member = object {
 	name : (string def: 'undefined')
 	type : (string def: 'void')
 	isStatic : (boolean def: no)
-	stereotypes : (array of: stereotype)
+	stereotypes : (array of: string)
 	visibility : string
 		in: visibilities
 		def: visibilities.public
@@ -51,7 +49,7 @@ relationship = object {
 			val.test validMultiplicity
 	)
 	toMultiplicity : (string test: validMultiplicity)
-	stereotypes : (array of: stereotype)
+	stereotypes : (array of: string)
 }
 
 essential = object {
@@ -60,7 +58,7 @@ essential = object {
 	name : (string def: 'ClassName')
 	color : (string def: 'white')
 	isAbstract : (boolean def: no)
-	stereotypes : (array of: stereotype)
+	stereotypes : (array of: string)
 	attributes : (array of: attribute)
 	operations : (array of: operation)
 	relationships : (array of: (pointer -> relationship))

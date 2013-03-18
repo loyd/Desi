@@ -203,6 +203,8 @@ class Synchronizer
 
 		if spec.type == 'pointer'
 			obs.deref = -> ptrTable[obs()]
+
+		if spec.type in ['string', 'pointer']
 			obs.leaveStorage = ->
 				ls.remove obs.id
 				obs.id = null

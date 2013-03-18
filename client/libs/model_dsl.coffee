@@ -48,7 +48,7 @@ module.exports = {
 		result.type = 'boolean'
 		result
 
-	string : (opts) ->
+	string : (opts = {}) ->
 		if 'def' not of opts
 			opts.def = ''
 		result = standardize opts

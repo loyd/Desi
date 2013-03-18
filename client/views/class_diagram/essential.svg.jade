@@ -6,6 +6,9 @@ g.essential(data-bind="\
 		style: { fill: color }")
 
 	g.header
+		// ko if: stereotypes().length
+		text.stereotype(data-bind="text: stereotypeText, x: namePosX, y: stereotypePosY")
+		// /ko
 		text.name(data-bind="text: name, x: namePosX, y: namePosY")
 
 	g.section.attributes(data-bind="if: attributesVisible, translateY: attributesPosY")

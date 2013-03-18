@@ -26,6 +26,7 @@ class EssentialViewModel extends BaseViewModel
 		do @placeOperations
 
 		@relationships = sync.observer 'relationships'
+		@stereotypes   = sync.observer 'stereotypes'
 
 		@isMoved   = ko.observable no
 		@isChosen  = ko.observable no
@@ -35,6 +36,10 @@ class EssentialViewModel extends BaseViewModel
 	@computed \
 	nameSize : ->
 		countTextSize '.name', @name()
+
+	@computed \
+	stereotypeSize : ->
+		countTextSize '.stereotype', @stereotypeText()
 
 	@computed \
 	centerX : ->
@@ -47,6 +52,7 @@ class EssentialViewModel extends BaseViewModel
 	@computed \
 	width : ->
 		w = Math.max(
+			MIN_HEADER_PADDING * 2 + @stereotypeSize().width
 			MIN_HEADER_PADDING * 2 + @nameSize().width
 			(@attributes().map (attr) -> attr.minWidth()).max()
 			(@operations().map (oper) -> oper.minWidth()).max()
@@ -79,7 +85,7 @@ class EssentialViewModel extends BaseViewModel
 
 	addRelationship : (rel) ->
 		sync = new Synchronizer @spec.data.relationships.item
-		ptr = sync.observer()
+		ptr  = sync.observer()
 		ptr rel.ref()
 		@relationships.push ptr
 
@@ -87,10 +93,18 @@ class EssentialViewModel extends BaseViewModel
 		@relationships.delete (ptr) ->
 			ptr.deref() is rel
 
+	addStereotype : (stereotype) ->
+		sync = new Synchronizer @spec.data.stereotypes.item
+		str  = sync.observer()
+		str stereotype
+		@stereotypes.push str
+
 	#### Header section
 	
+	@computed \
 	headerHeight : ->
-		MIN_HEADER_PADDING * 2 + @nameSize().height
+		MIN_HEADER_PADDING * 2 + @nameSize().height +
+			MIN_HEADER_PADDING * @stereotypes().length * 3/2
 
 	@computed \
 	namePosX : ->
@@ -98,7 +112,15 @@ class EssentialViewModel extends BaseViewModel
 
 	@computed \
 	namePosY : ->
-		@headerHeight() / 2
+		@headerHeight() - MIN_HEADER_PADDING - @nameSize().height / 2
+
+	@computed \
+	stereotypePosY : ->
+		MIN_HEADER_PADDING + @stereotypeSize().height / 2
+
+	@computed \
+	stereotypeText : ->
+		"<<#{@stereotypes()[0]?() || ''}>>"
 
 	#### Attributes section
 
@@ -115,7 +137,7 @@ class EssentialViewModel extends BaseViewModel
 		return
 
 	@computed \
-	attributesPosY : @::headerHeight
+	attributesPosY : -> @headerHeight()
 
 	@computed \
 	attributesVisible : ->
