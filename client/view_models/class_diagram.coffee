@@ -25,15 +25,28 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		# Fix bug with updating removed relationships
 		['delete', 'pop', 'shift', 'splice'].forEach (event) =>
-			@relationships.subscribe ([args, res]) ->
-				rel = if event == 'splice'
+			getFrom = (res) ->
+				if event == 'splice'
 					res[0]
 				else if event == 'delete'
 					res[1]
 				else res
 
+			@relationships.subscribe ([args, res]) =>
+				rel = getFrom res
 				rel.fromEssential @fakeEssential().ref()
 				rel.toEssential   @fakeEssential().ref()
+
+				if rel is @chosenRelationship()
+					@openMenu null
+					@chooseRelationship null
+			, this, event
+
+			@essentials.subscribe ([args, res]) =>
+				ess = getFrom res
+				if ess is @chosenEssential()
+					@openMenu null
+					@chooseEssential null
 			, this, event
 
 		@originX     = ko.observable 0
@@ -171,8 +184,6 @@ class ClassDiagramViewModel extends BaseViewModel
 		if @chosenEssential() is ess
 			@chooseEssential null
 
-		console.log(ess.sync.pid)
-
 	redefineRelationshipsLevel : (from, to, fake) ->
 		fromRef = from.ref()
 		unless to
@@ -230,7 +241,6 @@ class ClassDiagramViewModel extends BaseViewModel
 		to.removeRelationship rel if from isnt to
 		@relationships.delete rel
 		@redefineRelationshipsLevel from, to
-		console.log(rel.sync.pid)
 
 	#### Clicking and moving essential
 

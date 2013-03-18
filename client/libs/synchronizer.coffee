@@ -87,7 +87,7 @@ class Synchronizer
 		@doc?.submitOp action
 
 	snapshot : ->
-		console.assert @id
+		# console.assert @id
 		ls.expand @id
 
 	touch : ->
@@ -99,7 +99,7 @@ class Synchronizer
 		current = start
 		while parent = current.parent
 			if parent.type == 'array'
-				console.assert(current.id)
+				# console.assert(current.id)
 				index = parent.routing[current.id]
 				arr   = parent.peek()
 

@@ -409,8 +409,8 @@ class CommonViewModel extends BaseViewModel
 			if xhr.status == 401
 				if xhr.statusText == 'Existing user'
 					@invalidLogin yes
-			else if xhr.status == 200
-				console.log 'signup!'
+			# else if xhr.status == 200
+				# console.log 'signup!'
 				# do @authorize
 
 		xhr.setRequestHeader 'Content-Type', 'application/json'
