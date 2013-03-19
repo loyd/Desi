@@ -5,7 +5,7 @@ table.table.table-striped
 		th
 		th(data-bind="text: lastModified")
 	tbody(data-bind="foreach: diagrams")
-		tr.diagram-item(data-bind="css: { open: isOpen, active : isActive }")
+		tr.diagram-item(data-bind="css: { open: isOpen, active : isActive }", onclick="")
 			td.number(data-bind="text: $index() + 1")
 			td.title
 				span(data-bind="text: title, visible: !isRenamed()")

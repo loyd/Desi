@@ -4,11 +4,12 @@ class Delegator
 	constructor : (@root=document) ->
 		@listeners = {}
 
-	delegate : (event, sel, klass, key) ->
-		unless event of @listeners
-			@listenEvent event
+	delegate : (events, sel, klass, key) ->
+		for event in events.words()
+			unless event of @listeners
+				@listenEvent event
 
-		@listeners[event].push { sel, klass, key }
+			@listeners[event].push { sel, klass, key }
 
 	findElement : (selector, startNode) ->
 		nodes = @root.querySelectorAll selector

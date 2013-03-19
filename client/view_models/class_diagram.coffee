@@ -134,7 +134,8 @@ class ClassDiagramViewModel extends BaseViewModel
 	stopEditing : ->
 		@isChosen = no
 
-	@delegate('click') (el, event) ->
+	@delegate('click') \
+	clickOnArea : (el, event) ->
 		return if event.target isnt @element()
 		if @shifting
 			@shifting = no
@@ -254,6 +255,10 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		menuName = @openMenu() ? 'control'
 
+		unless event.clientX?
+			event.clientX = event.touches[0].clientX
+			event.clientY = event.touches[0].clientY
+
 		{posX, posY} = ess
 		{left, top} = main.getBoundingClientRect()
 		scaleFactor = @scaleFactor()
@@ -281,6 +286,10 @@ class ClassDiagramViewModel extends BaseViewModel
 				@openMenu null
 				@chooseEssential null
 
+			unless e.clientX?
+				e.clientX = e.touches[0].clientX
+				e.clientY = e.touches[0].clientY
+
 			posX baseShiftX + (e.clientX - left) / scaleFactor
 			posY baseShiftY + (e.clientY - top)  / scaleFactor
 
@@ -290,6 +299,11 @@ class ClassDiagramViewModel extends BaseViewModel
 		mouseUp = (e) =>
 			document.removeEventListener 'mousemove', mouseMove, on
 			document.removeEventListener 'mouseup', mouseUp, on
+
+			if e.touches
+				document.removeEventListener 'touchmove', mouseMove, on
+				document.removeEventListener 'touchend', mouseUp, on
+				document.removeEventListener 'touchcancel', mouseUp, on
 
 			do originXSubsrc.dispose
 			do originYSubsrc.dispose
@@ -301,6 +315,11 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
+
+		if event.touches
+			document.addEventListener 'touchmove', mouseMove, on
+			document.addEventListener 'touchend', mouseUp, on
+			document.addEventListener 'touchcancel', mouseUp, on
 
 		do event.preventDefault
 
@@ -386,13 +405,37 @@ class ClassDiagramViewModel extends BaseViewModel
 
 		do event.preventDefault
 
-	@delegate('mousedown') (el, event) ->
+	defFactor = null
+	scalingCenterX = null
+	scalingCenterY = null
+	@delegate('touchstart') (el, e) ->
+		return if e.touches.length < 2
+		scalingCenterX = (e.touches[0].clientX + e.touches[1].clientX) / 2
+		scalingCenterY = (e.touches[0].clientY + e.touches[1].clientY) / 2
+
+	@delegate('gesturechange') (el, event) ->
+		return if @moving() || @linking()
+
+		defFactor ?= @scaleFactor()
+		newFactor = event.scale.sqrt() * defFactor
+
+		if MIN_SCALE <= newFactor <= MAX_SCALE
+			@scaleFactor newFactor
+
+		relFactor = 1 - @scaleFactor() / oldScaleFactor
+		@shift scalingCenterX * relFactor, scalingCenterY * relFactor
+
+	@delegate('mousedown touchstart') (el, event) ->
 		return if event.target isnt @element()
 		{originX, originY} = this
-		prevX = event.clientX
-		prevY = event.clientY
+		prevX = event.clientX ? event.touches[0].clientX
+		prevY = event.clientY ? event.touches[0].clientY
 
 		mouseMove = ((e) =>
+			unless e.clientX?
+				e.clientX = e.touches[0].clientX
+				e.clientY = e.touches[0].clientY
+
 			@shift(e.clientX - prevX, e.clientY - prevY)
 			prevX = e.clientX
 			prevY = e.clientY
@@ -400,6 +443,8 @@ class ClassDiagramViewModel extends BaseViewModel
 				@shifting = yes
 				if @openMenu() == 'creating'
 					@openMenu null
+
+			return
 		).throttle(FRAME_RATE)
 
 		mouseUp = (e) =>
@@ -409,8 +454,22 @@ class ClassDiagramViewModel extends BaseViewModel
 			if e.target isnt event.target
 				@shifting = no
 
+			if e.touches
+				document.removeEventListener 'touchmove', mouseMove, on
+				document.removeEventListener 'touchend', mouseUp, on
+				document.removeEventListener 'touchcancel', mouseUp, on
+
+				e.clientX = prevX
+				e.clientY = prevY
+				@clickOnArea this, e
+
 		document.addEventListener 'mousemove', mouseMove, on
 		document.addEventListener 'mouseup', mouseUp, on
+
+		if event.touches
+			document.addEventListener 'touchmove', mouseMove, on
+			document.addEventListener 'touchend', mouseUp, on
+			document.addEventListener 'touchcancel', mouseUp, on
 
 		do event.preventDefault
 
@@ -443,7 +502,7 @@ class ClassDiagramViewModel extends BaseViewModel
 	@delegate('click', '.btn-edit-essential') ->
 		@openMenu 'essential'
 
-	@delegate('mousedown', '.btn-link-essential') ->
+	@delegate('mousedown touchstart', '.btn-link-essential') (e, event) ->
 		fakeRel = @fakeRelationship()
 		fakeEss = @fakeEssential()
 		fakeRel.fromEssential @chosenEssential().ref()
@@ -475,19 +534,35 @@ class ClassDiagramViewModel extends BaseViewModel
 				@openMenu null
 				menuIsClosed = yes
 
+			unless e.clientX
+				e.clientX = e.touches[0].clientX
+				e.clientY = e.touches[0].clientY
+
 			posX someX + (e.clientX - left) / scaleFactor
 			posY someY + (e.clientY - top) / scaleFactor
 		).throttle(FRAME_RATE)
 
-		mouseUp = =>
+		mouseUp = (e) =>
 			do originXSubsrc.dispose
 			do originYSubsrc.dispose
 
 			document.removeEventListener 'mousemove', mouseMove, off
 			document.removeEventListener 'mouseup', mouseUp, off
 
-		document.addEventListener 'mousemove', mouseMove, off
-		document.addEventListener 'mouseup', mouseUp, off
+			if e.touches
+				document.removeEventListener 'touchmove', mouseMove, on
+				document.removeEventListener 'touchend', mouseUp, on
+				document.removeEventListener 'touchcancel', mouseUp, on
+
+		document.addEventListener 'mousemove', mouseMove, on
+		document.addEventListener 'mouseup', mouseUp, on
+
+		if event.touches
+			document.addEventListener 'touchmove', mouseMove, on
+			document.addEventListener 'touchend', mouseUp, on
+			document.addEventListener 'touchcancel', mouseUp, on
+
+		do event.preventDefault
 
 	@delegate('mouseover', '.essential') (ess) ->
 		return unless @linking()
@@ -503,7 +578,8 @@ class ClassDiagramViewModel extends BaseViewModel
 		@fakeEssentialIsVisible yes
 		@redefineRelationshipsLevel @chosenEssential(), ess
 
-	@delegate('mouseup', '.essential') (ess) ->
+	@delegate('mouseup touchend', '.essential') \
+	endLinking : (ess) ->
 		return unless @linking()
 		@linking no
 		if ess is (fake = @fakeEssential())
@@ -515,8 +591,9 @@ class ClassDiagramViewModel extends BaseViewModel
 		@openMenu 'relationship'
 		@chooseEssential null
 
-	@delegate('mousedown', '.control-menu') (el, event) ->
+	@delegate('mousedown touchstart', '.control-menu') (el, event) ->
 		return unless ~" #{event.target.className} ".indexOf ' control-menu '
+		do event.preventDefault
 		@essentialMouseDown @chosenEssential(), event
 
 	#### Utils for menu

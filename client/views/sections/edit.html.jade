@@ -1,6 +1,7 @@
 // ko foreach: openDiagrams
 .class-diagram(data-bind="with: data")
 	svg(
+		onclick=""
 		data-bind="\
 			visible: $parent === $root.chosenDiagram(),\
 			viewBox: viewBox,\
@@ -128,7 +129,8 @@
 				hr
 				.colors(data-bind="foreach: 'white blue green yellow grey'.words()")
 					.color(data-bind="style: { backgroundColor: $data },\
-						css: { 'active-color': $data === $parent.color() }")
+						css: { 'active-color': $data === $parent.color() }",
+						onclick="")
 				hr
 				.attributes(data-bind="foreach: attributes")
 					.attribute.control-line
